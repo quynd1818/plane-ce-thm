@@ -33,7 +33,8 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
       (config?.is_google_enabled ||
         config?.is_github_enabled ||
         config?.is_gitlab_enabled ||
-        config?.is_gitea_enabled)) ||
+        config?.is_gitea_enabled ||
+        config?.is_keycloak_enabled)) ||
     false;
   const oAuthOptions: TOAuthOption[] = [
     {
@@ -78,6 +79,15 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
         window.location.assign(`${API_BASE_URL}/auth/gitea/${next_path ? `?next_path=${next_path}` : ``}`);
       },
       enabled: config?.is_gitea_enabled,
+    },
+    {
+      id: "keycloak",
+      text: "Login with THM SSO",
+      icon: <span aria-hidden="true">SSO</span>,
+      onClick: () => {
+        window.location.assign(`${API_BASE_URL}/auth/keycloak/${next_path ? `?next_path=${next_path}` : ``}`);
+      },
+      enabled: config?.is_keycloak_enabled,
     },
   ];
 

@@ -197,6 +197,9 @@
         "duration": "Send reminder before"
       }
     },
+    "customization": {
+      "label": "Customization"
+    },
     "empty_state": {
       "labels": {
         "title": "No labels yet",

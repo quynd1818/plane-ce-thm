@@ -334,6 +334,21 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 
+TEAMS_ENABLED = os.environ.get("TEAMS_ENABLED", "false").lower() in {"1", "true", "yes"}
+TEAMS_WEBHOOK_URL = os.environ.get("TEAMS_WEBHOOK_URL", "")
+TEAMS_NOTIFY_ISSUE_CREATED = os.environ.get("TEAMS_NOTIFY_ISSUE_CREATED", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_ISSUE_ASSIGNED = os.environ.get("TEAMS_NOTIFY_ISSUE_ASSIGNED", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_ISSUE_UPDATED = os.environ.get("TEAMS_NOTIFY_ISSUE_UPDATED", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_ISSUE_COMPLETED = os.environ.get("TEAMS_NOTIFY_ISSUE_COMPLETED", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_COMMENT = os.environ.get("TEAMS_NOTIFY_COMMENT", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_CYCLE_STARTED = os.environ.get("TEAMS_NOTIFY_CYCLE_STARTED", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_CYCLE_COMPLETED = os.environ.get("TEAMS_NOTIFY_CYCLE_COMPLETED", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_PROJECT_CREATED = os.environ.get("TEAMS_NOTIFY_PROJECT_CREATED", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_WORKLOG = os.environ.get("TEAMS_NOTIFY_WORKLOG", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_CUSTOMIZATION = os.environ.get("TEAMS_NOTIFY_CUSTOMIZATION", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_AUTOMATION = os.environ.get("TEAMS_NOTIFY_AUTOMATION", "true").lower() in {"1", "true", "yes"}
+TEAMS_NOTIFY_INTAKE = os.environ.get("TEAMS_NOTIFY_INTAKE", "true").lower() in {"1", "true", "yes"}
+
 
 CELERY_IMPORTS = (
     # scheduled tasks
@@ -341,6 +356,8 @@ CELERY_IMPORTS = (
     "plane.bgtasks.exporter_expired_task",
     "plane.bgtasks.file_asset_task",
     "plane.bgtasks.email_notification_task",
+    "plane.bgtasks.recurring_issue_task",
+    "plane.bgtasks.notification_task",
     "plane.bgtasks.cleanup_task",
     "plane.license.bgtasks.telemetry_metrics",
     # management tasks

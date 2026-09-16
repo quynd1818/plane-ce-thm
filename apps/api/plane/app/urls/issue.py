@@ -31,9 +31,39 @@ from plane.app.views import (
     WorkItemDescriptionVersionEndpoint,
     IssueMetaEndpoint,
     IssueDetailIdentifierEndpoint,
+    IssueTimerEndpoint,
+    IssueWorkLogDetailEndpoint,
+    IssueWorkLogEndpoint,
+    ProjectWorkLogSummaryEndpoint,
+    ProjectWorkLogReportEndpoint,
 )
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/worklogs/summary/",
+        ProjectWorkLogSummaryEndpoint.as_view(),
+        name="project-worklog-summary",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/worklogs/report/",
+        ProjectWorkLogReportEndpoint.as_view(),
+        name="project-worklog-report",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/worklogs/",
+        IssueWorkLogEndpoint.as_view(),
+        name="issue-worklogs",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/worklogs/<uuid:worklog_id>/",
+        IssueWorkLogDetailEndpoint.as_view(),
+        name="issue-worklog-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/timer/",
+        IssueTimerEndpoint.as_view(),
+        name="issue-timer",
+    ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/list/",
         IssueListEndpoint.as_view(),

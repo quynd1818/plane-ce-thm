@@ -129,6 +129,29 @@ from .issue.base import (
 )
 
 from .issue.activity import IssueActivityEndpoint
+from .issue.worklog import (
+    IssueTimerEndpoint,
+    IssueWorkLogDetailEndpoint,
+    IssueWorkLogEndpoint,
+    ProjectWorkLogReportEndpoint,
+    ProjectWorkLogSummaryEndpoint,
+)
+from .project.customization import (
+    ProjectCustomPropertyDetailEndpoint,
+    ProjectCustomPropertyEndpoint,
+    ProjectIssueTypeDetailEndpoint,
+    ProjectIssueTypeEndpoint,
+    WorkItemTemplateDetailEndpoint,
+    WorkItemTemplateEndpoint,
+)
+from .project.phase3 import (
+    IntakeFormDetailEndpoint,
+    IntakeFormEndpoint,
+    ProjectDashboardSummaryEndpoint,
+    PublicIntakeFormEndpoint,
+    RecurringIssueDetailEndpoint,
+    RecurringIssueEndpoint,
+)
 
 from .issue.archive import IssueArchiveViewSet, BulkArchiveIssuesEndpoint
 

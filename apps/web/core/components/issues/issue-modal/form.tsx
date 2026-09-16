@@ -121,6 +121,9 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     handlePropertyValuesValidation,
     handleCreateUpdatePropertyValues,
     handleTemplateChange,
+    workItemTemplates,
+    issuePropertyValues,
+    handleProjectEntitiesFetch,
   } = useIssueModal();
   const { isMobile } = usePlatformOS();
   const { moveIssue } = useWorkspaceDraftIssues();
@@ -175,6 +178,16 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
+  useEffect(() => {
+    if (workspaceSlug && projectId) {
+      void handleProjectEntitiesFetch({
+        workItemProjectId: projectId,
+        workItemTypeId: watch("type_id") ?? undefined,
+        workspaceSlug: workspaceSlug.toString(),
+      });
+    }
+  }, [handleProjectEntitiesFetch, projectId, workspaceSlug, watch]);
+
   // Reset form when data prop changes
   useEffect(() => {
     if (data) {
@@ -206,7 +219,7 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workItemTemplateId]);
+  }, [handleTemplateChange, workItemTemplateId, workItemTemplates.length, workspaceSlug]);
 
   const handleFormSubmit = async (formData: Partial<TIssue>, is_draft_issue = false) => {
     // Check if the editor is ready to discard
@@ -230,13 +243,14 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
       return;
 
     const submitData = !data?.id
-      ? formData
+      ? { ...formData, custom_properties: issuePropertyValues }
       : {
           ...getChangedIssuefields(formData, dirtyFields as { [key: string]: boolean | undefined }),
           project_id: getValues<"project_id">("project_id"),
           id: data.id,
           description_html: formData.description_html ?? "<p></p>",
           type_id: getValues<"type_id">("type_id"),
+          custom_properties: issuePropertyValues,
         };
 
     // this condition helps to move the issues from draft to project issues

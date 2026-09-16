@@ -14,6 +14,7 @@ export const coreRoutes: RouteConfigEntry[] = [
 
   // Home - Sign In
   layout("./(home)/layout.tsx", [index("./(home)/page.tsx")]),
+  route("intake/:publicKey", "./intake/[publicKey]/page.tsx"),
 
   // Sign Up
   layout("./(all)/sign-up/layout.tsx", [route("sign-up", "./(all)/sign-up/page.tsx")]),
@@ -337,6 +338,15 @@ export const coreRoutes: RouteConfigEntry[] = [
             route(
               ":workspaceSlug/settings/projects/:projectId/estimates",
               "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/estimates/page.tsx"
+            ),
+            // Project Worklogs
+            route(
+              ":workspaceSlug/settings/projects/:projectId/worklogs",
+              "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/worklogs/page.tsx"
+            ),
+            route(
+              ":workspaceSlug/settings/projects/:projectId/customization",
+              "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/customization/page.tsx"
             ),
             // Project Automations
             layout("./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/automations/layout.tsx", [

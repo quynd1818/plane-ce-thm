@@ -63,6 +63,7 @@ export type TBaseIssue = {
   cycle_id: string | null;
   module_ids: string[] | null;
   type_id: string | null;
+  custom_properties?: Record<string, unknown>;
 
   created_at: string;
   updated_at: string;

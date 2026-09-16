@@ -1,0 +1,299 @@
+You are working in a Plane CE self-hosted source tree.
+
+GOAL
+
+Implement a new OAuth/OIDC authentication provider named "keycloak" by reusing the existing OAuth architecture already used by:
+
+- google.py
+- github.py
+- gitlab.py
+- gitea.py
+
+DO NOT implement a brand new auth system.
+
+Reuse the existing:
+
+- OauthAdapter
+- post_user_auth_workflow
+- user_login
+- Account linking
+- Session management
+- Existing callback/login flow
+
+====================================================
+SOURCE FILES TO FOLLOW
+====================================================
+
+OAuth provider examples:
+
+apps/api/plane/authentication/provider/oauth/google.py
+apps/api/plane/authentication/provider/oauth/gitlab.py
+apps/api/plane/authentication/provider/oauth/gitea.py
+
+Views:
+
+apps/api/plane/authentication/views/app/google.py
+apps/api/plane/authentication/views/space/google.py
+
+Routes:
+
+apps/api/plane/authentication/urls.py
+
+Exports:
+
+apps/api/plane/authentication/views/__init__.py
+
+====================================================
+KEYCLOAK CONFIG
+====================================================
+
+Realm:
+
+cds-tanhoangminh
+
+Keycloak Base:
+
+https://sso.tanhoangminh.com.vn/realms/cds-tanhoangminh
+
+OIDC endpoints:
+
+Authorize:
+https://sso.tanhoangminh.com.vn/realms/cds-tanhoangminh/protocol/openid-connect/auth
+
+Token:
+https://sso.tanhoangminh.com.vn/realms/cds-tanhoangminh/protocol/openid-connect/token
+
+UserInfo:
+https://sso.tanhoangminh.com.vn/realms/cds-tanhoangminh/protocol/openid-connect/userinfo
+
+====================================================
+NEW ENV VARIABLES
+====================================================
+
+KEYCLOAK_CLIENT_ID
+
+KEYCLOAK_CLIENT_SECRET
+
+KEYCLOAK_HOST
+
+Example:
+
+KEYCLOAK_CLIENT_ID=plane
+
+KEYCLOAK_CLIENT_SECRET=xxxxxxxx
+
+KEYCLOAK_HOST=https://sso.tanhoangminh.com.vn/realms/cds-tanhoangminh
+
+====================================================
+PROVIDER IMPLEMENTATION
+====================================================
+
+Create:
+
+apps/api/plane/authentication/provider/oauth/keycloak.py
+
+Implement:
+
+class KeycloakOAuthProvider(OauthAdapter)
+
+Use:
+
+provider = "keycloak"
+
+scope = "openid email profile"
+
+Read configuration using the same
+get_configuration_value pattern
+used by GitLab and Google providers.
+
+Build:
+
+auth_url =
+{KEYCLOAK_HOST}/protocol/openid-connect/auth
+
+token_url =
+{KEYCLOAK_HOST}/protocol/openid-connect/token
+
+userinfo_url =
+{KEYCLOAK_HOST}/protocol/openid-connect/userinfo
+
+Redirect URI pattern should match other providers:
+
+/auth/keycloak/callback/
+
+====================================================
+USER MAPPING
+====================================================
+
+Keycloak UserInfo response example:
+
+{
+  "sub":"...",
+  "email":"user@example.com",
+  "preferred_username":"quynd",
+  "given_name":"Duc",
+  "family_name":"Quy",
+  "email_verified": true
+}
+
+Require:
+
+email_verified == true
+
+Map user:
+
+{
+  "email": email,
+  "user": {
+      "provider_id": sub,
+      "email": email,
+      "first_name": given_name,
+      "last_name": family_name,
+      "is_password_autoset": True
+  }
+}
+
+====================================================
+APP VIEWS
+====================================================
+
+Create:
+
+apps/api/plane/authentication/views/app/keycloak.py
+
+Use:
+
+apps/api/plane/authentication/views/app/google.py
+
+as template.
+
+Implement:
+
+KeycloakOauthInitiateEndpoint
+
+KeycloakCallbackEndpoint
+
+====================================================
+SPACE VIEWS
+====================================================
+
+Create:
+
+apps/api/plane/authentication/views/space/keycloak.py
+
+Use:
+
+apps/api/plane/authentication/views/space/google.py
+
+as template.
+
+Implement:
+
+KeycloakOauthInitiateSpaceEndpoint
+
+KeycloakCallbackSpaceEndpoint
+
+====================================================
+EXPORTS
+====================================================
+
+Update:
+
+apps/api/plane/authentication/views/__init__.py
+
+Export:
+
+KeycloakCallbackEndpoint
+KeycloakOauthInitiateEndpoint
+
+KeycloakCallbackSpaceEndpoint
+KeycloakOauthInitiateSpaceEndpoint
+
+====================================================
+URLS
+====================================================
+
+Update:
+
+apps/api/plane/authentication/urls.py
+
+Add:
+
+path(
+    "keycloak/",
+    KeycloakOauthInitiateEndpoint.as_view(),
+    name="keycloak-initiate",
+)
+
+path(
+    "keycloak/callback/",
+    KeycloakCallbackEndpoint.as_view(),
+    name="keycloak-callback",
+)
+
+path(
+    "spaces/keycloak/",
+    KeycloakOauthInitiateSpaceEndpoint.as_view(),
+    name="space-keycloak-initiate",
+)
+
+path(
+    "spaces/keycloak/callback/",
+    KeycloakCallbackSpaceEndpoint.as_view(),
+    name="space-keycloak-callback",
+)
+
+====================================================
+FRONTEND
+====================================================
+
+Find authentication providers list where:
+
+Google
+Github
+Gitlab
+Gitea
+
+buttons are rendered.
+
+Add:
+
+"Login with THM SSO"
+
+which redirects to:
+
+/auth/keycloak/
+
+Follow existing provider button patterns.
+
+====================================================
+KEYCLOAK CLIENT SETTINGS
+====================================================
+
+Client ID:
+
+plane
+
+Valid Redirect URIs:
+
+https://qtda.tanhoangminh.com.vn/auth/keycloak/callback/
+https://qtda.tanhoangminh.com.vn/spaces/keycloak/callback/
+
+Web Origins:
+
+https://qtda.tanhoangminh.com.vn
+
+====================================================
+DELIVERABLE
+====================================================
+
+Provide:
+
+1. All modified files
+2. Unified diff patches
+3. Any migration requirements
+4. Any env changes
+5. Run-through of login flow
+
+Do not redesign the auth framework.
+Reuse the existing OAuth provider architecture.

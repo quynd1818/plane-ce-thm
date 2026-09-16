@@ -47,6 +47,13 @@ from .project import (
 )
 from .state import StateSerializer, StateLiteSerializer
 from .view import IssueViewSerializer, ViewIssueListSerializer
+from .worklog import WorkLogCreateSerializer, WorkLogSerializer
+from .customization import (
+    ProjectCustomPropertySerializer,
+    ProjectIssueTypeSerializer,
+    WorkItemTemplateSerializer,
+)
+from .phase3 import IntakeFormSerializer, RecurringIssueSerializer
 from .cycle import (
     CycleSerializer,
     CycleIssueSerializer,

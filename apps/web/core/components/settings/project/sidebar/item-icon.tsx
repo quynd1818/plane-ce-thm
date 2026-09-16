@@ -34,5 +34,7 @@ export const PROJECT_SETTINGS_ICONS: Record<TProjectSettingsTabs, LucideIcon | R
   states: StateOutline,
   labels: LabelsOutline,
   estimates: EstimateOutline,
+  worklogs: SettingIcon,
+  customization: SettingIcon,
   automations: TriggerOutline,
 };

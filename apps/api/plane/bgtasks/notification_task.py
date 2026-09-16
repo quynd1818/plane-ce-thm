@@ -29,6 +29,28 @@ from django.db.models import Subquery
 # Third Party imports
 from celery import shared_task
 from bs4 import BeautifulSoup
+import logging
+
+from plane.notifications.events import NotificationEvent
+from plane.notifications.manager import NotificationManager
+from plane.notifications.provider.teams import NotificationDeliveryError
+
+logger = logging.getLogger(__name__)
+
+
+@shared_task(
+    bind=True,
+    autoretry_for=(NotificationDeliveryError,),
+    retry_backoff=True,
+    retry_kwargs={"max_retries": 3},
+)
+def dispatch_notification_event(self, event_data):
+    event = NotificationEvent(name=event_data["name"], payload=event_data["payload"])
+    try:
+        NotificationManager().publish(event)
+    except NotificationDeliveryError:
+        logger.exception("notification_failure", extra={"event": event.name})
+        raise
 
 
 # =========== Issue Description Html Parsing and notification Functions ======================

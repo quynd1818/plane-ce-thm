@@ -32,6 +32,7 @@ import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useProject } from "@/hooks/store/use-project";
 import { useUserPermissions } from "@/hooks/store/user";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { useIssueModal } from "@/hooks/context/use-issue-modal";
 
 type TIssueDefaultPropertiesProps = {
   control: Control<TIssue>;
@@ -68,6 +69,8 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
   const { areEstimateEnabledByProjectId } = useProjectEstimates();
   const { getProjectById } = useProject();
   const { isMobile } = usePlatformOS();
+  const { customPropertyDefinitions, issuePropertyValues, setIssuePropertyValues, workItemTemplates, setWorkItemTemplateId } =
+    useIssueModal();
   const { allowPermissions } = useUserPermissions();
   // derived values
   const projectDetails = getProjectById(projectId);
@@ -85,6 +88,20 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      {workItemTemplates.length > 0 && !id && (
+        <select
+          className="h-7 rounded border border-subtle-1 px-2 text-sm"
+          defaultValue=""
+          onChange={(event) => setWorkItemTemplateId(event.target.value || null)}
+        >
+          <option value="">Template</option>
+          {workItemTemplates.map((template) => (
+            <option key={template.id} value={template.id}>
+              {template.name}
+            </option>
+          ))}
+        </select>
+      )}
       <Controller
         control={control}
         name="state_id"
@@ -219,6 +236,62 @@ export const IssueDefaultProperties = observer(function IssueDefaultProperties(p
           )}
         />
       )}
+      {customPropertyDefinitions.map((definition) => {
+        const value = issuePropertyValues[definition.key];
+        const setValue = (nextValue: unknown) =>
+          setIssuePropertyValues((current) => ({ ...current, [definition.key]: nextValue }));
+        if (definition.property_type === "boolean") {
+          return (
+            <label key={definition.id} className="flex h-7 items-center gap-1 text-sm">
+              <input type="checkbox" checked={Boolean(value)} onChange={(event) => setValue(event.target.checked)} />
+              {definition.name}
+            </label>
+          );
+        }
+        if (definition.property_type === "select") {
+          return (
+            <select
+              key={definition.id}
+              className="h-7 rounded border border-subtle-1 px-2 text-sm"
+              value={typeof value === "string" ? value : ""}
+              onChange={(event) => setValue(event.target.value || undefined)}
+            >
+              <option value="">{definition.name}</option>
+              {definition.options.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+          );
+        }
+        if (definition.property_type === "multi_select") {
+          const selectedValues = Array.isArray(value) ? value : [];
+          return (
+            <select
+              key={definition.id}
+              className="h-7 rounded border border-subtle-1 px-2 text-sm"
+              multiple
+              value={selectedValues.map(String)}
+              onChange={(event) =>
+                setValue(Array.from(event.target.selectedOptions, (option) => option.value))
+              }
+            >
+              {definition.options.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
+          );
+        }
+        return (
+          <input
+            key={definition.id}
+            className="h-7 rounded border border-subtle-1 px-2 text-sm"
+            type={definition.property_type === "number" ? "number" : definition.property_type === "date" ? "date" : "text"}
+            placeholder={definition.name}
+            value={value == null ? "" : String(value)}
+            onChange={(event) =>
+              setValue(
+                definition.property_type === "number" ? Number(event.target.value) : event.target.value || undefined
+              )
+            }
+          />
+        );
+      })}
       {projectDetails?.module_view && workspaceSlug && (
         <Controller
           control={control}

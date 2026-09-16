@@ -10,6 +10,7 @@ import type { UseFormReset, UseFormWatch } from "react-hook-form";
 // plane imports
 import type { EditorRefApi } from "@plane/editor";
 import type { ISearchIssueResponse, TIssue, TIssuePropertyValues, TIssuePropertyValueErrors } from "@plane/types";
+import type { TCustomProperty, TWorkItemTemplate } from "@/services/project/customization.service";
 
 export type TPropertyValuesValidationProps = {
   projectId: string | null;
@@ -67,6 +68,8 @@ export type TIssueModalContext = {
   issuePropertyValues: TIssuePropertyValues;
   setIssuePropertyValues: React.Dispatch<React.SetStateAction<TIssuePropertyValues>>;
   issuePropertyValueErrors: TIssuePropertyValueErrors;
+  customPropertyDefinitions: TCustomProperty[];
+  workItemTemplates: TWorkItemTemplate[];
   setIssuePropertyValueErrors: React.Dispatch<React.SetStateAction<TIssuePropertyValueErrors>>;
   getIssueTypeIdOnProjectChange: (projectId: string) => string | null;
   getActiveAdditionalPropertiesLength: (props: TActiveAdditionalPropertiesProps) => number;

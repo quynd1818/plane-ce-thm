@@ -1,0 +1,201 @@
+You are working inside a self-hosted Plane CE source tree.
+
+GOAL
+
+Implement Microsoft Teams notifications for Plane CE.
+
+Do NOT hardcode logic into issue creation handlers.
+
+Build a reusable notification/event architecture that can later support:
+
+- Microsoft Teams
+- Email
+- N8N
+- Slack
+- Zalo OA
+- Future integrations
+
+====================================================
+BUSINESS CONTEXT
+====================================================
+
+This is a self-hosted enterprise deployment.
+
+Current stack:
+
+- Plane CE
+- PostgreSQL
+- Redis
+- RabbitMQ
+- Keycloak
+- Active Directory
+
+Organization uses Microsoft Teams.
+
+Primary objective:
+
+Whenever important activities occur in Plane,
+Microsoft Teams channels should receive rich notifications.
+
+====================================================
+PHASE 1 EVENTS
+====================================================
+
+Implement notifications for:
+
+Issue Created
+Issue Assigned
+Issue Updated
+Issue Completed
+Comment Added
+
+Cycle Started
+Cycle Completed
+
+Project Created
+
+====================================================
+ARCHITECTURE
+====================================================
+
+Create a notification abstraction layer.
+
+Example:
+
+NotificationProvider
+
+TeamsProvider
+
+NotificationManager
+
+Do not couple Teams logic directly inside issue workflows.
+
+Event Flow:
+
+Issue Event
+↓
+NotificationManager
+↓
+TeamsProvider
+↓
+Incoming Webhook
+
+====================================================
+CONFIGURATION
+====================================================
+
+Environment variables:
+
+TEAMS_ENABLED=true
+
+TEAMS_WEBHOOK_URL=
+
+TEAMS_NOTIFY_ISSUE_CREATED=true
+TEAMS_NOTIFY_ISSUE_ASSIGNED=true
+TEAMS_NOTIFY_ISSUE_UPDATED=true
+TEAMS_NOTIFY_ISSUE_COMPLETED=true
+TEAMS_NOTIFY_COMMENT=true
+
+====================================================
+CARD FORMAT
+====================================================
+
+Send Adaptive Card compatible payloads.
+
+Example:
+
+Title:
+New Issue Assigned
+
+Project:
+ERP
+
+Issue:
+Implement HRM API
+
+Assignee:
+quynd
+
+Status:
+Todo
+
+Priority:
+High
+
+Link:
+https://qtda.tanhoangminh.com.vn/workspace/project/issue
+
+====================================================
+IMPLEMENTATION REQUIREMENTS
+====================================================
+
+Create:
+
+notifications/
+
+provider/
+
+teams.py
+
+manager.py
+
+events.py
+
+service.py
+
+Use async/background execution where existing Plane
+worker architecture already exists.
+
+Do not block request processing.
+
+====================================================
+FAILURE HANDLING
+====================================================
+
+If Teams is unavailable:
+
+Do not fail Plane operations.
+
+Log:
+
+notification_failure
+
+Retry using existing queue/worker mechanisms if possible.
+
+====================================================
+SECURITY
+====================================================
+
+Never expose webhook URL in UI.
+
+Webhook URL stored only in environment variables.
+
+Sanitize issue description content before sending.
+
+====================================================
+FUTURE EXTENSIBILITY
+====================================================
+
+Design all interfaces such that another provider can be added:
+
+EmailProvider
+SlackProvider
+N8NProvider
+
+without changing issue business logic.
+
+====================================================
+DELIVERABLES
+====================================================
+
+Provide:
+
+1. Architecture diagram (text)
+2. New files
+3. Modified files
+4. Unified patch
+5. Configuration changes
+6. Example Teams message output
+7. Deployment instructions
+
+Focus on maintainability and enterprise architecture.

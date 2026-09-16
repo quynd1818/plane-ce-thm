@@ -18,10 +18,46 @@ from plane.app.views import (
     UserProjectRolesEndpoint,
     ProjectArchiveUnarchiveEndpoint,
     ProjectMemberPreferenceEndpoint,
+    ProjectCustomPropertyDetailEndpoint,
+    ProjectCustomPropertyEndpoint,
+    ProjectIssueTypeDetailEndpoint,
+    ProjectIssueTypeEndpoint,
+    WorkItemTemplateDetailEndpoint,
+    WorkItemTemplateEndpoint,
 )
 
 
 urlpatterns = [
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/custom-properties/",
+        ProjectCustomPropertyEndpoint.as_view(),
+        name="project-custom-properties",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/custom-properties/<uuid:property_id>/",
+        ProjectCustomPropertyDetailEndpoint.as_view(),
+        name="project-custom-property-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-item-templates/",
+        WorkItemTemplateEndpoint.as_view(),
+        name="work-item-templates",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-item-templates/<uuid:template_id>/",
+        WorkItemTemplateDetailEndpoint.as_view(),
+        name="work-item-template-detail",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-item-types/",
+        ProjectIssueTypeEndpoint.as_view(),
+        name="project-work-item-types",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/work-item-types/<uuid:type_id>/",
+        ProjectIssueTypeDetailEndpoint.as_view(),
+        name="project-work-item-type-detail",
+    ),
     path(
         "workspaces/<str:slug>/projects/",
         ProjectViewSet.as_view({"get": "list", "post": "create"}),

@@ -100,6 +100,20 @@ export const PROJECT_SETTINGS: Record<TProjectSettingsTabs, TProjectSettingsItem
     access: [EUserProjectRoles.ADMIN],
     highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/estimates/`,
   },
+  worklogs: {
+    key: "worklogs",
+    i18n_label: "workspace_settings.settings.worklogs",
+    href: `/worklogs`,
+    access: [EUserProjectRoles.ADMIN, EUserProjectRoles.MEMBER, EUserProjectRoles.GUEST],
+    highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/worklogs/`,
+  },
+  customization: {
+    key: "customization",
+    i18n_label: "project_settings.customization.label",
+    href: `/customization`,
+    access: [EUserProjectRoles.ADMIN, EUserProjectRoles.MEMBER],
+    highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/customization/`,
+  },
   automations: {
     key: "automations",
     i18n_label: "project_settings.automations.label",
@@ -124,6 +138,8 @@ export const GROUPED_PROJECT_SETTINGS: Record<PROJECT_SETTINGS_CATEGORY, TProjec
     PROJECT_SETTINGS["states"],
     PROJECT_SETTINGS["labels"],
     PROJECT_SETTINGS["estimates"],
+    PROJECT_SETTINGS["worklogs"],
+    PROJECT_SETTINGS["customization"],
   ],
   [PROJECT_SETTINGS_CATEGORY.EXECUTION]: [PROJECT_SETTINGS["automations"]],
 };

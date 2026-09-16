@@ -88,5 +88,8 @@ from .label import Label
 from .device import Device, DeviceSession
 
 from .sticky import Sticky
+from .worklog import WorkLog
+from .customization import ProjectCustomProperty, WorkItemTemplate
+from .phase3 import IntakeForm, RecurringIssue
 
 from .description import Description, DescriptionVersion

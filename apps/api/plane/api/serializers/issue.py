@@ -73,6 +73,49 @@ class IssueSerializer(BaseSerializer):
         exclude = ["description_json", "description_stripped"]
 
     def validate(self, data):
+        custom_properties = data.get("custom_properties")
+        if custom_properties is not None:
+            if not isinstance(custom_properties, dict):
+                raise serializers.ValidationError({"custom_properties": "Custom properties must be an object."})
+            from plane.db.models import ProjectCustomProperty
+
+            definitions = {
+                prop.key: prop
+                for prop in ProjectCustomProperty.objects.filter(
+                    project_id=self.context.get("project_id"), is_active=True, deleted_at__isnull=True
+                )
+            }
+            existing_properties = self.instance.custom_properties if self.instance else {}
+            merged_properties = {**existing_properties, **custom_properties}
+            unknown_keys = set(merged_properties) - set(definitions)
+            if unknown_keys:
+                raise serializers.ValidationError(
+                    {"custom_properties": f"Unknown custom properties: {sorted(unknown_keys)}"}
+                )
+            missing_required = {
+                key for key, definition in definitions.items() if definition.is_required and key not in merged_properties
+            }
+            if missing_required:
+                raise serializers.ValidationError(
+                    {"custom_properties": f"Missing required custom properties: {sorted(missing_required)}"}
+                )
+            for key, value in merged_properties.items():
+                definition = definitions[key]
+                if definition.property_type == "number" and (
+                    isinstance(value, bool) or not isinstance(value, (int, float))
+                ):
+                    raise serializers.ValidationError({"custom_properties": f"{key} must be a number."})
+                if definition.property_type == "boolean" and not isinstance(value, bool):
+                    raise serializers.ValidationError({"custom_properties": f"{key} must be a boolean."})
+                if definition.property_type == "multi_select" and not isinstance(value, list):
+                    raise serializers.ValidationError({"custom_properties": f"{key} must be a list."})
+                if definition.property_type in {"select", "multi_select"}:
+                    allowed = set(definition.options)
+                    values = value if definition.property_type == "multi_select" else [value]
+                    if any(option not in allowed for option in values):
+                        raise serializers.ValidationError({"custom_properties": f"{key} contains an invalid option."})
+            data["custom_properties"] = merged_properties
+
         if (
             data.get("start_date", None) is not None
             and data.get("target_date", None) is not None
