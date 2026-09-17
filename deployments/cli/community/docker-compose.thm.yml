@@ -1,0 +1,216 @@
+# THM deployment compose file.
+# Use together with variables.env:
+# docker compose --env-file variables.env -f docker-compose.thm.yml up -d
+
+x-db-env: &db-env
+  PGHOST: ${PGHOST:?PGHOST must point to the external PostgreSQL host}
+  PGDATABASE: ${PGDATABASE:?PGDATABASE must be set}
+  POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER must be set}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+  POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB must be set}
+  POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+  PGDATA: ${PGDATA:-/var/lib/postgresql/data}
+
+x-redis-env: &redis-env
+  REDIS_HOST: ${REDIS_HOST:?REDIS_HOST must point to the external Redis host}
+  REDIS_PORT: ${REDIS_PORT:-6379}
+  REDIS_URL: ${REDIS_URL:?REDIS_URL must point to the external Redis instance}
+
+x-minio-env: &minio-env
+  MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-access-key}
+  MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-secret-key}
+
+x-aws-s3-env: &aws-s3-env
+  AWS_REGION: ${AWS_REGION:-}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-access-key}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-secret-key}
+  AWS_S3_ENDPOINT_URL: ${AWS_S3_ENDPOINT_URL:?AWS_S3_ENDPOINT_URL must point to external S3-compatible storage}
+  AWS_S3_BUCKET_NAME: ${AWS_S3_BUCKET_NAME:?AWS_S3_BUCKET_NAME must be set}
+
+x-proxy-env: &proxy-env
+  APP_DOMAIN: ${APP_DOMAIN:-localhost}
+  FILE_SIZE_LIMIT: ${FILE_SIZE_LIMIT:-5242880}
+  CERT_EMAIL: ${CERT_EMAIL}
+  CERT_ACME_CA: ${CERT_ACME_CA}
+  CERT_ACME_DNS: ${CERT_ACME_DNS}
+  LISTEN_HTTP_PORT: ${LISTEN_HTTP_PORT:-80}
+  LISTEN_HTTPS_PORT: ${LISTEN_HTTPS_PORT:-443}
+  BUCKET_NAME: ${AWS_S3_BUCKET_NAME:-uploads}
+  SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+
+x-mq-env: &mq-env # RabbitMQ Settings
+  RABBITMQ_HOST: ${RABBITMQ_HOST:?RABBITMQ_HOST must point to the external RabbitMQ host}
+  RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+  RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-plane}
+  RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-plane}
+  RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-plane}
+  RABBITMQ_VHOST: ${RABBITMQ_VHOST:-plane}
+
+x-live-env: &live-env
+  API_BASE_URL: ${API_BASE_URL:-http://api:8000}
+  LIVE_SERVER_SECRET_KEY: ${LIVE_SERVER_SECRET_KEY}
+
+x-app-env: &app-env
+  WEB_URL: ${WEB_URL:-http://localhost}
+  DEBUG: ${DEBUG:-0}
+  CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+  TEAMS_ENABLED: ${TEAMS_ENABLED:-false}
+  TEAMS_WEBHOOK_URL: ${TEAMS_WEBHOOK_URL:-}
+  TEAMS_NOTIFY_ISSUE_CREATED: ${TEAMS_NOTIFY_ISSUE_CREATED:-true}
+  TEAMS_NOTIFY_ISSUE_ASSIGNED: ${TEAMS_NOTIFY_ISSUE_ASSIGNED:-true}
+  TEAMS_NOTIFY_ISSUE_UPDATED: ${TEAMS_NOTIFY_ISSUE_UPDATED:-true}
+  TEAMS_NOTIFY_ISSUE_COMPLETED: ${TEAMS_NOTIFY_ISSUE_COMPLETED:-true}
+  TEAMS_NOTIFY_COMMENT: ${TEAMS_NOTIFY_COMMENT:-true}
+  TEAMS_NOTIFY_CYCLE_STARTED: ${TEAMS_NOTIFY_CYCLE_STARTED:-true}
+  TEAMS_NOTIFY_CYCLE_COMPLETED: ${TEAMS_NOTIFY_CYCLE_COMPLETED:-true}
+  TEAMS_NOTIFY_PROJECT_CREATED: ${TEAMS_NOTIFY_PROJECT_CREATED:-true}
+  TEAMS_NOTIFY_WORKLOG: ${TEAMS_NOTIFY_WORKLOG:-true}
+  TEAMS_NOTIFY_CUSTOMIZATION: ${TEAMS_NOTIFY_CUSTOMIZATION:-true}
+  TEAMS_NOTIFY_AUTOMATION: ${TEAMS_NOTIFY_AUTOMATION:-true}
+  TEAMS_NOTIFY_INTAKE: ${TEAMS_NOTIFY_INTAKE:-true}
+  IS_KEYCLOAK_ENABLED: ${IS_KEYCLOAK_ENABLED:-0}
+  KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-}
+  KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+  KEYCLOAK_HOST: ${KEYCLOAK_HOST:-}
+  GUNICORN_WORKERS: 1
+  USE_MINIO: ${USE_MINIO:-0}
+  DATABASE_URL: ${DATABASE_URL:?DATABASE_URL must point to the external PostgreSQL instance}
+  SECRET_KEY: ${SECRET_KEY}
+  AMQP_URL: ${AMQP_URL:?AMQP_URL must point to the external RabbitMQ instance}
+  API_KEY_RATE_LIMIT: ${API_KEY_RATE_LIMIT:-60/minute}
+  MINIO_ENDPOINT_SSL: ${MINIO_ENDPOINT_SSL:-0}
+  LIVE_SERVER_SECRET_KEY: ${LIVE_SERVER_SECRET_KEY}
+  WEBHOOK_ALLOWED_IPS: ${WEBHOOK_ALLOWED_IPS:-}
+  WEBHOOK_ALLOWED_HOSTS: ${WEBHOOK_ALLOWED_HOSTS:-}
+
+services:
+  web:
+    image: local/plane-frontend:${APP_RELEASE:-latest}
+    deploy:
+      replicas: ${WEB_REPLICAS:-1}
+      restart_policy:
+        condition: any
+    depends_on:
+      - api
+      - worker
+
+  space:
+    image: local/plane-space:${APP_RELEASE:-latest}
+    deploy:
+      replicas: ${SPACE_REPLICAS:-1}
+      restart_policy:
+        condition: any
+    depends_on:
+      - api
+      - worker
+      - web
+
+  admin:
+    image: local/plane-admin:${APP_RELEASE:-latest}
+    deploy:
+      replicas: ${ADMIN_REPLICAS:-1}
+      restart_policy:
+        condition: any
+    depends_on:
+      - api
+      - web
+
+  live:
+    image: local/plane-live:${APP_RELEASE:-latest}
+    environment:
+      <<: [*live-env, *redis-env]
+    deploy:
+      replicas: ${LIVE_REPLICAS:-1}
+      restart_policy:
+        condition: any
+    depends_on:
+      - api
+      - web
+
+  api:
+    image: local/plane-backend:${APP_RELEASE:-latest}
+    command: ./bin/docker-entrypoint-api.sh
+    deploy:
+      replicas: ${API_REPLICAS:-1}
+      restart_policy:
+        condition: any
+    volumes:
+      - logs_api:/code/plane/logs
+    environment:
+      <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
+
+  worker:
+    image: local/plane-backend:${APP_RELEASE:-latest}
+    command: ./bin/docker-entrypoint-worker.sh
+    deploy:
+      replicas: ${WORKER_REPLICAS:-1}
+      restart_policy:
+        condition: any
+    volumes:
+      - logs_worker:/code/plane/logs
+    environment:
+      <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
+    depends_on:
+      - api
+
+  beat-worker:
+    image: local/plane-backend:${APP_RELEASE:-latest}
+    command: ./bin/docker-entrypoint-beat.sh
+    deploy:
+      replicas: ${BEAT_WORKER_REPLICAS:-1}
+      restart_policy:
+        condition: any
+    volumes:
+      - logs_beat-worker:/code/plane/logs
+    environment:
+      <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
+    depends_on:
+      - api
+
+  migrator:
+    image: local/plane-backend:${APP_RELEASE:-latest}
+    command: ./bin/docker-entrypoint-migrator.sh
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+    volumes:
+      - logs_migrator:/code/plane/logs
+    environment:
+      <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
+
+  # Comment this if you already have a reverse proxy running
+  proxy:
+    image: local/plane-proxy:${APP_RELEASE:-latest}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+    environment:
+      <<: *proxy-env
+    ports:
+      - target: 80
+        published: ${LISTEN_HTTP_PORT:-80}
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: ${LISTEN_HTTPS_PORT:-443}
+        protocol: tcp
+        mode: host
+    volumes:
+      - proxy_config:/config
+      - proxy_data:/data
+    depends_on:
+      - web
+      - api
+      - space
+      - admin
+      - live
+
+volumes:
+  logs_api:
+  logs_worker:
+  logs_beat-worker:
+  logs_migrator:
+  proxy_config:
+  proxy_data:
