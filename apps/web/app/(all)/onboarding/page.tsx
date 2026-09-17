@@ -56,9 +56,9 @@ function OnboardingPage() {
         }}
       >
         <ThmBrandPanel
-          title="Chào mừng bạn đến với"
-          accent="không gian làm việc THM."
-          description="Chỉ vài bước để hoàn thiện hồ sơ và tham gia không gian làm việc của Tập đoàn Tân Hoàng Minh — nơi kế hoạch, bàn giao, pháp lý và vận hành dự án cùng ở một chỗ."
+          title="Không gian làm việc"
+          accent="của những người chế tác."
+          description="Hệ thống quản lý công việc và tri thức nội bộ của Tập đoàn Tân Hoàng Minh — một nơi cho kế hoạch, bàn giao, pháp lý và vận hành dự án."
           footer="D'. Palais Louis  ·  D'. Le Roi Soleil  ·  D'. Capitale  ·  D'. El Dorado"
         />
         <div
