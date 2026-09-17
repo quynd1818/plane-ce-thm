@@ -45,8 +45,10 @@ ISSUE_NOTIFY_FIELDS = ("name", "state_id", "priority", "target_date", "start_dat
 def track_issue_state(sender, instance, **kwargs):
     if instance._state.adding:
         return
+    # all_objects: the default manager hides soft-deleted rows, which would make
+    # every re-save of a deleted issue look like a fresh delete.
     previous = (
-        sender.objects.filter(pk=instance.pk)
+        sender.all_objects.filter(pk=instance.pk)
         .values("state__group", "deleted_at", *ISSUE_NOTIFY_FIELDS)
         .first()
     )

@@ -40,7 +40,8 @@ def worklog_project(db, workspace, create_user):
 @pytest.fixture
 def worklog_member(db, workspace, worklog_project):
     project, _ = worklog_project
-    member = User.objects.create(email=f"worklog-{uuid4().hex[:8]}@plane.so", first_name="Worklog")
+    suffix = uuid4().hex[:8]
+    member = User.objects.create(email=f"worklog-{suffix}@plane.so", username=f"worklog-{suffix}", first_name="Worklog")
     WorkspaceMember.objects.create(workspace=workspace, member=member, role=15)
     ProjectMember.objects.create(project=project, member=member, workspace=workspace, role=15)
     return member

@@ -50,7 +50,9 @@ def create_due_recurring_issues():
 def _process_recurring_issue(recurring_id, now):
     with transaction.atomic():
         recurring = (
-            RecurringIssue.objects.select_for_update()
+            # of=("self",): state / issue_type are nullable FKs (outer joins) and
+            # Postgres refuses FOR UPDATE on the nullable side of an outer join.
+            RecurringIssue.objects.select_for_update(of=("self",))
             .select_related("project", "workspace", "state", "issue_type")
             .filter(pk=recurring_id, is_active=True, next_run_at__lte=now, deleted_at__isnull=True)
             .first()
