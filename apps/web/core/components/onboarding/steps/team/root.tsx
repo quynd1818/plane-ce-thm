@@ -176,10 +176,10 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
             control={control}
             name={`emails.${index}.role`}
             rules={{ required: true }}
-            render={({ field: { value, onChange } }) => (
+            render={({ field: { value: roleValue, onChange } }) => (
               <Listbox
                 as="div"
-                value={value}
+                value={roleValue}
                 onChange={(val) => {
                   onChange(val);
                   setValue(`emails.${index}.role_active`, true);
@@ -196,7 +196,7 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
                       !getValues(`emails.${index}.role_active`) ? "text-placeholder" : "text-primary"
                     } sm:text-13`}
                   >
-                    {ROLE[value]}
+                    {ROLE[roleValue]}
                   </span>
 
                   <ChevronDownOutline
@@ -213,7 +213,7 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
                     style={styles.popper}
                     {...attributes.popper}
                   >
-                    {Object.entries(ROLE_DETAILS).map(([key, value]) => (
+                    {Object.entries(ROLE_DETAILS).map(([key, detail]) => (
                       <Listbox.Option
                         as="div"
                         key={key}
@@ -227,8 +227,8 @@ const InviteMemberInput = observer(function InviteMemberInput(props: InviteMembe
                         {({ selected }) => (
                           <div className="flex items-center gap-2 p-1 text-wrap">
                             <div className="flex flex-col">
-                              <div className="text-13 font-medium">{t(value.i18n_title)}</div>
-                              <div className="flex text-11 text-tertiary">{t(value.i18n_description)}</div>
+                              <div className="text-13 font-medium">{t(detail.i18n_title)}</div>
+                              <div className="flex text-11 text-tertiary">{t(detail.i18n_description)}</div>
                             </div>
                             {selected && <TickOutline className="h-4 w-4 shrink-0" />}
                           </div>
@@ -305,9 +305,10 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
         setToast({
           type: TOAST_TYPE.SUCCESS,
           title: "Success!",
-          message: "Invitations sent successfully.",
+          message: "Đã gửi lời mời.",
         });
         await nextStep();
+        return undefined;
       })
       .catch((err) => {
         setToast({
@@ -346,13 +347,13 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
       }}
     >
       <CommonOnboardingHeader
-        title="Invite your teammates"
-        description="Work in plane happens best with your team. Invite them now to use Plane to its potential."
+        title="Mời đồng nghiệp"
+        description="Mời các thành viên trong ban / phòng của bạn vào không gian làm việc. Bạn có thể bỏ qua và mời sau."
       />
       <div className="w-full py-4 text-13">
         <div className="group relative mx-8 grid grid-cols-10 gap-4 py-2">
           <div className="col-span-6 px-1 text-13 font-medium text-secondary">Email</div>
-          <div className="col-span-4 px-1 text-13 font-medium text-secondary">Role</div>
+          <div className="col-span-4 px-1 text-13 font-medium text-secondary">Vai trò</div>
         </div>
         <div className="mb-3 space-y-3 sm:space-y-4">
           {fields.map((field, index) => (
@@ -378,7 +379,7 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
           onClick={appendField}
         >
           <AddOutline className="h-4 w-4" />
-          Add another
+          Thêm người khác
         </button>
       </div>
       <div className="mx-auto flex w-full flex-col items-center justify-center gap-4 px-8 sm:px-2">
@@ -389,10 +390,10 @@ export const InviteTeamStep = observer(function InviteTeamStep(props: Props) {
           className="w-full"
           disabled={isInvitationDisabled || !isValid || isSubmitting}
         >
-          {isSubmitting ? <Spinner height="20px" width="20px" /> : "Continue"}
+          {isSubmitting ? <Spinner height="20px" width="20px" /> : "Gửi lời mời"}
         </Button>
         <Button variant="ghost" size="xl" className="w-full" onClick={nextStep}>
-          I’ll do it later
+          Để sau
         </Button>
       </div>
     </form>

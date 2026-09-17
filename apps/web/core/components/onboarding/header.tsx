@@ -6,12 +6,13 @@
 
 import { observer } from "mobx-react";
 // plane imports
-import { PlaneLockup } from "@plane/propel/icons";
 import { ChevronLeftOutline } from "@makeplane/propel/icons";
 import { Tooltip } from "@makeplane/propel/components/tooltip";
 import type { TOnboardingStep } from "@plane/types";
 import { EOnboardingSteps } from "@plane/types";
 import { cn } from "@plane/utils";
+// components
+import { ThmLogo } from "@/components/thm";
 // hooks
 import { useInstance } from "@/hooks/store/use-instance";
 import { useUser } from "@/hooks/store/user";
@@ -68,23 +69,40 @@ export const OnboardingHeader = observer(function OnboardingHeader(props: Onboar
       : user?.email;
 
   return (
-    <div className="sticky top-0 z-10 flex flex-col gap-4">
-      <div className="h-1.5 w-full cursor-pointer overflow-hidden rounded-t-lg bg-surface-1">
+    <div className="sticky top-0 z-10 flex flex-col gap-5">
+      {/* gold progress line */}
+      <div className="h-1 w-full overflow-hidden rounded-t-[28px]" style={{ background: "rgba(201,162,76,0.18)" }}>
         <Tooltip label={`${currentStepNumber}/${totalSteps}`} side="bottom" align="end">
           <div
-            className="h-full bg-accent-primary transition-all duration-700 ease-out"
-            style={{ width: `${(currentStepNumber / totalSteps) * 100}%` }}
+            className="h-full transition-all duration-700 ease-out"
+            style={{
+              width: `${(currentStepNumber / totalSteps) * 100}%`,
+              background: "linear-gradient(90deg, #C9A24C, #E3CB84)",
+            }}
           />
         </Tooltip>
       </div>
-      <div className={cn("flex w-full items-center justify-between gap-6 px-6", canGoBack && "pr-6 pl-4")}>
-        <div className="flex items-center gap-2.5">
+      <div className={cn("flex w-full items-center justify-between gap-6 px-8", canGoBack && "pl-6")}>
+        <div className="flex items-center gap-3">
           {canGoBack && (
-            <button onClick={handleStepBack} className="cursor-pointer" type="button" disabled={!canGoBack}>
-              <ChevronLeftOutline className="size-6 text-placeholder" />
+            <button
+              onClick={handleStepBack}
+              className="cursor-pointer rounded-full p-1 transition-colors hover:bg-layer-1"
+              type="button"
+              disabled={!canGoBack}
+              aria-label="Quay lại bước trước"
+            >
+              <ChevronLeftOutline className="size-5 text-placeholder" />
             </button>
           )}
-          <PlaneLockup height={20} width={95} className="text-primary" />
+          {/* logo only on small screens — on lg+ the brand panel carries it */}
+          <ThmLogo height={36} className="lg:hidden" />
+          <span
+            className="text-[11px] font-bold tracking-[2px] uppercase"
+            style={{ color: "#8C6B1F", fontFamily: '"Be Vietnam Pro", system-ui, sans-serif' }}
+          >
+            Bước {currentStepNumber} / {totalSteps}
+          </span>
         </div>
         <SwitchAccountDropdown fullName={userName} />
       </div>

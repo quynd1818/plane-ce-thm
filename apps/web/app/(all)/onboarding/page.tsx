@@ -10,6 +10,7 @@ import useSWR from "swr";
 // components
 import { LogoSpinner } from "@/components/common/logo-spinner";
 import { OnboardingRoot } from "@/components/onboarding";
+import { ThmBrandPanel } from "@/components/thm";
 // constants
 import { USER_WORKSPACES_LIST } from "@plane/constants";
 // helpers
@@ -46,17 +47,31 @@ function OnboardingPage() {
 
   return (
     <AuthenticationWrapper pageType={EPageTypes.ONBOARDING}>
-      <div className="relative flex size-full overflow-hidden rounded-lg bg-canvas transition-all duration-300 ease-in-out">
-        <div className="size-full flex-grow overflow-hidden p-2 transition-all duration-300 ease-in-out">
-          <div className="shadow-md relative flex h-full w-full flex-col overflow-hidden rounded-lg border border-subtle bg-surface-1">
-            {user && !invitationsLoader ? (
-              <OnboardingRoot invitations={invitations ?? []} />
-            ) : (
-              <div className="grid h-full w-full place-items-center">
-                <LogoSpinner />
-              </div>
-            )}
-          </div>
+      {/* THM: two-column layout matching the login screen — navy brand panel + ivory content card */}
+      <div
+        className="relative flex size-full gap-[22px] overflow-hidden p-[22px]"
+        style={{
+          background:
+            "radial-gradient(900px 600px at 100% 100%, rgba(201,162,76,0.10), transparent 60%), var(--bg-canvas, #EFE9DC)",
+        }}
+      >
+        <ThmBrandPanel
+          title="Chào mừng bạn đến với"
+          accent="không gian làm việc THM."
+          description="Chỉ vài bước để hoàn thiện hồ sơ và tham gia không gian làm việc của Tập đoàn Tân Hoàng Minh — nơi kế hoạch, bàn giao, pháp lý và vận hành dự án cùng ở một chỗ."
+          footer="D'. Palais Louis  ·  D'. Le Roi Soleil  ·  D'. Capitale  ·  D'. El Dorado"
+        />
+        <div
+          className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] bg-surface-1"
+          style={{ boxShadow: "0 12px 40px rgba(11,30,60,0.08), inset 0 0 0 1px rgba(201,162,76,0.22)" }}
+        >
+          {user && !invitationsLoader ? (
+            <OnboardingRoot invitations={invitations ?? []} />
+          ) : (
+            <div className="grid h-full w-full place-items-center">
+              <LogoSpinner />
+            </div>
+          )}
         </div>
       </div>
     </AuthenticationWrapper>

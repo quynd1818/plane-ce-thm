@@ -77,9 +77,12 @@ export function SetPasswordRoot({ onPasswordChange, onConfirmPasswordChange, dis
 
   return (
     <div className={`flex flex-col overflow-hidden rounded-lg bg-surface-2 transition-all duration-300 ease-in-out`}>
-      <div
+      <button
+        type="button"
+        aria-expanded={isExpanded}
+        disabled={disabled}
         className={cn(
-          "flex items-center justify-between px-3 py-2 text-13 transition-colors duration-200",
+          "flex w-full items-center justify-between px-3 py-2 text-left text-13 transition-colors duration-200",
           disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
           isExpanded && "pb-1"
         )}
@@ -87,13 +90,13 @@ export function SetPasswordRoot({ onPasswordChange, onConfirmPasswordChange, dis
       >
         <div className="flex items-center gap-1 text-tertiary">
           <LockOutline className="size-3" />
-          <span className="font-medium">Set a password</span>
-          <span>{`(Optional)`}</span>
+          <span className="font-medium">Đặt mật khẩu dự phòng</span>
+          <span>(không bắt buộc)</span>
         </div>
         <div className="flex items-center gap-2 text-placeholder">
           <ChevronDownOutline className={chevronIconClasses} />
         </div>
-      </div>
+      </button>
 
       <div className={expandedContentClasses}>
         {/* Password input */}
@@ -102,7 +105,7 @@ export function SetPasswordRoot({ onPasswordChange, onConfirmPasswordChange, dis
             id="password"
             value={passwordState.password}
             onChange={(value) => handlePasswordChange("password", value)}
-            placeholder="Set a password"
+            placeholder="Nhập mật khẩu"
             className="transition-all duration-200"
           />
           {passwordState.password.length > 0 && <PasswordStrengthIndicator password={passwordState.password} />}
@@ -120,7 +123,7 @@ export function SetPasswordRoot({ onPasswordChange, onConfirmPasswordChange, dis
               id="confirm-password"
               value={passwordState.confirmPassword}
               onChange={(value) => handlePasswordChange("confirmPassword", value)}
-              placeholder="Confirm password"
+              placeholder="Nhập lại mật khẩu"
               className="transition-all duration-200"
             />
             {hasPasswordMismatch && <p className="mt-1 text-11 text-danger-primary">Passwords do not match</p>}

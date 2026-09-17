@@ -132,7 +132,10 @@ export const WorkspaceCreateStep = observer(function WorkspaceCreateStep({
         void handleSubmit(handleCreateWorkspace)(e);
       }}
     >
-      <CommonOnboardingHeader title="Create your workspace" description="All your work — unified." />
+      <CommonOnboardingHeader
+        title="Tạo không gian làm việc"
+        description="Mọi công việc của Tập đoàn — quy về một nơi."
+      />
       <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-2">
           <label
