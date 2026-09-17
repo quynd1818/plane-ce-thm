@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db.models.signals import m2m_changed, post_delete, post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from plane.db.models import (
     Cycle,
@@ -12,6 +13,7 @@ from plane.db.models import (
     ProjectCustomProperty,
     ProjectIssueType,
     RecurringIssue,
+    User,
     WorkItemTemplate,
     WorkLog,
 )
@@ -33,11 +35,28 @@ def _issue_payload(issue, title):
     }
 
 
+# Fields whose change is worth a Teams message. Every other Issue.save()
+# (sort_order drags, description autosave, sequence updates, ...) is ignored,
+# otherwise the channel gets flooded.
+ISSUE_NOTIFY_FIELDS = ("name", "state_id", "priority", "target_date", "start_date")
+
+
 @receiver(pre_save, sender=Issue)
 def track_issue_state(sender, instance, **kwargs):
-    if not instance._state.adding:
-        previous = sender.objects.filter(pk=instance.pk).values("state__group").first()
-        instance._notification_previous_state = previous.get("state__group") if previous else None
+    if instance._state.adding:
+        return
+    previous = (
+        sender.objects.filter(pk=instance.pk)
+        .values("state__group", "deleted_at", *ISSUE_NOTIFY_FIELDS)
+        .first()
+    )
+    if not previous:
+        return
+    instance._notification_previous_state = previous.get("state__group")
+    instance._notification_previous_deleted_at = previous.get("deleted_at")
+    instance._notification_changed = any(
+        getattr(instance, field, None) != previous.get(field) for field in ISSUE_NOTIFY_FIELDS
+    )
 
 
 @receiver(pre_save, sender=Cycle)
@@ -50,38 +69,61 @@ def track_cycle_dates(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=Issue)
-def issue_saved(sender, instance, created, **kwargs):
-    if created:
-        publish_event("issue.created", _issue_payload(instance, "New Issue Created"))
+def issue_saved(sender, instance, created, raw=False, **kwargs):
+    if raw or getattr(instance, "is_draft", False):
         return
-    publish_event("issue.updated", _issue_payload(instance, "Issue Updated"))
+    if created:
+        if instance.deleted_at is None:
+            publish_event("issue.created", _issue_payload(instance, "New Issue Created"))
+        return
+    # Soft delete: Plane never fires post_delete for issues, it sets deleted_at.
+    if instance.deleted_at is not None:
+        if getattr(instance, "_notification_previous_deleted_at", None) is None:
+            publish_event("issue.deleted", _issue_payload(instance, "Issue Deleted"))
+        return
     previous = getattr(instance, "_notification_previous_state", None)
     if previous != "completed" and getattr(instance.state, "group", None) == "completed":
         publish_event("issue.completed", _issue_payload(instance, "Issue Completed"))
+        return
+    if getattr(instance, "_notification_changed", False):
+        publish_event("issue.updated", _issue_payload(instance, "Issue Updated"))
+
+
+def notify_issue_assigned(issue, assignee_ids):
+    """Publish one issue.assigned event per newly added assignee.
+
+    Plane writes assignees with IssueAssignee.objects.bulk_create(), which fires
+    neither m2m_changed nor post_save, so the serializers call this explicitly.
+    """
+    if not assignee_ids or getattr(issue, "is_draft", False):
+        return
+    for assignee in User.objects.filter(pk__in=assignee_ids):
+        payload = _issue_payload(issue, "New Issue Assigned")
+        payload["assignee"] = assignee.display_name or assignee.email
+        publish_event("issue.assigned", payload)
 
 
 @receiver(m2m_changed, sender=Issue.assignees.through)
 def issue_assigned(sender, instance, action, pk_set, **kwargs):
+    # Only reached when assignees are changed through the M2M manager.
     if action == "post_add" and pk_set:
-        for assignee in instance.assignees.filter(pk__in=pk_set):
-            payload = _issue_payload(instance, "New Issue Assigned")
-            payload["assignee"] = assignee.display_name or assignee.email
-            publish_event("issue.assigned", payload)
+        notify_issue_assigned(instance, pk_set)
 
 
 @receiver(post_save, sender=IssueComment)
-def comment_added(sender, instance, created, **kwargs):
-    if created:
+def comment_added(sender, instance, created, raw=False, **kwargs):
+    if created and not raw and instance.deleted_at is None:
         payload = _issue_payload(instance.issue, "New Comment Added")
         payload["description"] = instance.comment_stripped or ""
         publish_event("comment.added", payload)
 
 
 @receiver(post_save, sender=Cycle)
-def cycle_saved(sender, instance, created, **kwargs):
+def cycle_saved(sender, instance, created, raw=False, **kwargs):
+    if raw or instance.deleted_at is not None:
+        return
     previous_start = getattr(instance, "_notification_previous_start", None)
     previous_end = getattr(instance, "_notification_previous_end", None)
-    from django.utils import timezone
 
     if instance.start_date and instance.start_date <= timezone.now() and (created or previous_start is None):
         publish_event(
@@ -96,8 +138,8 @@ def cycle_saved(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=Project)
-def project_created(sender, instance, created, **kwargs):
-    if created:
+def project_created(sender, instance, created, raw=False, **kwargs):
+    if created and not raw:
         publish_event("project.created", {"title": "Project Created", "project_name": instance.name})
 
 
@@ -106,7 +148,16 @@ def _project_payload(instance, title):
 
 
 @receiver(post_save, sender=WorkLog)
-def worklog_saved(sender, instance, created, **kwargs):
+def worklog_saved(sender, instance, created, raw=False, **kwargs):
+    if raw:
+        return
+    if instance.deleted_at is not None:
+        # soft delete goes through save(), not post_delete
+        worklog_deleted(sender, instance)
+        return
+    if instance.is_timer and instance.ended_at is None:
+        # running timer: nothing meaningful to report yet
+        return
     event_name = "worklog.created" if created else "worklog.updated"
     payload = _issue_payload(instance.issue, "Worklog Added" if created else "Worklog Updated")
     payload.update({"duration_seconds": instance.duration_seconds, "user": instance.user.display_name or instance.user.email})
@@ -127,11 +178,16 @@ def worklog_deleted(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=ProjectCustomProperty)
-def custom_property_changed(sender, instance, created, **kwargs):
-    publish_event(
-        "custom_property.changed",
-        _project_payload(instance, "Custom Property Created" if created else "Custom Property Updated"),
-    )
+def custom_property_changed(sender, instance, created, raw=False, **kwargs):
+    if raw:
+        return
+    if instance.deleted_at is not None:
+        title = "Custom Property Deleted"
+    elif created:
+        title = "Custom Property Created"
+    else:
+        title = "Custom Property Updated"
+    publish_event("custom_property.changed", _project_payload(instance, title))
 
 
 @receiver(post_delete, sender=ProjectCustomProperty)
@@ -140,11 +196,16 @@ def custom_property_deleted(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=WorkItemTemplate)
-def template_changed(sender, instance, created, **kwargs):
-    publish_event(
-        "template.changed",
-        _project_payload(instance, "Work Item Template Created" if created else "Work Item Template Updated"),
-    )
+def template_changed(sender, instance, created, raw=False, **kwargs):
+    if raw:
+        return
+    if instance.deleted_at is not None:
+        title = "Work Item Template Deleted"
+    elif created:
+        title = "Work Item Template Created"
+    else:
+        title = "Work Item Template Updated"
+    publish_event("template.changed", _project_payload(instance, title))
 
 
 @receiver(post_delete, sender=WorkItemTemplate)
@@ -153,7 +214,9 @@ def template_deleted(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=ProjectIssueType)
-def work_item_type_changed(sender, instance, created, **kwargs):
+def work_item_type_changed(sender, instance, created, raw=False, **kwargs):
+    if raw or getattr(instance, "deleted_at", None) is not None:
+        return
     publish_event(
         "work_item_type.changed",
         _project_payload(instance, "Work Item Type Added" if created else "Work Item Type Updated"),
@@ -166,11 +229,16 @@ def work_item_type_deleted(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=RecurringIssue)
-def recurring_issue_changed(sender, instance, created, **kwargs):
-    publish_event(
-        "recurring_issue.changed",
-        _project_payload(instance, "Recurring Issue Created" if created else "Recurring Issue Updated"),
-    )
+def recurring_issue_changed(sender, instance, created, raw=False, **kwargs):
+    if raw:
+        return
+    if instance.deleted_at is not None:
+        title = "Recurring Issue Deleted"
+    elif created:
+        title = "Recurring Issue Created"
+    else:
+        title = "Recurring Issue Updated"
+    publish_event("recurring_issue.changed", _project_payload(instance, title))
 
 
 @receiver(post_delete, sender=RecurringIssue)
@@ -179,11 +247,16 @@ def recurring_issue_deleted(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=IntakeForm)
-def intake_form_changed(sender, instance, created, **kwargs):
-    publish_event(
-        "intake_form.changed",
-        _project_payload(instance, "Intake Form Created" if created else "Intake Form Updated"),
-    )
+def intake_form_changed(sender, instance, created, raw=False, **kwargs):
+    if raw:
+        return
+    if instance.deleted_at is not None:
+        title = "Intake Form Deleted"
+    elif created:
+        title = "Intake Form Created"
+    else:
+        title = "Intake Form Updated"
+    publish_event("intake_form.changed", _project_payload(instance, title))
 
 
 @receiver(post_delete, sender=IntakeForm)
@@ -192,8 +265,8 @@ def intake_form_deleted(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=IntakeIssue)
-def intake_submitted(sender, instance, created, **kwargs):
-    if created:
+def intake_submitted(sender, instance, created, raw=False, **kwargs):
+    if created and not raw and instance.deleted_at is None:
         payload = _issue_payload(instance.issue, "New Intake Submission")
         payload["source"] = instance.source or "IN_APP"
         publish_event("intake.submitted", payload)

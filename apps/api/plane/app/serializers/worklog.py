@@ -22,7 +22,7 @@ class WorkLogSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "issue", "user", "user_detail", "created_at", "updated_at"]
+        read_only_fields = ["id", "issue", "user", "user_detail", "is_timer", "created_at", "updated_at"]
 
     def validate(self, attrs):
         issue = self.instance.issue if self.instance else self.context["issue"]

@@ -5,7 +5,9 @@ from django.db.models import Sum
 from django.db.models.functions import TruncDate
 from django.http import HttpResponse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 
 from plane.app.permissions import ROLE, allow_permission
@@ -111,6 +113,7 @@ class IssueTimerEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def delete(self, request, slug, project_id, issue_id):
         worklog = WorkLog.objects.filter(
+            workspace__slug=slug,
             project_id=project_id,
             issue_id=issue_id,
             user=request.user,
@@ -125,6 +128,29 @@ class IssueTimerEndpoint(BaseAPIView):
         return Response(WorkLogSerializer(worklog).data)
 
 
+def _apply_worklog_filters(queryset, params):
+    """Apply optional issue/user/date filters. Raises ValidationError on bad dates (-> HTTP 400)."""
+    issue_id = params.get("issue_id")
+    user_id = params.get("user_id")
+    started_after = params.get("started_after")
+    started_before = params.get("started_before")
+    if issue_id:
+        queryset = queryset.filter(issue_id=issue_id)
+    if user_id:
+        queryset = queryset.filter(user_id=user_id)
+    for key, value in (("started_after", started_after), ("started_before", started_before)):
+        if not value:
+            continue
+        parsed = parse_date(value)
+        if parsed is None:
+            raise ValidationError({key: "Expected a date in YYYY-MM-DD format."})
+        if key == "started_after":
+            queryset = queryset.filter(started_at__date__gte=parsed)
+        else:
+            queryset = queryset.filter(started_at__date__lte=parsed)
+    return queryset
+
+
 class ProjectWorkLogSummaryEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id):
@@ -135,18 +161,7 @@ class ProjectWorkLogSummaryEndpoint(BaseAPIView):
             project__project_projectmember__is_active=True,
             project__is_time_tracking_enabled=True,
         )
-        issue_id = request.GET.get("issue_id")
-        user_id = request.GET.get("user_id")
-        started_after = request.GET.get("started_after")
-        started_before = request.GET.get("started_before")
-        if issue_id:
-            queryset = queryset.filter(issue_id=issue_id)
-        if user_id:
-            queryset = queryset.filter(user_id=user_id)
-        if started_after:
-            queryset = queryset.filter(started_at__date__gte=started_after)
-        if started_before:
-            queryset = queryset.filter(started_at__date__lte=started_before)
+        queryset = _apply_worklog_filters(queryset, request.GET)
         total = queryset.aggregate(total=Sum("duration_seconds"))["total"] or 0
         group_by = request.GET.get("group_by")
         grouped = []
@@ -189,18 +204,7 @@ class ProjectWorkLogReportEndpoint(BaseAPIView):
             project__project_projectmember__member=request.user,
             project__project_projectmember__is_active=True,
         ).select_related("issue", "user")
-        issue_id = request.GET.get("issue_id")
-        user_id = request.GET.get("user_id")
-        started_after = request.GET.get("started_after")
-        started_before = request.GET.get("started_before")
-        if issue_id:
-            queryset = queryset.filter(issue_id=issue_id)
-        if user_id:
-            queryset = queryset.filter(user_id=user_id)
-        if started_after:
-            queryset = queryset.filter(started_at__date__gte=started_after)
-        if started_before:
-            queryset = queryset.filter(started_at__date__lte=started_before)
+        queryset = _apply_worklog_filters(queryset, request.GET)
 
         if request.GET.get("format") == "csv":
             response = HttpResponse(content_type="text/csv")

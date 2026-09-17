@@ -43,6 +43,7 @@ from plane.db.models import (
     ProjectMember,
     EstimatePoint,
 )
+from plane.notifications.signals import notify_issue_assigned
 from plane.utils.content_validator import (
     validate_html_content,
     validate_binary_data,
@@ -229,6 +230,7 @@ class IssueCreateSerializer(BaseSerializer):
                 )
             except IntegrityError:
                 pass
+            notify_issue_assigned(issue, assignees)
         else:
             # Then assign it to default assignee, if it is a valid assignee
             if (
@@ -284,6 +286,9 @@ class IssueCreateSerializer(BaseSerializer):
         updated_by_id = instance.updated_by_id
 
         if assignees is not None:
+            previous_assignee_ids = set(
+                IssueAssignee.objects.filter(issue=instance).values_list("assignee_id", flat=True)
+            )
             IssueAssignee.objects.filter(issue=instance).delete()
             try:
                 IssueAssignee.objects.bulk_create(
@@ -303,6 +308,10 @@ class IssueCreateSerializer(BaseSerializer):
                 )
             except IntegrityError:
                 pass
+            notify_issue_assigned(
+                instance,
+                [assignee_id for assignee_id in assignees if assignee_id not in previous_assignee_ids],
+            )
 
         if labels is not None:
             IssueLabel.objects.filter(issue=instance).delete()

@@ -14,6 +14,7 @@ class NotificationEvent:
             "issue.assigned": "TEAMS_NOTIFY_ISSUE_ASSIGNED",
             "issue.updated": "TEAMS_NOTIFY_ISSUE_UPDATED",
             "issue.completed": "TEAMS_NOTIFY_ISSUE_COMPLETED",
+            "issue.deleted": "TEAMS_NOTIFY_ISSUE_UPDATED",
             "comment.added": "TEAMS_NOTIFY_COMMENT",
             "cycle.started": "TEAMS_NOTIFY_CYCLE_STARTED",
             "cycle.completed": "TEAMS_NOTIFY_CYCLE_COMPLETED",

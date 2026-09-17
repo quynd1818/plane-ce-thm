@@ -1,6 +1,7 @@
 import json
 import logging
-import os
+
+from django.conf import settings
 from django.utils.html import strip_tags
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -16,14 +17,15 @@ class NotificationDeliveryError(Exception):
 
 class TeamsProvider:
     def __init__(self):
-        self.enabled = os.environ.get("TEAMS_ENABLED", "false").lower() in {"1", "true", "yes"}
-        self.webhook_url = os.environ.get("TEAMS_WEBHOOK_URL", "")
+        self.enabled = bool(getattr(settings, "TEAMS_ENABLED", False))
+        self.webhook_url = getattr(settings, "TEAMS_WEBHOOK_URL", "") or ""
 
     def is_enabled_for(self, event: NotificationEvent) -> bool:
-        return self.enabled and bool(self.webhook_url) and (
-            not event.setting_name
-            or os.environ.get(event.setting_name, "true").lower() in {"1", "true", "yes"}
-        )
+        if not (self.enabled and self.webhook_url):
+            return False
+        if not event.setting_name:
+            return True
+        return bool(getattr(settings, event.setting_name, True))
 
     def send(self, event: NotificationEvent) -> None:
         if not self.is_enabled_for(event):
