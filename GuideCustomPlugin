@@ -277,7 +277,7 @@ plane
 Valid Redirect URIs:
 
 https://qtda.tanhoangminh.com.vn/auth/keycloak/callback/
-https://qtda.tanhoangminh.com.vn/spaces/keycloak/callback/
+https://qtda.tanhoangminh.com.vn/auth/spaces/keycloak/callback/
 
 Web Origins:
 

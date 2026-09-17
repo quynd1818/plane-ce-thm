@@ -45,7 +45,9 @@ class KeycloakOAuthProvider(OauthAdapter):
         host = KEYCLOAK_HOST.rstrip("/")
         self.token_url = f"{host}/protocol/openid-connect/token"
         self.userinfo_url = f"{host}/protocol/openid-connect/userinfo"
-        callback_path = "/spaces/keycloak/callback/" if is_space else "/auth/keycloak/callback/"
+        # Both routes live under the "auth/" prefix (see plane/urls.py) — the
+        # space route is /auth/spaces/keycloak/callback/, not /spaces/...
+        callback_path = "/auth/spaces/keycloak/callback/" if is_space else "/auth/keycloak/callback/"
         redirect_uri = f"{'https' if request.is_secure() else 'http'}://{request.get_host()}{callback_path}"
         auth_params = {
             "client_id": KEYCLOAK_CLIENT_ID,
