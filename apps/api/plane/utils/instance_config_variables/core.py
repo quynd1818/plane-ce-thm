@@ -187,6 +187,12 @@ keycloak_config_variables = [
         "category": "KEYCLOAK",
         "is_encrypted": True,
     },
+    {
+        "key": "KEYCLOAK_REQUIRE_VERIFIED_EMAIL",
+        "value": os.environ.get("KEYCLOAK_REQUIRE_VERIFIED_EMAIL", "1"),
+        "category": "KEYCLOAK",
+        "is_encrypted": False,
+    },
 ]
 
 smtp_config_variables = [

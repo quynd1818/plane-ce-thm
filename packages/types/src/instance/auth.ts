@@ -61,7 +61,8 @@ export type TInstanceGiteaAuthenticationConfigurationKeys =
 export type TInstanceKeycloakAuthenticationConfigurationKeys =
   | "KEYCLOAK_HOST"
   | "KEYCLOAK_CLIENT_ID"
-  | "KEYCLOAK_CLIENT_SECRET";
+  | "KEYCLOAK_CLIENT_SECRET"
+  | "KEYCLOAK_REQUIRE_VERIFIED_EMAIL";
 
 export type TInstanceAuthenticationConfigurationKeys =
   | TInstanceGoogleAuthenticationConfigurationKeys

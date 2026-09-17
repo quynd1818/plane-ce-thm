@@ -21,13 +21,25 @@ class KeycloakOAuthProvider(OauthAdapter):
     scope = "openid email profile"
 
     def __init__(self, request, code=None, state=None, callback=None, is_space=False):
-        KEYCLOAK_CLIENT_ID, KEYCLOAK_CLIENT_SECRET, KEYCLOAK_HOST = get_configuration_value(
+        (
+            KEYCLOAK_CLIENT_ID,
+            KEYCLOAK_CLIENT_SECRET,
+            KEYCLOAK_HOST,
+            KEYCLOAK_REQUIRE_VERIFIED_EMAIL,
+        ) = get_configuration_value(
             [
                 {"key": "KEYCLOAK_CLIENT_ID", "default": os.environ.get("KEYCLOAK_CLIENT_ID")},
                 {"key": "KEYCLOAK_CLIENT_SECRET", "default": os.environ.get("KEYCLOAK_CLIENT_SECRET")},
                 {"key": "KEYCLOAK_HOST", "default": os.environ.get("KEYCLOAK_HOST")},
+                {
+                    "key": "KEYCLOAK_REQUIRE_VERIFIED_EMAIL",
+                    "default": os.environ.get("KEYCLOAK_REQUIRE_VERIFIED_EMAIL", "1"),
+                },
             ]
         )
+        # Users synced from AD/LDAP usually arrive with email_verified=false even
+        # though the address is IT-issued; operators can relax the check.
+        self.require_verified_email = str(KEYCLOAK_REQUIRE_VERIFIED_EMAIL or "1") == "1"
 
         if not (KEYCLOAK_CLIENT_ID and KEYCLOAK_CLIENT_SECRET and KEYCLOAK_HOST):
             raise AuthenticationException(
@@ -99,7 +111,7 @@ class KeycloakOAuthProvider(OauthAdapter):
 
     def set_user_data(self):
         user_info_response = self.get_user_response()
-        if user_info_response.get("email_verified") is not True:
+        if self.require_verified_email and user_info_response.get("email_verified") is not True:
             raise AuthenticationException(
                 error_code=AUTHENTICATION_ERROR_CODES["OAUTH_PROVIDER_UNVERIFIED_EMAIL"],
                 error_message="OAUTH_PROVIDER_UNVERIFIED_EMAIL",

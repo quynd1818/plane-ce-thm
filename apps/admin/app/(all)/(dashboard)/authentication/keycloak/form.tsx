@@ -7,10 +7,11 @@
 import { useState } from "react";
 import { isEmpty } from "lodash-es";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 // plane internal packages
 import { API_BASE_URL } from "@plane/constants";
 import { Button } from "@makeplane/propel/components/button";
+import { Switch } from "@makeplane/propel/components/switch";
 import { TOAST_TYPE, setToast } from "@/providers/toast";
 import type { IFormattedInstanceConfiguration, TInstanceKeycloakAuthenticationConfigurationKeys } from "@plane/types";
 // components
@@ -48,6 +49,7 @@ export function InstanceKeycloakConfigForm(props: Props) {
       KEYCLOAK_HOST: config["KEYCLOAK_HOST"] || DEFAULT_KEYCLOAK_HOST,
       KEYCLOAK_CLIENT_ID: config["KEYCLOAK_CLIENT_ID"],
       KEYCLOAK_CLIENT_SECRET: config["KEYCLOAK_CLIENT_SECRET"],
+      KEYCLOAK_REQUIRE_VERIFIED_EMAIL: config["KEYCLOAK_REQUIRE_VERIFIED_EMAIL"] || "1",
     },
   });
 
@@ -122,6 +124,7 @@ export function InstanceKeycloakConfigForm(props: Props) {
         KEYCLOAK_HOST: response.find((item) => item.key === "KEYCLOAK_HOST")?.value,
         KEYCLOAK_CLIENT_ID: response.find((item) => item.key === "KEYCLOAK_CLIENT_ID")?.value,
         KEYCLOAK_CLIENT_SECRET: response.find((item) => item.key === "KEYCLOAK_CLIENT_SECRET")?.value,
+        KEYCLOAK_REQUIRE_VERIFIED_EMAIL: response.find((item) => item.key === "KEYCLOAK_REQUIRE_VERIFIED_EMAIL")?.value,
       });
     } catch (err) {
       console.error(err);
@@ -159,6 +162,26 @@ export function InstanceKeycloakConfigForm(props: Props) {
                 required={field.required}
               />
             ))}
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-1">
+                <h4 className="text-13 font-medium text-tertiary">Require verified email</h4>
+                <p className="text-11 text-tertiary">
+                  Reject sign-ins whose Keycloak profile has <CodeBlock darkerShade>email_verified: false</CodeBlock>.
+                  Turn off when accounts are provisioned from AD/LDAP and the flag is never set.
+                </p>
+              </div>
+              <Controller
+                control={control}
+                name="KEYCLOAK_REQUIRE_VERIFIED_EMAIL"
+                render={({ field: { value, onChange } }) => (
+                  <Switch
+                    checked={value === "1"}
+                    onCheckedChange={() => onChange(value === "1" ? "0" : "1")}
+                    size="sm"
+                  />
+                )}
+              />
+            </div>
             <div className="flex flex-col gap-1 pt-4">
               <div className="flex items-center gap-4">
                 <Button

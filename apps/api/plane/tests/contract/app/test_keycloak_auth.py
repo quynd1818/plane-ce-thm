@@ -24,12 +24,13 @@ KEYCLOAK_HOST = "https://sso.example.test/realms/thm"
 UA = "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/128.0"
 
 
-def _configure(enabled="1", host=KEYCLOAK_HOST, client_id="plane", secret="s3cret"):
+def _configure(enabled="1", host=KEYCLOAK_HOST, client_id="plane", secret="s3cret", require_verified="1"):
     for key, value, encrypted in (
         ("IS_KEYCLOAK_ENABLED", enabled, False),
         ("KEYCLOAK_HOST", host, False),
         ("KEYCLOAK_CLIENT_ID", client_id, False),
         ("KEYCLOAK_CLIENT_SECRET", secret, True),
+        ("KEYCLOAK_REQUIRE_VERIFIED_EMAIL", require_verified, False),
     ):
         obj, _ = InstanceConfiguration.objects.get_or_create(key=key)
         obj.category = "KEYCLOAK"
@@ -183,3 +184,47 @@ class TestKeycloakLogin:
             )
         assert "error_code=5124" in response["Location"]  # OAUTH_PROVIDER_UNVERIFIED_EMAIL
         assert not User.objects.filter(email="u@thm.vn").exists()
+
+    def test_unverified_email_accepted_when_check_disabled(self, instance):
+        _configure(require_verified="0")
+        client = Client(HTTP_USER_AGENT=UA)
+        client.get(reverse("keycloak-initiate"), HTTP_HOST="qtda.example.test")
+        state = client.session["state"]
+        with patch(
+            "plane.authentication.adapter.oauth.requests.post",
+            return_value=_Resp({"access_token": "at", "expires_in": 300}),
+        ), patch(
+            "plane.authentication.adapter.oauth.requests.get",
+            return_value=_Resp({"sub": "ldap-1", "email": "ldap@thm.vn", "email_verified": False}),
+        ):
+            response = client.get(
+                reverse("keycloak-callback"), {"code": "abc", "state": state}, HTTP_HOST="qtda.example.test"
+            )
+        assert "error_code" not in response["Location"]
+        assert User.objects.filter(email="ldap@thm.vn").exists()
+
+    def test_provider_failure_is_logged_with_reason(self, instance, caplog):
+        import requests as _requests
+
+        _configure()
+        client = Client(HTTP_USER_AGENT=UA)
+        client.get(reverse("keycloak-initiate"), HTTP_HOST="qtda.example.test")
+        state = client.session["state"]
+
+        class _Err(_Resp):
+            def raise_for_status(self):
+                err = _requests.HTTPError("400 Client Error")
+                err.response = self
+                raise err
+
+        failing = _Err({"error": "invalid_grant", "error_description": "Incorrect redirect_uri"}, status=400)
+        failing.text = '{"error":"invalid_grant","error_description":"Incorrect redirect_uri"}'
+        with patch("plane.authentication.adapter.oauth.requests.post", return_value=failing), caplog.at_level(
+            "WARNING", logger="plane.authentication"
+        ):
+            response = client.get(
+                reverse("keycloak-callback"), {"code": "abc", "state": state}, HTTP_HOST="qtda.example.test"
+            )
+        assert "error_code=5126" in response["Location"]
+        assert "Incorrect redirect_uri" in caplog.text
+        assert "status=400" in caplog.text

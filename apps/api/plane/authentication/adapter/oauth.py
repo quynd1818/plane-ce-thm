@@ -74,14 +74,33 @@ class OauthAdapter(Adapter):
         self.set_user_data()
         return self.complete_login_or_signup()
 
+    def _describe_request_failure(self, exc):
+        """Return a short, token-free description of a failed provider call.
+
+        Providers such as Keycloak put the real reason in the response body
+        ("invalid_grant: Incorrect redirect_uri", "unauthorized_client", ...),
+        and TLS / DNS failures only show up in the exception itself. Without
+        this the operator just sees a generic *_OAUTH_PROVIDER_ERROR.
+        """
+        response = getattr(exc, "response", None)
+        if response is not None:
+            body = (response.text or "")[:500].replace("\n", " ")
+            return f"status={response.status_code} body={body!r}"
+        return f"{exc.__class__.__name__}: {str(exc)[:500]}"
+
     def get_user_token(self, data, headers=None):
         try:
             headers = headers or {}
             response = requests.post(self.get_token_url(), data=data, headers=headers)
             response.raise_for_status()
             return response.json()
-        except requests.RequestException:
-            self.logger.warning("Error getting user token")
+        except requests.RequestException as exc:
+            self.logger.warning(
+                "Error getting user token from %s (%s): %s",
+                self.provider,
+                self.get_token_url(),
+                self._describe_request_failure(exc),
+            )
             code = self.authentication_error_code()
             raise AuthenticationException(error_code=AUTHENTICATION_ERROR_CODES[code], error_message=str(code))
 
@@ -91,9 +110,14 @@ class OauthAdapter(Adapter):
             response = requests.get(self.get_user_info_url(), headers=headers)
             response.raise_for_status()
             return response.json()
-        except requests.RequestException:
+        except requests.RequestException as exc:
             # Do not log headers here: they carry the access token
-            self.logger.warning("Error getting user response")
+            self.logger.warning(
+                "Error getting user response from %s (%s): %s",
+                self.provider,
+                self.get_user_info_url(),
+                self._describe_request_failure(exc),
+            )
             code = self.authentication_error_code()
             raise AuthenticationException(error_code=AUTHENTICATION_ERROR_CODES[code], error_message=str(code))
 
