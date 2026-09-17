@@ -197,6 +197,12 @@
         "duration": "Надіслати сповіщення заздалегідь"
       }
     },
+    "customization": {
+      "label": "Налаштування полів"
+    },
+    "workflow": {
+      "label": "Робочий процес"
+    },
     "empty_state": {
       "labels": {
         "title": "Немає міток",

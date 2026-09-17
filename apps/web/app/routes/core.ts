@@ -348,6 +348,10 @@ export const coreRoutes: RouteConfigEntry[] = [
               ":workspaceSlug/settings/projects/:projectId/customization",
               "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/customization/page.tsx"
             ),
+            route(
+              ":workspaceSlug/settings/projects/:projectId/workflow",
+              "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/workflow/page.tsx"
+            ),
             // Project Automations
             layout("./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/automations/layout.tsx", [
               route(

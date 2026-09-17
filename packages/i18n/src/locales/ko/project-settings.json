@@ -197,6 +197,12 @@
         "duration": "알림 전"
       }
     },
+    "customization": {
+      "label": "사용자 지정"
+    },
+    "workflow": {
+      "label": "워크플로"
+    },
     "empty_state": {
       "labels": {
         "title": "레이블 없음",

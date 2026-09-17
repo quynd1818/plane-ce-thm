@@ -91,5 +91,6 @@ from .sticky import Sticky
 from .worklog import WorkLog
 from .customization import ProjectCustomProperty, WorkItemTemplate
 from .phase3 import IntakeForm, RecurringIssue
+from .workflow import WorkflowTransitionRule
 
 from .description import Description, DescriptionVersion

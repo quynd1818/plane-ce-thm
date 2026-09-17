@@ -197,6 +197,12 @@
         "duration": "Kirim pengingat sebelum"
       }
     },
+    "customization": {
+      "label": "Kustomisasi"
+    },
+    "workflow": {
+      "label": "Alur kerja"
+    },
     "empty_state": {
       "labels": {
         "title": "Belum ada label",

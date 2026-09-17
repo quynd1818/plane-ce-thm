@@ -197,6 +197,12 @@
         "duration": "Trimite avertizare înainte"
       }
     },
+    "customization": {
+      "label": "Personalizare"
+    },
+    "workflow": {
+      "label": "Flux de lucru"
+    },
     "empty_state": {
       "labels": {
         "title": "Nicio etichetă încă",

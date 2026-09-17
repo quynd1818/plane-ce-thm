@@ -197,6 +197,12 @@
         "duration": "Erinnerung vor"
       }
     },
+    "customization": {
+      "label": "Anpassung"
+    },
+    "workflow": {
+      "label": "Workflow"
+    },
     "empty_state": {
       "labels": {
         "title": "Keine Labels",

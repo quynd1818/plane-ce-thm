@@ -197,6 +197,12 @@
         "duration": "Hatırlatma gönderimi öncesi"
       }
     },
+    "customization": {
+      "label": "Özelleştirme"
+    },
+    "workflow": {
+      "label": "İş akışı"
+    },
     "empty_state": {
       "labels": {
         "title": "Henüz etiket yok",

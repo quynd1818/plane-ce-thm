@@ -34,6 +34,7 @@ import { useMember } from "@/hooks/store/use-member";
 import { useModule } from "@/hooks/store/use-module";
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
+import { useWorkflowRules } from "@/hooks/store/use-workflow-rules";
 import { useProjectView } from "@/hooks/store/use-project-view";
 import { useUser, useUserPermissions } from "@/hooks/store/user";
 import { useTimeLineChart } from "@/hooks/use-timeline-chart";
@@ -61,6 +62,7 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
     project: { fetchProjectMembers, fetchProjectUserProperties },
   } = useMember();
   const { fetchProjectStates, fetchProjectIntakeState } = useProjectState();
+  const { fetchRules: fetchWorkflowRules } = useWorkflowRules();
   const { data: currentUserData } = useUser();
   const { fetchProjectLabels } = useLabel();
   const { getProjectEstimates } = useProjectEstimates();
@@ -97,6 +99,12 @@ export const ProjectAuthWrapper = observer(function ProjectAuthWrapper(props: IP
     revalidateIfStale: false,
     revalidateOnFocus: false,
   });
+  // THM: workflow transition rules (state dropdown + kanban drag guards)
+  useSWR(
+    projectId ? `PROJECT_WORKFLOW_RULES_${projectId}_${currentProjectRole}` : null,
+    projectId ? () => fetchWorkflowRules(workspaceSlug, projectId, true) : null,
+    { revalidateIfStale: false, revalidateOnFocus: false }
+  );
   // fetching project members
   useSWR(PROJECT_MEMBERS(projectId, currentProjectRole), () => fetchProjectMembers(workspaceSlug, projectId), {
     revalidateIfStale: false,

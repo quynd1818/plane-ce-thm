@@ -197,6 +197,12 @@
         "duration": "Gửi nhắc nhở trước"
       }
     },
+    "customization": {
+      "label": "Tùy chỉnh"
+    },
+    "workflow": {
+      "label": "Quy trình"
+    },
     "empty_state": {
       "labels": {
         "title": "Chưa có nhãn",

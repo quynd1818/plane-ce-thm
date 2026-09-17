@@ -197,6 +197,12 @@
         "duration": "リマインダーを送信する前"
       }
     },
+    "customization": {
+      "label": "カスタマイズ"
+    },
+    "workflow": {
+      "label": "ワークフロー"
+    },
     "empty_state": {
       "labels": {
         "title": "ラベルがまだありません",

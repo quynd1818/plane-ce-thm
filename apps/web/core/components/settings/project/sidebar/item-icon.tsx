@@ -36,5 +36,6 @@ export const PROJECT_SETTINGS_ICONS: Record<TProjectSettingsTabs, LucideIcon | R
   estimates: EstimateOutline,
   worklogs: SettingIcon,
   customization: SettingIcon,
+  workflow: SettingIcon,
   automations: TriggerOutline,
 };

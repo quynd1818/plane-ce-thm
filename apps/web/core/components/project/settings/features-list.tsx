@@ -5,7 +5,7 @@
  */
 
 import { observer } from "mobx-react";
-import { Clock } from "lucide-react";
+import { Clock, ShieldCheck } from "lucide-react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { setPromiseToast } from "@plane/propel/toast";
@@ -71,6 +71,15 @@ const PROJECT_FEATURES_LIST = {
     title: "Intake",
     description: "Consider and discuss work items before you add them to your project.",
     icon: <IntakeOutline className="h-5 w-5 flex-shrink-0 text-tertiary" />,
+    isPro: false,
+    isEnabled: true,
+  },
+  workflow: {
+    key: "workflow",
+    property: "is_workflow_enabled",
+    title: "Workflow & approval",
+    description: "Restrict who can move work items into a state. Configure rules under Settings → Workflow.",
+    icon: <ShieldCheck className="h-5 w-5 flex-shrink-0 text-tertiary" />,
     isPro: false,
     isEnabled: true,
   },

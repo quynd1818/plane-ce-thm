@@ -60,7 +60,12 @@ export type TIssueDetailRoot = {
 
 export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDetailRoot) {
   const { t } = useTranslation();
-  const { workspaceSlug, projectId, issueId, is_archived = false } = props;
+  const {
+    workspaceSlug: currentWorkspaceSlug,
+    projectId: currentProjectId,
+    issueId: currentIssueId,
+    is_archived = false,
+  } = props;
   // router
   const router = useAppRouter();
   // hooks
@@ -96,10 +101,17 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
           await updateIssue(workspaceSlug, projectId, issueId, data);
         } catch (error) {
           console.log("Error in updating issue:", error);
+          // THM workflow: surface the rule's reason instead of the generic message
+          const denied = (error as { code?: string[] | string; state_id?: string[] | string } | undefined) ?? {};
+          const code = Array.isArray(denied.code) ? denied.code[0] : denied.code;
+          const reason = Array.isArray(denied.state_id) ? denied.state_id[0] : denied.state_id;
           setToast({
             title: t("common.error.label"),
             type: TOAST_TYPE.ERROR,
-            message: t("entity.update.failed", { entity: t("issue.label") }),
+            message:
+              code === "WORKFLOW_TRANSITION_DENIED" && reason
+                ? reason
+                : t("entity.update.failed", { entity: t("issue.label") }),
           });
         }
       },
@@ -216,13 +228,13 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
   );
 
   // issue details
-  const issue = getIssueById(issueId);
+  const issue = getIssueById(currentIssueId);
   // checking if issue is editable, based on user role
   const isEditable = allowPermissions(
     [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
     EUserPermissionsLevel.PROJECT,
-    workspaceSlug,
-    projectId
+    currentWorkspaceSlug,
+    currentProjectId
   );
 
   return (
@@ -234,16 +246,16 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
           description={t("issue.empty_state.issue_detail.description")}
           primaryButton={{
             text: t("issue.empty_state.issue_detail.primary_button.text"),
-            onClick: () => router.push(`/${workspaceSlug}/projects/${projectId}/issues`),
+            onClick: () => router.push(`/${currentWorkspaceSlug}/projects/${currentProjectId}/issues`),
           }}
         />
       ) : (
         <div className="flex h-full w-full overflow-hidden">
           <div className="h-full w-full space-y-6 overflow-y-auto px-9 py-5">
             <IssueMainContent
-              workspaceSlug={workspaceSlug}
-              projectId={projectId}
-              issueId={issueId}
+              workspaceSlug={currentWorkspaceSlug}
+              projectId={currentProjectId}
+              issueId={currentIssueId}
               issueOperations={issueOperations}
               isEditable={isEditable}
               isArchived={is_archived}
@@ -254,9 +266,9 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
             style={issueDetailSidebarCollapsed ? { right: `-${window?.innerWidth || 0}px` } : {}}
           >
             <IssueDetailsSidebar
-              workspaceSlug={workspaceSlug}
-              projectId={projectId}
-              issueId={issueId}
+              workspaceSlug={currentWorkspaceSlug}
+              projectId={currentProjectId}
+              issueId={currentIssueId}
               issueOperations={issueOperations}
               isEditable={!is_archived && isEditable}
             />

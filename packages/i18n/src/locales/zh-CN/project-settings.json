@@ -197,6 +197,12 @@
         "duration": "提前提醒"
       }
     },
+    "customization": {
+      "label": "自定义"
+    },
+    "workflow": {
+      "label": "工作流"
+    },
     "empty_state": {
       "labels": {
         "title": "尚无标签",

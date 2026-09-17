@@ -29,4 +29,5 @@ class NotificationEvent:
             "recurring_issue.generated": "TEAMS_NOTIFY_AUTOMATION",
             "intake_form.changed": "TEAMS_NOTIFY_INTAKE",
             "intake.submitted": "TEAMS_NOTIFY_INTAKE",
+            "workflow_rule.changed": "TEAMS_NOTIFY_AUTOMATION",
         }.get(self.name, "")

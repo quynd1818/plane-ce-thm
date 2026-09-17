@@ -197,6 +197,12 @@
         "duration": "Enviar aviso antes"
       }
     },
+    "customization": {
+      "label": "Personalização"
+    },
+    "workflow": {
+      "label": "Fluxo de trabalho"
+    },
     "empty_state": {
       "labels": {
         "title": "Nenhuma etiqueta ainda",

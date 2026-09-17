@@ -197,6 +197,12 @@
         "duration": "Poslať upozornenie pred"
       }
     },
+    "customization": {
+      "label": "Prispôsobenie"
+    },
+    "workflow": {
+      "label": "Pracovný postup"
+    },
     "empty_state": {
       "labels": {
         "title": "Žiadne štítky",

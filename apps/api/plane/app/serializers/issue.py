@@ -44,6 +44,7 @@ from plane.db.models import (
     EstimatePoint,
 )
 from plane.notifications.signals import notify_issue_assigned
+from plane.utils.workflow import check_transition
 from plane.utils.content_validator import (
     validate_html_content,
     validate_binary_data,
@@ -175,6 +176,20 @@ class IssueCreateSerializer(BaseSerializer):
             ).exists()
         ):
             raise serializers.ValidationError("State is not valid please pass a valid state_id")
+
+        # THM workflow: who may move the work item into the requested state
+        if attrs.get("state") and self.instance is not None:
+            request = self.context.get("request")
+            actor = getattr(request, "user", None) if request is not None else None
+            if actor is not None and str(attrs["state"].id) != str(self.instance.state_id):
+                decision = check_transition(
+                    project_id=self.context.get("project_id") or self.instance.project_id,
+                    user=actor,
+                    from_state_id=self.instance.state_id,
+                    to_state_id=attrs["state"].id,
+                )
+                if not decision.allowed:
+                    raise serializers.ValidationError({"state_id": decision.reason, "code": "WORKFLOW_TRANSITION_DENIED"})
 
         # Check parent issue is from workspace as it can be cross workspace
         if (

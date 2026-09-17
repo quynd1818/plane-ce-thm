@@ -197,6 +197,12 @@
         "duration": "Отправить напоминание заранее"
       }
     },
+    "customization": {
+      "label": "Настройка полей"
+    },
+    "workflow": {
+      "label": "Рабочий процесс"
+    },
     "empty_state": {
       "labels": {
         "title": "Нет меток",

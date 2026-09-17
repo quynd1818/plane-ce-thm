@@ -197,6 +197,9 @@
         "duration": "Send reminder before"
       }
     },
+    "workflow": {
+      "label": "Workflow"
+    },
     "customization": {
       "label": "Customization"
     },

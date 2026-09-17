@@ -197,6 +197,12 @@
         "duration": "Send reminder before"
       }
     },
+    "customization": {
+      "label": "მორგება"
+    },
+    "workflow": {
+      "label": "სამუშაო პროცესი"
+    },
     "empty_state": {
       "labels": {
         "title": "ჯერ იარლიყები არ არის",

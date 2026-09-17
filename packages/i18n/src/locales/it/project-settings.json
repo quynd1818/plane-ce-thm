@@ -197,6 +197,12 @@
         "duration": "Invia promemoria prima di"
       }
     },
+    "customization": {
+      "label": "Personalizzazione"
+    },
+    "workflow": {
+      "label": "Flusso di lavoro"
+    },
     "empty_state": {
       "labels": {
         "title": "Nessuna etichetta ancora",

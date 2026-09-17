@@ -197,6 +197,12 @@
         "duration": "提前提醒"
       }
     },
+    "customization": {
+      "label": "自訂"
+    },
+    "workflow": {
+      "label": "工作流程"
+    },
     "empty_state": {
       "labels": {
         "title": "尚無標籤",

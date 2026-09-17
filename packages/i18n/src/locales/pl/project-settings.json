@@ -197,6 +197,12 @@
         "duration": "Wyślij przypomnienie przed"
       }
     },
+    "customization": {
+      "label": "Dostosowanie"
+    },
+    "workflow": {
+      "label": "Przepływ pracy"
+    },
     "empty_state": {
       "labels": {
         "title": "Brak etykiet",

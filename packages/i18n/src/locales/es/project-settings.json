@@ -197,6 +197,12 @@
         "duration": "Enviar recordatorio antes"
       }
     },
+    "customization": {
+      "label": "Personalización"
+    },
+    "workflow": {
+      "label": "Flujo de trabajo"
+    },
     "empty_state": {
       "labels": {
         "title": "Aún no hay etiquetas",
