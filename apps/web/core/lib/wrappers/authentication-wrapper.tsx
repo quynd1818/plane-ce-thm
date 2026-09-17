@@ -47,6 +47,8 @@ export const AuthenticationWrapper = observer(function AuthenticationWrapper(pro
     shouldRetryOnError: false,
   });
 
+  const isUserProfilePending = Boolean(currentUser?.id) && !currentUserProfile?.id;
+
   const isUserOnboard =
     currentUserProfile?.is_onboarded ||
     (currentUserProfile?.onboarding_step?.profile_complete &&
@@ -78,7 +80,12 @@ export const AuthenticationWrapper = observer(function AuthenticationWrapper(pro
     return redirectionRoute;
   };
 
-  if ((isUserSWRLoading || isUserLoading || workspacesLoader) && !currentUser?.id)
+  const shouldShowInitialLoader =
+    (isUserSWRLoading || isUserLoading || workspacesLoader || isUserProfilePending) && !currentUser?.id
+      ? true
+      : isUserProfilePending;
+
+  if (shouldShowInitialLoader)
     return (
       <div className="relative flex h-screen w-full items-center justify-center">
         <LogoSpinner />
@@ -89,15 +96,20 @@ export const AuthenticationWrapper = observer(function AuthenticationWrapper(pro
 
   if (pageType === EPageTypes.NON_AUTHENTICATED) {
     if (!currentUser?.id) return <>{children}</>;
-    else {
-      if (currentUserProfile?.id && isUserOnboard) {
-        const currentRedirectRoute = getWorkspaceRedirectionUrl();
-        router.push(currentRedirectRoute);
-        return <></>;
-      } else {
-        router.push("/onboarding");
-        return <></>;
-      }
+    if (isUserProfilePending) {
+      return (
+        <div className="relative flex h-screen w-full items-center justify-center">
+          <LogoSpinner />
+        </div>
+      );
+    }
+    if (currentUserProfile?.id && isUserOnboard) {
+      const currentRedirectRoute = getWorkspaceRedirectionUrl();
+      router.push(currentRedirectRoute);
+      return <></>;
+    } else {
+      router.push("/onboarding");
+      return <></>;
     }
   }
 
@@ -105,37 +117,55 @@ export const AuthenticationWrapper = observer(function AuthenticationWrapper(pro
     if (!currentUser?.id) {
       router.push(`/${pathname ? `?next_path=${pathname}` : ``}`);
       return <></>;
-    } else {
-      if (currentUser && currentUserProfile?.id && isUserOnboard) {
-        const currentRedirectRoute = getWorkspaceRedirectionUrl();
-        router.replace(currentRedirectRoute);
-        return <></>;
-      } else return <>{children}</>;
     }
+    if (isUserProfilePending) {
+      return (
+        <div className="relative flex h-screen w-full items-center justify-center">
+          <LogoSpinner />
+        </div>
+      );
+    }
+    if (currentUser && currentUserProfile?.id && isUserOnboard) {
+      const currentRedirectRoute = getWorkspaceRedirectionUrl();
+      router.replace(currentRedirectRoute);
+      return <></>;
+    } else return <>{children}</>;
   }
 
   if (pageType === EPageTypes.SET_PASSWORD) {
     if (!currentUser?.id) {
       router.push(`/${pathname ? `?next_path=${pathname}` : ``}`);
       return <></>;
-    } else {
-      if (currentUser && !currentUser?.is_password_autoset && currentUserProfile?.id && isUserOnboard) {
-        const currentRedirectRoute = getWorkspaceRedirectionUrl();
-        router.push(currentRedirectRoute);
-        return <></>;
-      } else return <>{children}</>;
     }
+    if (isUserProfilePending) {
+      return (
+        <div className="relative flex h-screen w-full items-center justify-center">
+          <LogoSpinner />
+        </div>
+      );
+    }
+    if (currentUser && !currentUser?.is_password_autoset && currentUserProfile?.id && isUserOnboard) {
+      const currentRedirectRoute = getWorkspaceRedirectionUrl();
+      router.push(currentRedirectRoute);
+      return <></>;
+    } else return <>{children}</>;
   }
 
   if (pageType === EPageTypes.AUTHENTICATED) {
-    if (currentUser?.id) {
-      if (currentUserProfile && currentUserProfile?.id && isUserOnboard) return <>{children}</>;
-      else {
-        router.push(`/onboarding`);
-        return <></>;
-      }
-    } else {
+    if (!currentUser?.id) {
       router.push(`/${pathname ? `?next_path=${pathname}` : ``}`);
+      return <></>;
+    }
+    if (isUserProfilePending) {
+      return (
+        <div className="relative flex h-screen w-full items-center justify-center">
+          <LogoSpinner />
+        </div>
+      );
+    }
+    if (currentUserProfile && currentUserProfile?.id && isUserOnboard) return <>{children}</>;
+    else {
+      router.push(`/onboarding`);
       return <></>;
     }
   }
