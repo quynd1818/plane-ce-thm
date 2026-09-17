@@ -6,6 +6,7 @@ from django.views import View
 
 from plane.authentication.adapter.error import AUTHENTICATION_ERROR_CODES, AuthenticationException
 from plane.authentication.provider.oauth.keycloak import KeycloakOAuthProvider
+from plane.authentication.utils.keycloak_auto_join import keycloak_post_auth_workflow
 from plane.authentication.utils.host import base_host
 from plane.authentication.utils.login import user_login
 from plane.license.models import Instance
@@ -56,7 +57,9 @@ class KeycloakCallbackSpaceEndpoint(View):
             )
 
         try:
-            provider = KeycloakOAuthProvider(request=request, code=code, is_space=True)
+            provider = KeycloakOAuthProvider(
+                request=request, code=code, is_space=True, callback=keycloak_post_auth_workflow
+            )
             user = provider.authenticate()
             user_login(request=request, user=user, is_space=True)
             path = str(validate_next_path(next_path)) if next_path else ""

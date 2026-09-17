@@ -17,20 +17,30 @@ from django.test import Client
 from django.utils import timezone
 from django.urls import reverse
 
-from plane.db.models import Account, User
+from plane.db.models import Account, User, Workspace, WorkspaceMember
 from plane.license.models import Instance, InstanceConfiguration
 
 KEYCLOAK_HOST = "https://sso.example.test/realms/thm"
 UA = "Mozilla/5.0 (X11; Linux x86_64) Gecko/20100101 Firefox/128.0"
 
 
-def _configure(enabled="1", host=KEYCLOAK_HOST, client_id="plane", secret="s3cret", require_verified="1"):
+def _configure(
+    enabled="1",
+    host=KEYCLOAK_HOST,
+    client_id="plane",
+    secret="s3cret",
+    require_verified="1",
+    auto_join_slug="",
+    auto_join_role="5",
+):
     for key, value, encrypted in (
         ("IS_KEYCLOAK_ENABLED", enabled, False),
         ("KEYCLOAK_HOST", host, False),
         ("KEYCLOAK_CLIENT_ID", client_id, False),
         ("KEYCLOAK_CLIENT_SECRET", secret, True),
         ("KEYCLOAK_REQUIRE_VERIFIED_EMAIL", require_verified, False),
+        ("KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG", auto_join_slug, False),
+        ("KEYCLOAK_AUTO_JOIN_ROLE", auto_join_role, False),
     ):
         obj, _ = InstanceConfiguration.objects.get_or_create(key=key)
         obj.category = "KEYCLOAK"
@@ -228,3 +238,61 @@ class TestKeycloakLogin:
         assert "error_code=5126" in response["Location"]
         assert "Incorrect redirect_uri" in caplog.text
         assert "status=400" in caplog.text
+
+
+def _login_via_keycloak(client, email, sub="kc-1"):
+    client.get(reverse("keycloak-initiate"), HTTP_HOST="qtda.example.test")
+    state = client.session["state"]
+    with patch(
+        "plane.authentication.adapter.oauth.requests.post",
+        return_value=_Resp({"access_token": "at", "expires_in": 300}),
+    ), patch(
+        "plane.authentication.adapter.oauth.requests.get",
+        return_value=_Resp({"sub": sub, "email": email, "email_verified": True, "given_name": "A", "family_name": "B"}),
+    ):
+        return client.get(reverse("keycloak-callback"), {"code": "abc", "state": state}, HTTP_HOST="qtda.example.test")
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+class TestKeycloakAutoJoin:
+    @pytest.fixture
+    def thm_workspace(self, db, create_user):
+        return Workspace.objects.create(name="Tân Hoàng Minh", slug="thm", owner=create_user)
+
+    def test_new_user_is_added_to_configured_workspace_as_guest(self, instance, thm_workspace):
+        _configure(auto_join_slug="thm", auto_join_role="5")
+        response = _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "staff@thm.vn")
+        assert "error_code" not in response["Location"]
+        member = WorkspaceMember.objects.get(workspace=thm_workspace, member__email="staff@thm.vn")
+        assert member.role == 5
+        assert member.is_active is True
+
+    def test_role_member_and_idempotent_on_second_login(self, instance, thm_workspace):
+        _configure(auto_join_slug="thm", auto_join_role="15")
+        _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "staff@thm.vn")
+        _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "staff@thm.vn")
+        rows = WorkspaceMember.objects.filter(workspace=thm_workspace, member__email="staff@thm.vn")
+        assert rows.count() == 1
+        assert rows.first().role == 15
+
+    def test_removed_member_is_not_re_added(self, instance, thm_workspace):
+        _configure(auto_join_slug="thm")
+        _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "staff@thm.vn")
+        WorkspaceMember.objects.get(workspace=thm_workspace, member__email="staff@thm.vn").delete()  # soft delete
+        _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "staff@thm.vn")
+        assert not WorkspaceMember.objects.filter(workspace=thm_workspace, member__email="staff@thm.vn").exists()
+
+    def test_admin_role_is_never_granted(self, instance, thm_workspace):
+        _configure(auto_join_slug="thm", auto_join_role="20")
+        _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "staff@thm.vn")
+        assert WorkspaceMember.objects.get(workspace=thm_workspace, member__email="staff@thm.vn").role == 5
+
+    def test_disabled_or_unknown_slug_logs_in_without_membership(self, instance, thm_workspace):
+        _configure(auto_join_slug="")
+        assert "error_code" not in _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "a@thm.vn")["Location"]
+        assert not WorkspaceMember.objects.filter(member__email="a@thm.vn").exists()
+
+        _configure(auto_join_slug="does-not-exist")
+        assert "error_code" not in _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "b@thm.vn", sub="kc-2")["Location"]
+        assert not WorkspaceMember.objects.filter(member__email="b@thm.vn").exists()

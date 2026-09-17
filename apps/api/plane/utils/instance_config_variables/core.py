@@ -193,6 +193,18 @@ keycloak_config_variables = [
         "category": "KEYCLOAK",
         "is_encrypted": False,
     },
+    {
+        "key": "KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG",
+        "value": os.environ.get("KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG", ""),
+        "category": "KEYCLOAK",
+        "is_encrypted": False,
+    },
+    {
+        "key": "KEYCLOAK_AUTO_JOIN_ROLE",
+        "value": os.environ.get("KEYCLOAK_AUTO_JOIN_ROLE", "5"),
+        "category": "KEYCLOAK",
+        "is_encrypted": False,
+    },
 ]
 
 smtp_config_variables = [

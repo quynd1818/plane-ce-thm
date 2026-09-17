@@ -62,7 +62,9 @@ export type TInstanceKeycloakAuthenticationConfigurationKeys =
   | "KEYCLOAK_HOST"
   | "KEYCLOAK_CLIENT_ID"
   | "KEYCLOAK_CLIENT_SECRET"
-  | "KEYCLOAK_REQUIRE_VERIFIED_EMAIL";
+  | "KEYCLOAK_REQUIRE_VERIFIED_EMAIL"
+  | "KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG"
+  | "KEYCLOAK_AUTO_JOIN_ROLE";
 
 export type TInstanceAuthenticationConfigurationKeys =
   | TInstanceGoogleAuthenticationConfigurationKeys

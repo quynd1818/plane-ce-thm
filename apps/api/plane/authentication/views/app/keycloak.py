@@ -8,7 +8,7 @@ from plane.authentication.provider.oauth.keycloak import KeycloakOAuthProvider
 from plane.authentication.utils.host import base_host
 from plane.authentication.utils.login import user_login
 from plane.authentication.utils.redirection_path import get_redirection_path
-from plane.authentication.utils.user_auth_workflow import post_user_auth_workflow
+from plane.authentication.utils.keycloak_auto_join import keycloak_post_auth_workflow
 from plane.license.models import Instance
 from plane.utils.path_validator import get_safe_redirect_url, validate_next_path
 
@@ -65,7 +65,7 @@ class KeycloakCallbackEndpoint(View):
             )
 
         try:
-            provider = KeycloakOAuthProvider(request=request, code=code, callback=post_user_auth_workflow)
+            provider = KeycloakOAuthProvider(request=request, code=code, callback=keycloak_post_auth_workflow)
             user = provider.authenticate()
             user_login(request=request, user=user, is_app=True)
             path = next_path or get_redirection_path(user=user)

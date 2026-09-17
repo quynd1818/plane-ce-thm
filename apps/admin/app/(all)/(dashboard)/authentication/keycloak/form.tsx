@@ -50,6 +50,8 @@ export function InstanceKeycloakConfigForm(props: Props) {
       KEYCLOAK_CLIENT_ID: config["KEYCLOAK_CLIENT_ID"],
       KEYCLOAK_CLIENT_SECRET: config["KEYCLOAK_CLIENT_SECRET"],
       KEYCLOAK_REQUIRE_VERIFIED_EMAIL: config["KEYCLOAK_REQUIRE_VERIFIED_EMAIL"] || "1",
+      KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG: config["KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG"] || "",
+      KEYCLOAK_AUTO_JOIN_ROLE: config["KEYCLOAK_AUTO_JOIN_ROLE"] || "5",
     },
   });
 
@@ -89,6 +91,20 @@ export function InstanceKeycloakConfigForm(props: Props) {
       error: Boolean(errors.KEYCLOAK_CLIENT_SECRET),
       required: true,
     },
+    {
+      key: "KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG",
+      type: "text",
+      label: "Auto-join workspace (slug)",
+      description: (
+        <>
+          Every user who signs in through Keycloak is added to this workspace on first login, so nobody needs a manual
+          invite. Leave empty to disable. The slug is the part after the domain in the workspace URL.
+        </>
+      ),
+      placeholder: "tan-hoang-minh",
+      error: Boolean(errors.KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG),
+      required: false,
+    },
   ];
 
   const KEYCLOAK_SERVICE_FIELD: TCopyField[] = [
@@ -125,6 +141,9 @@ export function InstanceKeycloakConfigForm(props: Props) {
         KEYCLOAK_CLIENT_ID: response.find((item) => item.key === "KEYCLOAK_CLIENT_ID")?.value,
         KEYCLOAK_CLIENT_SECRET: response.find((item) => item.key === "KEYCLOAK_CLIENT_SECRET")?.value,
         KEYCLOAK_REQUIRE_VERIFIED_EMAIL: response.find((item) => item.key === "KEYCLOAK_REQUIRE_VERIFIED_EMAIL")?.value,
+        KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG: response.find((item) => item.key === "KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG")
+          ?.value,
+        KEYCLOAK_AUTO_JOIN_ROLE: response.find((item) => item.key === "KEYCLOAK_AUTO_JOIN_ROLE")?.value,
       });
     } catch (err) {
       console.error(err);
@@ -177,6 +196,26 @@ export function InstanceKeycloakConfigForm(props: Props) {
                   <Switch
                     checked={value === "1"}
                     onCheckedChange={() => onChange(value === "1" ? "0" : "1")}
+                    size="sm"
+                  />
+                )}
+              />
+            </div>
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col gap-1">
+                <h4 className="text-13 font-medium text-tertiary">Auto-joined users are Members</h4>
+                <p className="text-11 text-tertiary">
+                  On: joined as <CodeBlock darkerShade>Member</CodeBlock> (can create and edit work items). Off: joined
+                  as <CodeBlock darkerShade>Guest</CodeBlock> (read and comment) until an admin promotes them.
+                </p>
+              </div>
+              <Controller
+                control={control}
+                name="KEYCLOAK_AUTO_JOIN_ROLE"
+                render={({ field: { value, onChange } }) => (
+                  <Switch
+                    checked={value === "15"}
+                    onCheckedChange={() => onChange(value === "15" ? "5" : "15")}
                     size="sm"
                   />
                 )}
