@@ -29,7 +29,7 @@ export function ThmBrandPanel({ title, accent, description, footer }: Props) {
   return (
     <aside
       aria-hidden="true"
-      className="relative hidden h-full shrink-0 flex-col justify-between overflow-hidden rounded-[28px] p-11 lg:flex lg:w-[42%] xl:w-[44%]"
+      className="relative hidden h-full shrink-0 flex-col justify-between overflow-hidden rounded-[28px] p-11 lg:flex lg:w-[calc(50vw-33px)]"
       style={{
         color: IVORY,
         background: [
@@ -42,7 +42,7 @@ export function ThmBrandPanel({ title, accent, description, footer }: Props) {
     >
       <ThmLogo height={110} className="self-start" />
 
-      <div className="max-w-[420px]">
+      <div className="max-w-[460px]">
         <h2
           className="text-[38px] leading-[1.18] font-medium tracking-[-0.2px]"
           style={{ fontFamily: '"Playfair Display", Georgia, "Times New Roman", serif' }}
@@ -57,7 +57,7 @@ export function ThmBrandPanel({ title, accent, description, footer }: Props) {
         </h2>
         {description && (
           <p
-            className="mt-6 max-w-[380px] text-[14px] leading-[1.7]"
+            className="mt-6 max-w-[380px] text-[14px] leading-[1.7] font-medium"
             style={{ color: "rgba(255,247,242,0.75)", fontFamily: '"Be Vietnam Pro", system-ui, sans-serif' }}
           >
             {description}
