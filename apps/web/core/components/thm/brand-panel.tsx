@@ -4,9 +4,9 @@
  * See the LICENSE file for details.
  *
  * Navy "card" shown on the left of the onboarding / auth screens.
- * Mirrors the login design from the THM handoff (theme.css) so the two
- * screens read as one flow. Colours are hard-coded on purpose: this panel
- * is always navy + gold regardless of the user's light/dark theme.
+ * Mirrors the login design from the THM handoff (theme.css, v13 red) so the
+ * two screens read as one flow. Colours are hard-coded on purpose: this panel
+ * is always deep red + gold regardless of the user's light/dark theme.
  */
 
 import { ThmLogo } from "./thm-logo";
@@ -20,9 +20,10 @@ type Props = {
   footer?: string;
 };
 
-const NAVY = "#0B1E3C";
-const IVORY = "#F6F2EA";
-const GOLD = "#D9B665";
+// THM palette (theme.css v13 "khung đỏ đậm"): deep red gradient + antique gold
+const RED_DARK = "#3E0810";
+const IVORY = "#FFF7F2";
+const GOLD = "#E3CB84";
 
 export function ThmBrandPanel({ title, accent, description, footer }: Props) {
   return (
@@ -33,10 +34,10 @@ export function ThmBrandPanel({ title, accent, description, footer }: Props) {
         color: IVORY,
         background: [
           "radial-gradient(640px 520px at 8% 6%, rgba(201,162,76,0.22), transparent 62%)",
-          "radial-gradient(520px 420px at 100% 100%, rgba(227,203,132,0.10), transparent 60%)",
-          `linear-gradient(160deg, #0F2447 0%, ${NAVY} 55%, #091A35 100%)`,
+          "radial-gradient(520px 420px at 100% 100%, rgba(0,0,0,0.20), transparent 60%)",
+          `linear-gradient(160deg, #7A1020 0%, #5A0B17 55%, ${RED_DARK} 100%)`,
         ].join(","),
-        boxShadow: "0 24px 60px rgba(11,30,60,0.22), inset 0 0 0 1px rgba(201,162,76,0.18)",
+        boxShadow: "0 24px 60px rgba(62,8,16,0.30), inset 0 0 0 1px rgba(201,162,76,0.25)",
       }}
     >
       <ThmLogo height={110} className="self-start" />
@@ -57,7 +58,7 @@ export function ThmBrandPanel({ title, accent, description, footer }: Props) {
         {description && (
           <p
             className="mt-6 max-w-[380px] text-[14px] leading-[1.7]"
-            style={{ color: "rgba(246,242,234,0.68)", fontFamily: '"Be Vietnam Pro", system-ui, sans-serif' }}
+            style={{ color: "rgba(255,247,242,0.75)", fontFamily: '"Be Vietnam Pro", system-ui, sans-serif' }}
           >
             {description}
           </p>
@@ -67,7 +68,7 @@ export function ThmBrandPanel({ title, accent, description, footer }: Props) {
       {footer && (
         <div
           className="pt-4 text-[11px] tracking-[1.2px] uppercase"
-          style={{ color: "rgba(246,242,234,0.48)", borderTop: "1px solid rgba(201,162,76,0.28)" }}
+          style={{ color: "rgba(255,247,242,0.55)", borderTop: "1px solid rgba(201,162,76,0.35)" }}
         >
           {footer}
         </div>

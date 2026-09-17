@@ -52,7 +52,7 @@ function OnboardingPage() {
         className="relative flex size-full gap-[22px] overflow-hidden p-[22px]"
         style={{
           background:
-            "radial-gradient(900px 600px at 100% 100%, rgba(201,162,76,0.10), transparent 60%), var(--bg-canvas, #EFE9DC)",
+            "radial-gradient(900px 600px at 100% 100%, rgba(201,162,76,0.10), transparent 60%), var(--bg-canvas, #5E0C19)",
         }}
       >
         <ThmBrandPanel

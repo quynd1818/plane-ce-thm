@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 // plane imports
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
@@ -32,6 +32,7 @@ export const OnboardingRoot = observer(function OnboardingRoot({ invitations = [
 
   const workspacesList = Object.values(workspaces ?? {});
   const isSelfManaged = instanceConfig?.is_self_managed;
+  const autoFinishRef = useRef(false);
 
   // Calculate total steps based on whether invitations are available
   const hasInvitations = invitations.length > 0;
@@ -105,6 +106,17 @@ export const OnboardingRoot = observer(function OnboardingRoot({ invitations = [
   );
 
   const updateCurrentStep = (step: EOnboardingSteps) => setCurrentStep(step);
+
+  // THM: users added to a workspace server-side (Keycloak auto-join) have nothing
+  // to create or join here. Skip the workspace step instead of showing the
+  // "ask an admin to invite you" dead end.
+  useEffect(() => {
+    if (autoFinishRef.current) return;
+    if (currentStep !== EOnboardingSteps.WORKSPACE_CREATE_OR_JOIN) return;
+    if (workspacesList.length === 0) return;
+    autoFinishRef.current = true;
+    void stepChange({ workspace_join: true }).finally(() => finishOnboarding());
+  }, [currentStep, workspacesList.length, stepChange, finishOnboarding]);
 
   useEffect(() => {
     const handleInitialStep = () => {
