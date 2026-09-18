@@ -17,7 +17,7 @@ from django.test import Client
 from django.utils import timezone
 from django.urls import reverse
 
-from plane.db.models import Account, User, Workspace, WorkspaceMember
+from plane.db.models import Account, Profile, User, Workspace, WorkspaceMember
 from plane.license.models import Instance, InstanceConfiguration
 
 KEYCLOAK_HOST = "https://sso.example.test/realms/thm"
@@ -165,6 +165,7 @@ class TestKeycloakLogin:
         account = Account.objects.get(user=user, provider="keycloak")
         assert account.provider_account_id == "kc-sub-123"
         assert client.session.get("_auth_user_id") == str(user.id)
+        assert parse_qs(urlparse(response["Location"]).query)["next_path"] == ["/onboarding"]
 
     def test_callback_rejects_bad_state(self, instance):
         _configure()
@@ -240,8 +241,9 @@ class TestKeycloakLogin:
         assert "status=400" in caplog.text
 
 
-def _login_via_keycloak(client, email, sub="kc-1"):
-    client.get(reverse("keycloak-initiate"), HTTP_HOST="qtda.example.test")
+def _login_via_keycloak(client, email, sub="kc-1", next_path=None):
+    params = {"next_path": next_path} if next_path else {}
+    client.get(reverse("keycloak-initiate"), params, HTTP_HOST="qtda.example.test")
     state = client.session["state"]
     with patch(
         "plane.authentication.adapter.oauth.requests.post",
@@ -267,6 +269,26 @@ class TestKeycloakAutoJoin:
         member = WorkspaceMember.objects.get(workspace=thm_workspace, member__email="staff@thm.vn")
         assert member.role == 5
         assert member.is_active is True
+
+    def test_onboarded_user_keeps_workspace_destination(self, instance, thm_workspace, create_user):
+        _configure(auto_join_slug="thm")
+        profile, _ = Profile.objects.get_or_create(user=create_user)
+        profile.is_onboarded = True
+        profile.save()
+
+        response = _login_via_keycloak(Client(HTTP_USER_AGENT=UA), create_user.email)
+
+        assert response.status_code == 302
+        assert parse_qs(urlparse(response["Location"]).query)["next_path"] == ["/thm"]
+
+    def test_callback_preserves_explicit_destination(self, instance, thm_workspace):
+        _configure(auto_join_slug="thm")
+        response = _login_via_keycloak(
+            Client(HTTP_USER_AGENT=UA), "staff@thm.vn", next_path="/thm/projects/"
+        )
+
+        assert response.status_code == 302
+        assert parse_qs(urlparse(response["Location"]).query)["next_path"] == ["/thm/projects/"]
 
     def test_role_member_and_idempotent_on_second_login(self, instance, thm_workspace):
         _configure(auto_join_slug="thm", auto_join_role="15")

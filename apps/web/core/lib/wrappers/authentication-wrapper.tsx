@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { observer } from "mobx-react";
 import { useSearchParams, usePathname } from "next/navigation";
 import useSWR from "swr";
@@ -81,93 +81,37 @@ export const AuthenticationWrapper = observer(function AuthenticationWrapper(pro
   };
 
   const shouldShowInitialLoader =
-    (isUserSWRLoading || isUserLoading || workspacesLoader || isUserProfilePending) && !currentUser?.id
-      ? true
-      : isUserProfilePending;
+    isUserProfilePending || (!currentUser?.id && (isUserSWRLoading || isUserLoading || workspacesLoader));
 
-  if (shouldShowInitialLoader)
+  // Keep rendering a loader until navigation commits, not just until the user
+  // profile is ready. Route modules can still be loading after authentication.
+  let redirectTo: string | undefined;
+  if (!shouldShowInitialLoader && pageType !== EPageTypes.PUBLIC) {
+    if (!currentUser?.id) {
+      if (pageType !== EPageTypes.NON_AUTHENTICATED) {
+        redirectTo = pathname ? `/?${new URLSearchParams({ next_path: pathname })}` : "/";
+      }
+    } else if (pageType === EPageTypes.NON_AUTHENTICATED) {
+      redirectTo = isUserOnboard ? getWorkspaceRedirectionUrl() : "/onboarding";
+    } else if (pageType === EPageTypes.ONBOARDING && isUserOnboard) {
+      redirectTo = getWorkspaceRedirectionUrl();
+    } else if (pageType === EPageTypes.SET_PASSWORD && !currentUser.is_password_autoset && isUserOnboard) {
+      redirectTo = getWorkspaceRedirectionUrl();
+    } else if (pageType === EPageTypes.AUTHENTICATED && !isUserOnboard) {
+      redirectTo = "/onboarding";
+    }
+  }
+
+  useEffect(() => {
+    if (redirectTo) router.replace(redirectTo);
+  }, [redirectTo, router]);
+
+  if (shouldShowInitialLoader || redirectTo) {
     return (
       <div className="relative flex h-screen w-full items-center justify-center">
         <LogoSpinner />
       </div>
     );
-
-  if (pageType === EPageTypes.PUBLIC) return <>{children}</>;
-
-  if (pageType === EPageTypes.NON_AUTHENTICATED) {
-    if (!currentUser?.id) return <>{children}</>;
-    if (isUserProfilePending) {
-      return (
-        <div className="relative flex h-screen w-full items-center justify-center">
-          <LogoSpinner />
-        </div>
-      );
-    }
-    if (currentUserProfile?.id && isUserOnboard) {
-      const currentRedirectRoute = getWorkspaceRedirectionUrl();
-      router.push(currentRedirectRoute);
-      return <></>;
-    } else {
-      router.push("/onboarding");
-      return <></>;
-    }
-  }
-
-  if (pageType === EPageTypes.ONBOARDING) {
-    if (!currentUser?.id) {
-      router.push(`/${pathname ? `?next_path=${pathname}` : ``}`);
-      return <></>;
-    }
-    if (isUserProfilePending) {
-      return (
-        <div className="relative flex h-screen w-full items-center justify-center">
-          <LogoSpinner />
-        </div>
-      );
-    }
-    if (currentUser && currentUserProfile?.id && isUserOnboard) {
-      const currentRedirectRoute = getWorkspaceRedirectionUrl();
-      router.replace(currentRedirectRoute);
-      return <></>;
-    } else return <>{children}</>;
-  }
-
-  if (pageType === EPageTypes.SET_PASSWORD) {
-    if (!currentUser?.id) {
-      router.push(`/${pathname ? `?next_path=${pathname}` : ``}`);
-      return <></>;
-    }
-    if (isUserProfilePending) {
-      return (
-        <div className="relative flex h-screen w-full items-center justify-center">
-          <LogoSpinner />
-        </div>
-      );
-    }
-    if (currentUser && !currentUser?.is_password_autoset && currentUserProfile?.id && isUserOnboard) {
-      const currentRedirectRoute = getWorkspaceRedirectionUrl();
-      router.push(currentRedirectRoute);
-      return <></>;
-    } else return <>{children}</>;
-  }
-
-  if (pageType === EPageTypes.AUTHENTICATED) {
-    if (!currentUser?.id) {
-      router.push(`/${pathname ? `?next_path=${pathname}` : ``}`);
-      return <></>;
-    }
-    if (isUserProfilePending) {
-      return (
-        <div className="relative flex h-screen w-full items-center justify-center">
-          <LogoSpinner />
-        </div>
-      );
-    }
-    if (currentUserProfile && currentUserProfile?.id && isUserOnboard) return <>{children}</>;
-    else {
-      router.push(`/onboarding`);
-      return <></>;
-    }
   }
 
   return <>{children}</>;

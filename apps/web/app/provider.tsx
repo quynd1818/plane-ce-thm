@@ -11,6 +11,8 @@ import { SWRConfig } from "swr";
 import { WEB_SWR_CONFIG } from "@plane/constants";
 import { TranslationProvider } from "@plane/i18n";
 import { Toast } from "@plane/propel/toast";
+// components
+import { LogoSpinner } from "@/components/common/logo-spinner";
 // helpers
 import { resolveGeneralTheme } from "@plane/utils";
 // mobx store provider
@@ -46,7 +48,13 @@ export function AppProvider(props: IAppProvider) {
           <Toast theme={resolveGeneralTheme(resolvedTheme)} />
           <StoreWrapper>
             <InstanceWrapper>
-              <Suspense>
+              <Suspense
+                fallback={
+                  <div className="relative flex h-screen w-full items-center justify-center">
+                    <LogoSpinner />
+                  </div>
+                }
+              >
                 <SWRConfig value={WEB_SWR_CONFIG}>{children}</SWRConfig>
               </Suspense>
             </InstanceWrapper>

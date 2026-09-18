@@ -68,7 +68,9 @@ class KeycloakCallbackEndpoint(View):
             provider = KeycloakOAuthProvider(request=request, code=code, callback=keycloak_post_auth_workflow)
             user = provider.authenticate()
             user_login(request=request, user=user, is_app=True)
-            path = next_path or get_redirection_path(user=user)
+            # get_redirection_path returns a route without a leading slash, but
+            # get_safe_redirect_url only accepts absolute application paths.
+            path = next_path or f"/{get_redirection_path(user=user).lstrip('/')}"
             return HttpResponseRedirect(
                 get_safe_redirect_url(base_url=base_host(request=request, is_app=True), next_path=path, params={})
             )
