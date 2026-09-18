@@ -14,6 +14,7 @@ export type TOAuthOption = {
   icon: React.ReactNode;
   onClick: () => void;
   enabled?: boolean;
+  className?: string;
 };
 
 type OAuthOptionsProps = {
@@ -48,7 +49,7 @@ export function OAuthOptions(props: OAuthOptionsProps) {
             icon={option.icon}
             onClick={option.onClick}
             compact={compact}
-            className="transition-all duration-300 ease-in-out"
+            className={cn("transition-all duration-300 ease-in-out", option.className)}
           />
         ))}
       </div>

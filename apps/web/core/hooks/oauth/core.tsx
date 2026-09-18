@@ -83,6 +83,8 @@ export const useCoreOAuthConfig = (oauthActionText: string): TOAuthConfigs => {
     {
       id: "keycloak",
       text: "Login with THM SSO",
+      className:
+        "border-[#C79940] bg-[#E6BD65] text-[#3B260C] hover:bg-[#F0CC7A] active:bg-[#D8AB50] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C79940]",
       icon: <span aria-hidden="true">SSO</span>,
       onClick: () => {
         window.location.assign(`${API_BASE_URL}/auth/keycloak/${next_path ? `?next_path=${next_path}` : ``}`);
