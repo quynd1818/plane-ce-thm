@@ -232,6 +232,8 @@
   "workflow_description": "Restrict who can move work items into a state. Configure rules under Settings → Workflow.",
   "worklog_approval": "Worklog approval",
   "worklog_approval_description": "New worklogs wait for a project admin or named approver before they count in reports.",
+  "epics": "Epics",
+  "epics_description": "Group work items under large bodies of work with rolled-up progress.",
   "work_management_description": "Manage your work and projects with ease.",
   "documentation": "Documentation",
   "message_support": "Message support",
@@ -1049,6 +1051,93 @@
       "created_at": "Created",
       "target_date": "Due date",
       "completed_at": "Completed"
+    }
+  },
+  "thm_epics": {
+    "create": "New epic",
+    "disabled": "Epics are turned off for this project. Enable them under Settings → Features.",
+    "demote": "Demote to work item",
+    "demote_confirm": "Turn \"{name}\" back into a normal work item? Its child work items stay but are detached.",
+    "detach": "Detach",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "no_children": "No work items in this epic yet.",
+    "overdue_count": "{count} overdue",
+    "empty": {
+      "title": "No epics yet",
+      "description": "Create an epic and attach the work items that belong to it. Progress rolls up automatically."
+    },
+    "form": {
+      "name": "Name",
+      "name_placeholder": "Epic title",
+      "description": "Description",
+      "description_placeholder": "What is this epic about?",
+      "state": "State",
+      "priority": "Priority",
+      "start_date": "Start date",
+      "target_date": "Due date",
+      "assignees": "Assignees"
+    },
+    "attach": {
+      "action": "Add work items",
+      "title": "Add work items to epic",
+      "search_placeholder": "Search work items in this project…",
+      "empty": "No matching work items.",
+      "submit": "Add {count}"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Unstarted",
+      "started": "Started",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "thm_initiatives": {
+    "label": "Initiatives",
+    "create": "New initiative",
+    "edit": "Edit initiative",
+    "delete": "Delete initiative",
+    "delete_confirm": "Delete initiative \"{name}\"? Linked projects and epics are not affected.",
+    "not_found": "Initiative not found or you do not have access to it.",
+    "project_count": "{count} projects",
+    "epic_count": "{count} epics",
+    "projects": "Projects",
+    "epics": "Epics",
+    "no_projects": "No projects linked yet.",
+    "no_epics": "No epics linked yet.",
+    "not_a_member": "not a member",
+    "unlink": "Unlink",
+    "link": "Link",
+    "pick_project": "Choose a project…",
+    "pick_epic": "Choose an epic…",
+    "empty": {
+      "title": "No initiatives yet",
+      "description": "Initiatives group projects and epics under one goal and roll up their progress in one place."
+    },
+    "form": {
+      "name": "Name",
+      "name_placeholder": "Initiative name",
+      "description": "Description",
+      "description_placeholder": "What does this initiative aim to achieve?",
+      "status": "Status",
+      "lead": "Lead",
+      "start_date": "Start date",
+      "end_date": "End date"
+    },
+    "status": {
+      "planned": "Planned",
+      "in_progress": "In progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "stats": {
+      "total": "Work items",
+      "completed": "Completed",
+      "started": "In progress",
+      "unstarted": "Not started",
+      "backlog": "Backlog",
+      "overdue": "Overdue"
     }
   }
 }

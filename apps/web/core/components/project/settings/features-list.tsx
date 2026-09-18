@@ -5,7 +5,7 @@
  */
 
 import { observer } from "mobx-react";
-import { CheckCheck, Clock, ShieldCheck } from "lucide-react";
+import { CheckCheck, Clock, Layers, ShieldCheck } from "lucide-react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { setPromiseToast } from "@plane/propel/toast";
@@ -89,6 +89,15 @@ const PROJECT_FEATURES_LIST = {
     title: "Time Tracking",
     description: "Log time spent on work items and projects.",
     icon: <Clock className="h-5 w-5 flex-shrink-0 text-tertiary" />,
+    isPro: false,
+    isEnabled: true,
+  },
+  epics: {
+    key: "epics",
+    property: "is_epic_enabled",
+    title: "Epics",
+    description: "Group work items under large bodies of work with rolled-up progress.",
+    icon: <Layers className="h-5 w-5 flex-shrink-0 text-tertiary" />,
     isPro: false,
     isEnabled: true,
   },

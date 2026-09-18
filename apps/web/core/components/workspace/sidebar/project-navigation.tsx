@@ -17,6 +17,7 @@ import {
   PagesOutline,
   ViewsOutline,
   WorkItemsOutline,
+  EpicOutline,
 } from "@makeplane/propel/icons";
 import type { EUserProjectRoles } from "@plane/types";
 // plane ui
@@ -76,6 +77,7 @@ export const ProjectNavigation = observer(function ProjectNavigation(props: TPro
   };
 
   const baseNavigation = useCallback(
+    // oxlint-disable-next-line no-shadow
     (workspaceSlug: string, projectId: string): TNavigationItem[] => [
       {
         i18n_key: "sidebar.work_items",
@@ -86,6 +88,16 @@ export const ProjectNavigation = observer(function ProjectNavigation(props: TPro
         access: [EUserPermissions.ADMIN, EUserPermissions.MEMBER, EUserPermissions.GUEST],
         shouldRender: true,
         sortOrder: 1,
+      },
+      {
+        i18n_key: "sidebar.epics",
+        key: "epics",
+        name: "Epics",
+        href: `/${workspaceSlug}/projects/${projectId}/epics`,
+        icon: EpicOutline,
+        access: [EUserPermissions.ADMIN, EUserPermissions.MEMBER, EUserPermissions.GUEST],
+        shouldRender: !!project?.is_epic_enabled,
+        sortOrder: 1.5,
       },
       {
         i18n_key: "sidebar.cycles",
@@ -143,22 +155,14 @@ export const ProjectNavigation = observer(function ProjectNavigation(props: TPro
 
   // memoized navigation items and adding additional navigation items
   const navigationItemsMemo = useMemo(() => {
-    const navigationItems = (workspaceSlug: string, projectId: string): TNavigationItem[] => {
-      const navItems = baseNavigation(workspaceSlug, projectId);
-
-      if (additionalNavigationItems) {
-        navItems.push(...additionalNavigationItems(workspaceSlug, projectId));
-      }
-
-      return navItems;
-    };
+    const navItems = baseNavigation(workspaceSlug, projectId);
+    if (additionalNavigationItems) {
+      navItems.push(...additionalNavigationItems(workspaceSlug, projectId));
+    }
 
     // sort navigation items by sortOrder
-    const sortedNavigationItems = navigationItems(workspaceSlug, projectId).sort(
-      (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0)
-    );
-
-    return sortedNavigationItems;
+    // oxlint-disable-next-line unicorn/no-array-sort
+    return navItems.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }, [workspaceSlug, projectId, baseNavigation, additionalNavigationItems]);
 
   const isActive = useCallback(

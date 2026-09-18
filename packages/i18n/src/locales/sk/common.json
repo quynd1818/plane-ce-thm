@@ -232,6 +232,8 @@
   "workflow_description": "Obmedzte, kto môže presúvať pracovné položky do stavu. Pravidlá nastavíte v Nastavenia → Pracovný postup.",
   "worklog_approval": "Schvaľovanie worklogov",
   "worklog_approval_description": "Nové worklogy čakajú na administrátora projektu alebo určeného schvaľovateľa, kým sa započítajú do reportov.",
+  "epics": "Epiky",
+  "epics_description": "Zoskupujte pracovné položky do veľkých celkov s agregovaným postupom.",
   "work_management_description": "Spravujte svoju prácu a projekty jednoducho.",
   "documentation": "Dokumentácia",
   "message_support": "Kontaktovať podporu",
@@ -1049,6 +1051,93 @@
       "created_at": "Vytvorené",
       "target_date": "Termín",
       "completed_at": "Dokončené"
+    }
+  },
+  "thm_epics": {
+    "create": "Nový epik",
+    "disabled": "Epiky sú v tomto projekte vypnuté. Zapnite ich v Nastavenia → Funkcie.",
+    "demote": "Zmeniť na pracovnú položku",
+    "demote_confirm": "Zmeniť „{name}“ späť na bežnú pracovnú položku? Podriadené položky zostanú, ale budú odpojené.",
+    "detach": "Odpojiť",
+    "expand": "Rozbaliť",
+    "collapse": "Zbaliť",
+    "no_children": "Tento epik zatiaľ nemá pracovné položky.",
+    "overdue_count": "{count} po termíne",
+    "empty": {
+      "title": "Zatiaľ žiadne epiky",
+      "description": "Vytvorte epik a pripojte pracovné položky, ktoré k nemu patria. Postup sa agreguje automaticky."
+    },
+    "form": {
+      "name": "Názov",
+      "name_placeholder": "Názov epiku",
+      "description": "Popis",
+      "description_placeholder": "O čom je tento epik?",
+      "state": "Stav",
+      "priority": "Priorita",
+      "start_date": "Dátum začiatku",
+      "target_date": "Termín",
+      "assignees": "Riešitelia"
+    },
+    "attach": {
+      "action": "Pridať položky",
+      "title": "Pridať položky do epiku",
+      "search_placeholder": "Hľadať položky v tomto projekte…",
+      "empty": "Žiadne zodpovedajúce položky.",
+      "submit": "Pridať {count}"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Nezačaté",
+      "started": "Začaté",
+      "completed": "Dokončené",
+      "cancelled": "Zrušené"
+    }
+  },
+  "thm_initiatives": {
+    "label": "Iniciatívy",
+    "create": "Nová iniciatíva",
+    "edit": "Upraviť iniciatívu",
+    "delete": "Odstrániť iniciatívu",
+    "delete_confirm": "Odstrániť iniciatívu „{name}“? Prepojené projekty a epiky nie sú ovplyvnené.",
+    "not_found": "Iniciatíva sa nenašla alebo nemáte prístup.",
+    "project_count": "Projekty: {count}",
+    "epic_count": "Epiky: {count}",
+    "projects": "Projekty",
+    "epics": "Epiky",
+    "no_projects": "Zatiaľ žiadne prepojené projekty.",
+    "no_epics": "Zatiaľ žiadne prepojené epiky.",
+    "not_a_member": "nie je členom",
+    "unlink": "Odpojiť",
+    "link": "Prepojiť",
+    "pick_project": "Vyberte projekt…",
+    "pick_epic": "Vyberte epik…",
+    "empty": {
+      "title": "Zatiaľ žiadne iniciatívy",
+      "description": "Iniciatívy zoskupujú projekty a epiky pod jeden cieľ a agregujú ich postup na jednom mieste."
+    },
+    "form": {
+      "name": "Názov",
+      "name_placeholder": "Názov iniciatívy",
+      "description": "Popis",
+      "description_placeholder": "Čo má táto iniciatíva dosiahnuť?",
+      "status": "Stav",
+      "lead": "Vedúci",
+      "start_date": "Dátum začiatku",
+      "end_date": "Dátum ukončenia"
+    },
+    "status": {
+      "planned": "Plánované",
+      "in_progress": "Prebieha",
+      "completed": "Dokončené",
+      "cancelled": "Zrušené"
+    },
+    "stats": {
+      "total": "Pracovné položky",
+      "completed": "Dokončené",
+      "started": "Prebieha",
+      "unstarted": "Nezačaté",
+      "backlog": "Backlog",
+      "overdue": "Po termíne"
     }
   }
 }

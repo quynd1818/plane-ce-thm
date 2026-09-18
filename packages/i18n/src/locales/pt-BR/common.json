@@ -232,6 +232,8 @@
   "workflow_description": "Restrinja quem pode mover itens de trabalho para um estado. Configure as regras em Configurações → Fluxo de trabalho.",
   "worklog_approval": "Aprovação de worklogs",
   "worklog_approval_description": "Novos worklogs aguardam um administrador do projeto ou aprovador designado antes de contar nos relatórios.",
+  "epics": "Epics",
+  "epics_description": "Agrupe itens de trabalho em grandes blocos com progresso consolidado.",
   "work_management_description": "Gerencie seu trabalho e projetos com facilidade.",
   "documentation": "Documentação",
   "message_support": "Suporte por mensagem",
@@ -1049,6 +1051,93 @@
       "created_at": "Criação",
       "target_date": "Data limite",
       "completed_at": "Conclusão"
+    }
+  },
+  "thm_epics": {
+    "create": "Novo epic",
+    "disabled": "Epics estão desativados neste projeto. Ative em Configurações → Recursos.",
+    "demote": "Rebaixar para item de trabalho",
+    "demote_confirm": "Transformar \"{name}\" de volta em um item normal? Os itens filhos permanecem, mas são desvinculados.",
+    "detach": "Desvincular",
+    "expand": "Expandir",
+    "collapse": "Recolher",
+    "no_children": "Ainda não há itens neste epic.",
+    "overdue_count": "{count} atrasados",
+    "empty": {
+      "title": "Nenhum epic ainda",
+      "description": "Crie um epic e anexe os itens de trabalho que pertencem a ele. O progresso é consolidado automaticamente."
+    },
+    "form": {
+      "name": "Nome",
+      "name_placeholder": "Título do epic",
+      "description": "Descrição",
+      "description_placeholder": "Sobre o que é este epic?",
+      "state": "Estado",
+      "priority": "Prioridade",
+      "start_date": "Data de início",
+      "target_date": "Data limite",
+      "assignees": "Responsáveis"
+    },
+    "attach": {
+      "action": "Adicionar itens",
+      "title": "Adicionar itens ao epic",
+      "search_placeholder": "Buscar itens neste projeto…",
+      "empty": "Nenhum item correspondente.",
+      "submit": "Adicionar {count}"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Não iniciado",
+      "started": "Iniciado",
+      "completed": "Concluído",
+      "cancelled": "Cancelado"
+    }
+  },
+  "thm_initiatives": {
+    "label": "Iniciativas",
+    "create": "Nova iniciativa",
+    "edit": "Editar iniciativa",
+    "delete": "Excluir iniciativa",
+    "delete_confirm": "Excluir a iniciativa \"{name}\"? Projetos e epics vinculados não são afetados.",
+    "not_found": "Iniciativa não encontrada ou sem acesso.",
+    "project_count": "{count} projetos",
+    "epic_count": "{count} epics",
+    "projects": "Projetos",
+    "epics": "Epics",
+    "no_projects": "Nenhum projeto vinculado.",
+    "no_epics": "Nenhum epic vinculado.",
+    "not_a_member": "não é membro",
+    "unlink": "Desvincular",
+    "link": "Vincular",
+    "pick_project": "Escolha um projeto…",
+    "pick_epic": "Escolha um epic…",
+    "empty": {
+      "title": "Nenhuma iniciativa ainda",
+      "description": "Iniciativas agrupam projetos e epics sob um objetivo e consolidam o progresso em um só lugar."
+    },
+    "form": {
+      "name": "Nome",
+      "name_placeholder": "Nome da iniciativa",
+      "description": "Descrição",
+      "description_placeholder": "O que esta iniciativa pretende alcançar?",
+      "status": "Status",
+      "lead": "Responsável",
+      "start_date": "Data de início",
+      "end_date": "Data de término"
+    },
+    "status": {
+      "planned": "Planejada",
+      "in_progress": "Em andamento",
+      "completed": "Concluída",
+      "cancelled": "Cancelada"
+    },
+    "stats": {
+      "total": "Itens de trabalho",
+      "completed": "Concluídos",
+      "started": "Em andamento",
+      "unstarted": "Não iniciados",
+      "backlog": "Backlog",
+      "overdue": "Atrasados"
     }
   }
 }

@@ -232,6 +232,8 @@
   "workflow_description": "限制谁可以将工作项移动到某个状态。请在\"设置 → 工作流\"中配置规则。",
   "worklog_approval": "工时审批",
   "worklog_approval_description": "新的工时记录需经项目管理员或指定审批人批准后才会计入报表。",
+  "epics": "史诗",
+  "epics_description": "将工作项归入大型工作单元并自动汇总进度。",
   "work_management_description": "轻松管理您的工作和项目。",
   "documentation": "文档",
   "message_support": "联系支持",
@@ -1049,6 +1051,93 @@
       "created_at": "创建时间",
       "target_date": "截止日期",
       "completed_at": "完成时间"
+    }
+  },
+  "thm_epics": {
+    "create": "新建史诗",
+    "disabled": "此项目未启用史诗。请在设置 → 功能中启用。",
+    "demote": "降级为工作项",
+    "demote_confirm": "将“{name}”变回普通工作项？其子工作项保留但会被解除关联。",
+    "detach": "解除",
+    "expand": "展开",
+    "collapse": "收起",
+    "no_children": "此史诗中还没有工作项。",
+    "overdue_count": "{count} 个逾期",
+    "empty": {
+      "title": "还没有史诗",
+      "description": "创建史诗并关联所属工作项，进度会自动汇总。"
+    },
+    "form": {
+      "name": "名称",
+      "name_placeholder": "史诗标题",
+      "description": "描述",
+      "description_placeholder": "这个史诗是关于什么的？",
+      "state": "状态",
+      "priority": "优先级",
+      "start_date": "开始日期",
+      "target_date": "截止日期",
+      "assignees": "负责人"
+    },
+    "attach": {
+      "action": "添加工作项",
+      "title": "向史诗添加工作项",
+      "search_placeholder": "搜索此项目中的工作项…",
+      "empty": "没有匹配的工作项。",
+      "submit": "添加 {count} 项"
+    },
+    "state_group": {
+      "backlog": "待办",
+      "unstarted": "未开始",
+      "started": "进行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    }
+  },
+  "thm_initiatives": {
+    "label": "计划",
+    "create": "新建计划",
+    "edit": "编辑计划",
+    "delete": "删除计划",
+    "delete_confirm": "删除计划“{name}”？已关联的项目和史诗不受影响。",
+    "not_found": "未找到计划或无权访问。",
+    "project_count": "{count} 个项目",
+    "epic_count": "{count} 个史诗",
+    "projects": "项目",
+    "epics": "史诗",
+    "no_projects": "尚未关联项目。",
+    "no_epics": "尚未关联史诗。",
+    "not_a_member": "非成员",
+    "unlink": "取消关联",
+    "link": "关联",
+    "pick_project": "选择项目…",
+    "pick_epic": "选择史诗…",
+    "empty": {
+      "title": "还没有计划",
+      "description": "计划将项目和史诗归入同一目标，并在一处汇总进度。"
+    },
+    "form": {
+      "name": "名称",
+      "name_placeholder": "计划名称",
+      "description": "描述",
+      "description_placeholder": "这个计划的目标是什么？",
+      "status": "状态",
+      "lead": "负责人",
+      "start_date": "开始日期",
+      "end_date": "结束日期"
+    },
+    "status": {
+      "planned": "已规划",
+      "in_progress": "进行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "stats": {
+      "total": "工作项",
+      "completed": "已完成",
+      "started": "进行中",
+      "unstarted": "未开始",
+      "backlog": "待办",
+      "overdue": "逾期"
     }
   }
 }

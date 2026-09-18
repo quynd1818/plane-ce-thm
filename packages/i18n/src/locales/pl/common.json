@@ -232,6 +232,8 @@
   "workflow_description": "Ogranicz, kto może przenosić elementy pracy do danego stanu. Reguły konfiguruje się w Ustawienia → Przepływ pracy.",
   "worklog_approval": "Zatwierdzanie worklogów",
   "worklog_approval_description": "Nowe worklogi czekają na administratora projektu lub wyznaczonego zatwierdzającego, zanim zostaną uwzględnione w raportach.",
+  "epics": "Epiki",
+  "epics_description": "Grupuj elementy pracy w duże bloki z zagregowanym postępem.",
   "work_management_description": "Łatwo zarządzaj swoją pracą i projektami.",
   "documentation": "Dokumentacja",
   "message_support": "Skontaktuj się z pomocą",
@@ -1049,6 +1051,93 @@
       "created_at": "Utworzono",
       "target_date": "Termin",
       "completed_at": "Ukończono"
+    }
+  },
+  "thm_epics": {
+    "create": "Nowy epik",
+    "disabled": "Epiki są wyłączone w tym projekcie. Włącz je w Ustawienia → Funkcje.",
+    "demote": "Zmień w element pracy",
+    "demote_confirm": "Zmienić „{name}” z powrotem w zwykły element pracy? Elementy podrzędne pozostaną, ale zostaną odłączone.",
+    "detach": "Odłącz",
+    "expand": "Rozwiń",
+    "collapse": "Zwiń",
+    "no_children": "Ten epik nie ma jeszcze elementów pracy.",
+    "overdue_count": "{count} po terminie",
+    "empty": {
+      "title": "Brak epików",
+      "description": "Utwórz epik i dołącz elementy pracy, które do niego należą. Postęp agreguje się automatycznie."
+    },
+    "form": {
+      "name": "Nazwa",
+      "name_placeholder": "Tytuł epika",
+      "description": "Opis",
+      "description_placeholder": "Czego dotyczy ten epik?",
+      "state": "Status",
+      "priority": "Priorytet",
+      "start_date": "Data rozpoczęcia",
+      "target_date": "Termin",
+      "assignees": "Przypisani"
+    },
+    "attach": {
+      "action": "Dodaj elementy",
+      "title": "Dodaj elementy do epika",
+      "search_placeholder": "Szukaj elementów w tym projekcie…",
+      "empty": "Brak pasujących elementów.",
+      "submit": "Dodaj {count}"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Nierozpoczęte",
+      "started": "Rozpoczęte",
+      "completed": "Ukończone",
+      "cancelled": "Anulowane"
+    }
+  },
+  "thm_initiatives": {
+    "label": "Inicjatywy",
+    "create": "Nowa inicjatywa",
+    "edit": "Edytuj inicjatywę",
+    "delete": "Usuń inicjatywę",
+    "delete_confirm": "Usunąć inicjatywę „{name}”? Powiązane projekty i epiki nie zostaną zmienione.",
+    "not_found": "Nie znaleziono inicjatywy lub brak dostępu.",
+    "project_count": "Projekty: {count}",
+    "epic_count": "Epiki: {count}",
+    "projects": "Projekty",
+    "epics": "Epiki",
+    "no_projects": "Brak powiązanych projektów.",
+    "no_epics": "Brak powiązanych epików.",
+    "not_a_member": "nie jest członkiem",
+    "unlink": "Odłącz",
+    "link": "Powiąż",
+    "pick_project": "Wybierz projekt…",
+    "pick_epic": "Wybierz epik…",
+    "empty": {
+      "title": "Brak inicjatyw",
+      "description": "Inicjatywy grupują projekty i epiki pod jednym celem i agregują ich postęp w jednym miejscu."
+    },
+    "form": {
+      "name": "Nazwa",
+      "name_placeholder": "Nazwa inicjatywy",
+      "description": "Opis",
+      "description_placeholder": "Co ma osiągnąć ta inicjatywa?",
+      "status": "Status",
+      "lead": "Lider",
+      "start_date": "Data rozpoczęcia",
+      "end_date": "Data zakończenia"
+    },
+    "status": {
+      "planned": "Zaplanowana",
+      "in_progress": "W toku",
+      "completed": "Ukończona",
+      "cancelled": "Anulowana"
+    },
+    "stats": {
+      "total": "Elementy pracy",
+      "completed": "Ukończone",
+      "started": "W toku",
+      "unstarted": "Nierozpoczęte",
+      "backlog": "Backlog",
+      "overdue": "Po terminie"
     }
   }
 }

@@ -232,6 +232,8 @@
   "workflow_description": "Restricționați cine poate muta elementele de lucru într-o stare. Configurați regulile în Setări → Flux de lucru.",
   "worklog_approval": "Aprobarea worklogurilor",
   "worklog_approval_description": "Worklogurile noi așteaptă un administrator de proiect sau un aprobator desemnat înainte de a fi incluse în rapoarte.",
+  "epics": "Epicuri",
+  "epics_description": "Grupează elementele de lucru în blocuri mari cu progres consolidat.",
   "work_management_description": "Gestionează-ți munca și proiectele cu ușurință.",
   "documentation": "Documentație",
   "message_support": "Trimite mesaj la suport",
@@ -1049,6 +1051,93 @@
       "created_at": "Creat",
       "target_date": "Termen",
       "completed_at": "Finalizat"
+    }
+  },
+  "thm_epics": {
+    "create": "Epic nou",
+    "disabled": "Epicurile sunt dezactivate pentru acest proiect. Activează-le din Setări → Funcții.",
+    "demote": "Retrogradează la element de lucru",
+    "demote_confirm": "Transformi „{name}” înapoi într-un element de lucru obișnuit? Elementele copil rămân, dar sunt detașate.",
+    "detach": "Detașează",
+    "expand": "Extinde",
+    "collapse": "Restrânge",
+    "no_children": "Niciun element de lucru în acest epic încă.",
+    "overdue_count": "{count} întârziate",
+    "empty": {
+      "title": "Niciun epic încă",
+      "description": "Creează un epic și atașează elementele de lucru care îi aparțin. Progresul se consolidează automat."
+    },
+    "form": {
+      "name": "Nume",
+      "name_placeholder": "Titlul epicului",
+      "description": "Descriere",
+      "description_placeholder": "Despre ce este acest epic?",
+      "state": "Stare",
+      "priority": "Prioritate",
+      "start_date": "Data de început",
+      "target_date": "Termen",
+      "assignees": "Responsabili"
+    },
+    "attach": {
+      "action": "Adaugă elemente",
+      "title": "Adaugă elemente la epic",
+      "search_placeholder": "Caută elemente în acest proiect…",
+      "empty": "Niciun element potrivit.",
+      "submit": "Adaugă {count}"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Neînceput",
+      "started": "Început",
+      "completed": "Finalizat",
+      "cancelled": "Anulat"
+    }
+  },
+  "thm_initiatives": {
+    "label": "Inițiative",
+    "create": "Inițiativă nouă",
+    "edit": "Editează inițiativa",
+    "delete": "Șterge inițiativa",
+    "delete_confirm": "Ștergi inițiativa „{name}”? Proiectele și epicurile legate nu sunt afectate.",
+    "not_found": "Inițiativa nu a fost găsită sau nu ai acces.",
+    "project_count": "{count} proiecte",
+    "epic_count": "{count} epicuri",
+    "projects": "Proiecte",
+    "epics": "Epicuri",
+    "no_projects": "Niciun proiect legat încă.",
+    "no_epics": "Niciun epic legat încă.",
+    "not_a_member": "nu este membru",
+    "unlink": "Dezleagă",
+    "link": "Leagă",
+    "pick_project": "Alege un proiect…",
+    "pick_epic": "Alege un epic…",
+    "empty": {
+      "title": "Nicio inițiativă încă",
+      "description": "Inițiativele grupează proiecte și epicuri sub un singur obiectiv și le consolidează progresul într-un singur loc."
+    },
+    "form": {
+      "name": "Nume",
+      "name_placeholder": "Numele inițiativei",
+      "description": "Descriere",
+      "description_placeholder": "Ce urmărește această inițiativă?",
+      "status": "Stare",
+      "lead": "Responsabil",
+      "start_date": "Data de început",
+      "end_date": "Data de sfârșit"
+    },
+    "status": {
+      "planned": "Planificată",
+      "in_progress": "În curs",
+      "completed": "Finalizată",
+      "cancelled": "Anulată"
+    },
+    "stats": {
+      "total": "Elemente de lucru",
+      "completed": "Finalizate",
+      "started": "În curs",
+      "unstarted": "Neîncepute",
+      "backlog": "Backlog",
+      "overdue": "Întârziate"
     }
   }
 }

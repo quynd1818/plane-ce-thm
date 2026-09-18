@@ -232,6 +232,8 @@
   "workflow_description": "Legen Sie fest, wer Arbeitselemente in einen Status verschieben darf. Regeln unter Einstellungen → Workflow konfigurieren.",
   "worklog_approval": "Worklog-Freigabe",
   "worklog_approval_description": "Neue Worklogs warten auf einen Projektadmin oder benannten Freigeber, bevor sie in Berichten zählen.",
+  "epics": "Epics",
+  "epics_description": "Arbeitselemente unter großen Arbeitspaketen mit aggregiertem Fortschritt bündeln.",
   "work_management_description": "Verwalten Sie Ihre Arbeit und Projekte mühelos.",
   "documentation": "Dokumentation",
   "message_support": "Support kontaktieren",
@@ -1049,6 +1051,93 @@
       "created_at": "Erstellt",
       "target_date": "Fälligkeitsdatum",
       "completed_at": "Abgeschlossen"
+    }
+  },
+  "thm_epics": {
+    "create": "Neues Epic",
+    "disabled": "Epics sind für dieses Projekt deaktiviert. Aktivieren unter Einstellungen → Funktionen.",
+    "demote": "Zu Arbeitselement zurückstufen",
+    "demote_confirm": "„{name}“ wieder in ein normales Arbeitselement umwandeln? Untergeordnete Elemente bleiben, werden aber gelöst.",
+    "detach": "Lösen",
+    "expand": "Aufklappen",
+    "collapse": "Zuklappen",
+    "no_children": "Noch keine Arbeitselemente in diesem Epic.",
+    "overdue_count": "{count} überfällig",
+    "empty": {
+      "title": "Noch keine Epics",
+      "description": "Erstellen Sie ein Epic und hängen Sie die zugehörigen Arbeitselemente an. Der Fortschritt wird automatisch aggregiert."
+    },
+    "form": {
+      "name": "Name",
+      "name_placeholder": "Epic-Titel",
+      "description": "Beschreibung",
+      "description_placeholder": "Worum geht es in diesem Epic?",
+      "state": "Status",
+      "priority": "Priorität",
+      "start_date": "Startdatum",
+      "target_date": "Fälligkeitsdatum",
+      "assignees": "Zuständige"
+    },
+    "attach": {
+      "action": "Arbeitselemente hinzufügen",
+      "title": "Arbeitselemente zum Epic hinzufügen",
+      "search_placeholder": "Arbeitselemente in diesem Projekt suchen…",
+      "empty": "Keine passenden Arbeitselemente.",
+      "submit": "{count} hinzufügen"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Nicht begonnen",
+      "started": "Begonnen",
+      "completed": "Abgeschlossen",
+      "cancelled": "Abgebrochen"
+    }
+  },
+  "thm_initiatives": {
+    "label": "Initiativen",
+    "create": "Neue Initiative",
+    "edit": "Initiative bearbeiten",
+    "delete": "Initiative löschen",
+    "delete_confirm": "Initiative „{name}“ löschen? Verknüpfte Projekte und Epics sind nicht betroffen.",
+    "not_found": "Initiative nicht gefunden oder kein Zugriff.",
+    "project_count": "{count} Projekte",
+    "epic_count": "{count} Epics",
+    "projects": "Projekte",
+    "epics": "Epics",
+    "no_projects": "Noch keine Projekte verknüpft.",
+    "no_epics": "Noch keine Epics verknüpft.",
+    "not_a_member": "kein Mitglied",
+    "unlink": "Trennen",
+    "link": "Verknüpfen",
+    "pick_project": "Projekt wählen…",
+    "pick_epic": "Epic wählen…",
+    "empty": {
+      "title": "Noch keine Initiativen",
+      "description": "Initiativen bündeln Projekte und Epics unter einem Ziel und aggregieren ihren Fortschritt an einem Ort."
+    },
+    "form": {
+      "name": "Name",
+      "name_placeholder": "Name der Initiative",
+      "description": "Beschreibung",
+      "description_placeholder": "Was soll diese Initiative erreichen?",
+      "status": "Status",
+      "lead": "Verantwortlich",
+      "start_date": "Startdatum",
+      "end_date": "Enddatum"
+    },
+    "status": {
+      "planned": "Geplant",
+      "in_progress": "In Arbeit",
+      "completed": "Abgeschlossen",
+      "cancelled": "Abgebrochen"
+    },
+    "stats": {
+      "total": "Arbeitselemente",
+      "completed": "Abgeschlossen",
+      "started": "In Arbeit",
+      "unstarted": "Nicht begonnen",
+      "backlog": "Backlog",
+      "overdue": "Überfällig"
     }
   }
 }

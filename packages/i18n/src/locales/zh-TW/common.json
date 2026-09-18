@@ -232,6 +232,8 @@
   "workflow_description": "限制誰可以將工作項目移動到某個狀態。請在「設定 → 工作流程」中設定規則。",
   "worklog_approval": "工時審核",
   "worklog_approval_description": "新的工時紀錄需經專案管理員或指定審核人核准後才會計入報表。",
+  "epics": "史詩",
+  "epics_description": "將工作項目歸入大型工作單元並自動彙總進度。",
   "work_management_description": "輕鬆管理您的工作和專案。",
   "documentation": "文件",
   "message_support": "聯絡支援",
@@ -1049,6 +1051,93 @@
       "created_at": "建立時間",
       "target_date": "截止日期",
       "completed_at": "完成時間"
+    }
+  },
+  "thm_epics": {
+    "create": "新增史詩",
+    "disabled": "此專案未啟用史詩。請在設定 → 功能中啟用。",
+    "demote": "降級為工作項目",
+    "demote_confirm": "將「{name}」變回一般工作項目？其子工作項目保留但會解除關聯。",
+    "detach": "解除",
+    "expand": "展開",
+    "collapse": "收合",
+    "no_children": "此史詩中還沒有工作項目。",
+    "overdue_count": "{count} 個逾期",
+    "empty": {
+      "title": "還沒有史詩",
+      "description": "建立史詩並關聯所屬工作項目，進度會自動彙總。"
+    },
+    "form": {
+      "name": "名稱",
+      "name_placeholder": "史詩標題",
+      "description": "描述",
+      "description_placeholder": "這個史詩是關於什麼？",
+      "state": "狀態",
+      "priority": "優先順序",
+      "start_date": "開始日期",
+      "target_date": "截止日期",
+      "assignees": "負責人"
+    },
+    "attach": {
+      "action": "新增工作項目",
+      "title": "將工作項目加入史詩",
+      "search_placeholder": "搜尋此專案中的工作項目…",
+      "empty": "沒有相符的工作項目。",
+      "submit": "新增 {count} 項"
+    },
+    "state_group": {
+      "backlog": "待辦",
+      "unstarted": "未開始",
+      "started": "進行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    }
+  },
+  "thm_initiatives": {
+    "label": "倡議",
+    "create": "新增倡議",
+    "edit": "編輯倡議",
+    "delete": "刪除倡議",
+    "delete_confirm": "刪除倡議「{name}」？已關聯的專案與史詩不受影響。",
+    "not_found": "找不到倡議或無權存取。",
+    "project_count": "{count} 個專案",
+    "epic_count": "{count} 個史詩",
+    "projects": "專案",
+    "epics": "史詩",
+    "no_projects": "尚未關聯專案。",
+    "no_epics": "尚未關聯史詩。",
+    "not_a_member": "非成員",
+    "unlink": "取消關聯",
+    "link": "關聯",
+    "pick_project": "選擇專案…",
+    "pick_epic": "選擇史詩…",
+    "empty": {
+      "title": "還沒有倡議",
+      "description": "倡議將專案與史詩歸入同一目標，並在一處彙總進度。"
+    },
+    "form": {
+      "name": "名稱",
+      "name_placeholder": "倡議名稱",
+      "description": "描述",
+      "description_placeholder": "這個倡議的目標是什麼？",
+      "status": "狀態",
+      "lead": "負責人",
+      "start_date": "開始日期",
+      "end_date": "結束日期"
+    },
+    "status": {
+      "planned": "已規劃",
+      "in_progress": "進行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "stats": {
+      "total": "工作項目",
+      "completed": "已完成",
+      "started": "進行中",
+      "unstarted": "未開始",
+      "backlog": "待辦",
+      "overdue": "逾期"
     }
   }
 }

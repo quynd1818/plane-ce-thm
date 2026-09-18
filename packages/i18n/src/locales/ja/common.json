@@ -232,6 +232,8 @@
   "workflow_description": "作業項目を特定のステータスへ移動できるユーザーを制限します。ルールは「設定 → ワークフロー」で設定します。",
   "worklog_approval": "作業ログの承認",
   "worklog_approval_description": "新しい作業ログは、プロジェクト管理者または指定された承認者が承認するまでレポートに集計されません。",
+  "epics": "エピック",
+  "epics_description": "作業項目を大きな作業単位にまとめ、進捗を自動集計します。",
   "work_management_description": "作業とプロジェクトを簡単に管理します。",
   "documentation": "ドキュメント",
   "message_support": "サポートにメッセージ",
@@ -1049,6 +1051,93 @@
       "created_at": "作成日",
       "target_date": "期限",
       "completed_at": "完了日"
+    }
+  },
+  "thm_epics": {
+    "create": "新しいエピック",
+    "disabled": "このプロジェクトではエピックが無効です。設定 → 機能で有効にしてください。",
+    "demote": "作業項目に戻す",
+    "demote_confirm": "「{name}」を通常の作業項目に戻しますか？子作業項目は残りますが、紐付けは解除されます。",
+    "detach": "解除",
+    "expand": "展開",
+    "collapse": "折りたたむ",
+    "no_children": "このエピックにはまだ作業項目がありません。",
+    "overdue_count": "期限超過 {count} 件",
+    "empty": {
+      "title": "エピックはまだありません",
+      "description": "エピックを作成し、関連する作業項目を紐付けます。進捗は自動的に集計されます。"
+    },
+    "form": {
+      "name": "名前",
+      "name_placeholder": "エピックのタイトル",
+      "description": "説明",
+      "description_placeholder": "このエピックの内容は？",
+      "state": "ステータス",
+      "priority": "優先度",
+      "start_date": "開始日",
+      "target_date": "期限",
+      "assignees": "担当者"
+    },
+    "attach": {
+      "action": "作業項目を追加",
+      "title": "エピックに作業項目を追加",
+      "search_placeholder": "このプロジェクトの作業項目を検索…",
+      "empty": "該当する作業項目がありません。",
+      "submit": "{count} 件を追加"
+    },
+    "state_group": {
+      "backlog": "バックログ",
+      "unstarted": "未着手",
+      "started": "進行中",
+      "completed": "完了",
+      "cancelled": "キャンセル"
+    }
+  },
+  "thm_initiatives": {
+    "label": "イニシアチブ",
+    "create": "新しいイニシアチブ",
+    "edit": "イニシアチブを編集",
+    "delete": "イニシアチブを削除",
+    "delete_confirm": "イニシアチブ「{name}」を削除しますか？紐付いたプロジェクトとエピックは影響を受けません。",
+    "not_found": "イニシアチブが見つからないか、アクセス権がありません。",
+    "project_count": "{count} プロジェクト",
+    "epic_count": "{count} エピック",
+    "projects": "プロジェクト",
+    "epics": "エピック",
+    "no_projects": "紐付いたプロジェクトはありません。",
+    "no_epics": "紐付いたエピックはありません。",
+    "not_a_member": "メンバーではありません",
+    "unlink": "解除",
+    "link": "紐付け",
+    "pick_project": "プロジェクトを選択…",
+    "pick_epic": "エピックを選択…",
+    "empty": {
+      "title": "イニシアチブはまだありません",
+      "description": "イニシアチブはプロジェクトとエピックを一つの目標にまとめ、進捗を一か所に集計します。"
+    },
+    "form": {
+      "name": "名前",
+      "name_placeholder": "イニシアチブ名",
+      "description": "説明",
+      "description_placeholder": "このイニシアチブの目的は？",
+      "status": "ステータス",
+      "lead": "リーダー",
+      "start_date": "開始日",
+      "end_date": "終了日"
+    },
+    "status": {
+      "planned": "計画中",
+      "in_progress": "進行中",
+      "completed": "完了",
+      "cancelled": "キャンセル"
+    },
+    "stats": {
+      "total": "作業項目",
+      "completed": "完了",
+      "started": "進行中",
+      "unstarted": "未着手",
+      "backlog": "バックログ",
+      "overdue": "期限超過"
     }
   }
 }

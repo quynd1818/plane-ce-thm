@@ -50,6 +50,7 @@ from .view import IssueViewSerializer, ViewIssueListSerializer
 from .worklog import WorkLogCreateSerializer, WorkLogSerializer
 from .project_template import ProjectTemplateLiteSerializer, ProjectTemplateSerializer
 from .dashboard import DashboardDetailSerializer, DashboardSerializer, DashboardWidgetSerializer
+from .initiative import InitiativeSerializer
 from .customization import (
     ProjectCustomPropertySerializer,
     ProjectIssueTypeSerializer,

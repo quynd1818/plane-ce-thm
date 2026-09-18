@@ -147,6 +147,20 @@ from .workspace.dashboard import (
     DashboardWidgetEndpoint,
     DashboardWidgetReorderEndpoint,
 )
+from .project.epic import (
+    ProjectEpicConvertEndpoint,
+    ProjectEpicDetailEndpoint,
+    ProjectEpicEndpoint,
+    ProjectEpicWorkItemsEndpoint,
+)
+from .workspace.initiative import (
+    InitiativeAnalyticsEndpoint,
+    InitiativeDetailEndpoint,
+    InitiativeEndpoint,
+    InitiativeEpicsEndpoint,
+    InitiativeProjectsEndpoint,
+    WorkspaceEpicEndpoint,
+)
 from .project.template import (
     ProjectSaveAsTemplateEndpoint,
     ProjectTemplateDetailEndpoint,

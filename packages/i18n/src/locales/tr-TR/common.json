@@ -232,6 +232,8 @@
   "workflow_description": "İş öğelerini bir duruma kimlerin taşıyabileceğini kısıtlayın. Kuralları Ayarlar → İş akışı altında yapılandırın.",
   "worklog_approval": "Çalışma kaydı onayı",
   "worklog_approval_description": "Yeni çalışma kayıtları raporlara dahil edilmeden önce bir proje yöneticisinin veya atanmış onaylayıcının onayını bekler.",
+  "epics": "Epikler",
+  "epics_description": "İş öğelerini toplu ilerleme ile büyük iş bloklarında gruplayın.",
   "work_management_description": "İşlerinizi ve projelerinizi kolayca yönetin.",
   "documentation": "Dokümantasyon",
   "message_support": "Destekle iletişim",
@@ -1049,6 +1051,93 @@
       "created_at": "Oluşturma",
       "target_date": "Son tarih",
       "completed_at": "Tamamlanma"
+    }
+  },
+  "thm_epics": {
+    "create": "Yeni epik",
+    "disabled": "Bu projede epikler kapalı. Ayarlar → Özellikler'den açın.",
+    "demote": "İş öğesine indir",
+    "demote_confirm": "\"{name}\" tekrar normal bir iş öğesine dönüştürülsün mü? Alt iş öğeleri kalır ancak ayrılır.",
+    "detach": "Ayır",
+    "expand": "Genişlet",
+    "collapse": "Daralt",
+    "no_children": "Bu epikte henüz iş öğesi yok.",
+    "overdue_count": "{count} gecikmiş",
+    "empty": {
+      "title": "Henüz epik yok",
+      "description": "Bir epik oluşturun ve ona ait iş öğelerini ekleyin. İlerleme otomatik olarak toplanır."
+    },
+    "form": {
+      "name": "Ad",
+      "name_placeholder": "Epik başlığı",
+      "description": "Açıklama",
+      "description_placeholder": "Bu epik ne hakkında?",
+      "state": "Durum",
+      "priority": "Öncelik",
+      "start_date": "Başlangıç tarihi",
+      "target_date": "Son tarih",
+      "assignees": "Atananlar"
+    },
+    "attach": {
+      "action": "İş öğesi ekle",
+      "title": "Epiğe iş öğesi ekle",
+      "search_placeholder": "Bu projedeki iş öğelerini ara…",
+      "empty": "Eşleşen iş öğesi yok.",
+      "submit": "{count} ekle"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Başlanmadı",
+      "started": "Başlandı",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal edildi"
+    }
+  },
+  "thm_initiatives": {
+    "label": "Girişimler",
+    "create": "Yeni girişim",
+    "edit": "Girişimi düzenle",
+    "delete": "Girişimi sil",
+    "delete_confirm": "\"{name}\" girişimi silinsin mi? Bağlı projeler ve epikler etkilenmez.",
+    "not_found": "Girişim bulunamadı veya erişiminiz yok.",
+    "project_count": "{count} proje",
+    "epic_count": "{count} epik",
+    "projects": "Projeler",
+    "epics": "Epikler",
+    "no_projects": "Henüz bağlı proje yok.",
+    "no_epics": "Henüz bağlı epik yok.",
+    "not_a_member": "üye değil",
+    "unlink": "Bağlantıyı kaldır",
+    "link": "Bağla",
+    "pick_project": "Proje seçin…",
+    "pick_epic": "Epik seçin…",
+    "empty": {
+      "title": "Henüz girişim yok",
+      "description": "Girişimler projeleri ve epikleri tek bir hedef altında toplar ve ilerlemelerini tek yerde birleştirir."
+    },
+    "form": {
+      "name": "Ad",
+      "name_placeholder": "Girişim adı",
+      "description": "Açıklama",
+      "description_placeholder": "Bu girişim neyi hedefliyor?",
+      "status": "Durum",
+      "lead": "Sorumlu",
+      "start_date": "Başlangıç tarihi",
+      "end_date": "Bitiş tarihi"
+    },
+    "status": {
+      "planned": "Planlandı",
+      "in_progress": "Devam ediyor",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal edildi"
+    },
+    "stats": {
+      "total": "İş öğeleri",
+      "completed": "Tamamlanan",
+      "started": "Devam eden",
+      "unstarted": "Başlanmayan",
+      "backlog": "Backlog",
+      "overdue": "Gecikmiş"
     }
   }
 }

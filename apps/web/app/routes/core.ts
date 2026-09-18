@@ -73,6 +73,15 @@ export const coreRoutes: RouteConfigEntry[] = [
           route(":workspaceSlug/analytics/:tabId", "./(all)/[workspaceSlug]/(projects)/analytics/[tabId]/page.tsx"),
         ]),
 
+        // THM initiatives
+        layout("./(all)/[workspaceSlug]/(projects)/initiatives/layout.tsx", [
+          route(":workspaceSlug/initiatives", "./(all)/[workspaceSlug]/(projects)/initiatives/page.tsx"),
+          route(
+            ":workspaceSlug/initiatives/:initiativeId",
+            "./(all)/[workspaceSlug]/(projects)/initiatives/[initiativeId]/page.tsx"
+          ),
+        ]),
+
         // THM dashboards
         layout("./(all)/[workspaceSlug]/(projects)/dashboards/layout.tsx", [
           route(":workspaceSlug/dashboards", "./(all)/[workspaceSlug]/(projects)/dashboards/page.tsx"),
@@ -177,6 +186,14 @@ export const coreRoutes: RouteConfigEntry[] = [
             route(
               ":workspaceSlug/projects/:projectId/modules/:moduleId",
               "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/modules/(detail)/[moduleId]/page.tsx"
+            ),
+          ]),
+
+          // THM Epics
+          layout("./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/epics/layout.tsx", [
+            route(
+              ":workspaceSlug/projects/:projectId/epics",
+              "./(all)/[workspaceSlug]/(projects)/projects/(detail)/[projectId]/epics/page.tsx"
             ),
           ]),
 

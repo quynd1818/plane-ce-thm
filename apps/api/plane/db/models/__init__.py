@@ -94,5 +94,6 @@ from .phase3 import IntakeForm, RecurringIssue
 from .workflow import WorkflowTransitionRule
 from .project_template import ProjectTemplate
 from .dashboard import Dashboard, DashboardWidget
+from .initiative import Initiative, InitiativeEpic, InitiativeProject
 
 from .description import Description, DescriptionVersion

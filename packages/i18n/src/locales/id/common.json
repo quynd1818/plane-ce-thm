@@ -232,6 +232,8 @@
   "workflow_description": "Batasi siapa yang dapat memindahkan item kerja ke suatu status. Atur aturannya di Pengaturan → Alur kerja.",
   "worklog_approval": "Persetujuan worklog",
   "worklog_approval_description": "Worklog baru menunggu admin proyek atau penyetuju yang ditunjuk sebelum dihitung dalam laporan.",
+  "epics": "Epik",
+  "epics_description": "Kelompokkan item kerja ke dalam blok kerja besar dengan progres yang terakumulasi.",
   "work_management_description": "Kelola pekerjaan dan proyek Anda dengan mudah.",
   "documentation": "Dokumentasi",
   "message_support": "Pesan dukungan",
@@ -1049,6 +1051,93 @@
       "created_at": "Dibuat",
       "target_date": "Jatuh tempo",
       "completed_at": "Selesai"
+    }
+  },
+  "thm_epics": {
+    "create": "Epik baru",
+    "disabled": "Epik dinonaktifkan untuk proyek ini. Aktifkan di Pengaturan → Fitur.",
+    "demote": "Turunkan menjadi item kerja",
+    "demote_confirm": "Ubah \"{name}\" kembali menjadi item kerja biasa? Item turunannya tetap ada tetapi dilepas.",
+    "detach": "Lepas",
+    "expand": "Perluas",
+    "collapse": "Ciutkan",
+    "no_children": "Belum ada item kerja di epik ini.",
+    "overdue_count": "{count} terlambat",
+    "empty": {
+      "title": "Belum ada epik",
+      "description": "Buat epik dan lampirkan item kerja yang menjadi bagiannya. Progres terakumulasi otomatis."
+    },
+    "form": {
+      "name": "Nama",
+      "name_placeholder": "Judul epik",
+      "description": "Deskripsi",
+      "description_placeholder": "Tentang apa epik ini?",
+      "state": "Status",
+      "priority": "Prioritas",
+      "start_date": "Tanggal mulai",
+      "target_date": "Tenggat",
+      "assignees": "Penanggung jawab"
+    },
+    "attach": {
+      "action": "Tambah item kerja",
+      "title": "Tambah item kerja ke epik",
+      "search_placeholder": "Cari item kerja di proyek ini…",
+      "empty": "Tidak ada item kerja yang cocok.",
+      "submit": "Tambah {count}"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Belum dimulai",
+      "started": "Dimulai",
+      "completed": "Selesai",
+      "cancelled": "Dibatalkan"
+    }
+  },
+  "thm_initiatives": {
+    "label": "Inisiatif",
+    "create": "Inisiatif baru",
+    "edit": "Edit inisiatif",
+    "delete": "Hapus inisiatif",
+    "delete_confirm": "Hapus inisiatif \"{name}\"? Proyek dan epik yang tertaut tidak terpengaruh.",
+    "not_found": "Inisiatif tidak ditemukan atau Anda tidak memiliki akses.",
+    "project_count": "{count} proyek",
+    "epic_count": "{count} epik",
+    "projects": "Proyek",
+    "epics": "Epik",
+    "no_projects": "Belum ada proyek yang tertaut.",
+    "no_epics": "Belum ada epik yang tertaut.",
+    "not_a_member": "bukan anggota",
+    "unlink": "Lepas tautan",
+    "link": "Tautkan",
+    "pick_project": "Pilih proyek…",
+    "pick_epic": "Pilih epik…",
+    "empty": {
+      "title": "Belum ada inisiatif",
+      "description": "Inisiatif mengelompokkan proyek dan epik di bawah satu tujuan dan mengakumulasi progresnya di satu tempat."
+    },
+    "form": {
+      "name": "Nama",
+      "name_placeholder": "Nama inisiatif",
+      "description": "Deskripsi",
+      "description_placeholder": "Apa yang ingin dicapai inisiatif ini?",
+      "status": "Status",
+      "lead": "Pemimpin",
+      "start_date": "Tanggal mulai",
+      "end_date": "Tanggal selesai"
+    },
+    "status": {
+      "planned": "Direncanakan",
+      "in_progress": "Berjalan",
+      "completed": "Selesai",
+      "cancelled": "Dibatalkan"
+    },
+    "stats": {
+      "total": "Item kerja",
+      "completed": "Selesai",
+      "started": "Berjalan",
+      "unstarted": "Belum dimulai",
+      "backlog": "Backlog",
+      "overdue": "Terlambat"
     }
   }
 }

@@ -232,6 +232,8 @@
   "workflow_description": "Giới hạn ai được chuyển mục công việc sang một trạng thái. Cấu hình quy tắc tại Cài đặt → Quy trình.",
   "worklog_approval": "Duyệt worklog",
   "worklog_approval_description": "Worklog mới sẽ chờ quản trị dự án hoặc người duyệt được chỉ định phê duyệt trước khi được tính vào báo cáo.",
+  "epics": "Epic",
+  "epics_description": "Gom các mục công việc thành khối việc lớn với tiến độ tự tổng hợp.",
   "work_management_description": "Quản lý công việc và dự án của bạn một cách dễ dàng.",
   "documentation": "Tài liệu",
   "message_support": "Liên hệ hỗ trợ",
@@ -1049,6 +1051,93 @@
       "created_at": "Ngày tạo",
       "target_date": "Hạn hoàn thành",
       "completed_at": "Ngày hoàn thành"
+    }
+  },
+  "thm_epics": {
+    "create": "Tạo epic",
+    "disabled": "Dự án này chưa bật Epic. Bật tại Cài đặt → Tính năng.",
+    "demote": "Chuyển về việc thường",
+    "demote_confirm": "Chuyển \"{name}\" về mục công việc thường? Các việc con vẫn còn nhưng được tách ra.",
+    "detach": "Tách",
+    "expand": "Mở rộng",
+    "collapse": "Thu gọn",
+    "no_children": "Epic này chưa có mục công việc nào.",
+    "overdue_count": "{count} quá hạn",
+    "empty": {
+      "title": "Chưa có epic",
+      "description": "Tạo epic và gắn các mục công việc thuộc về nó. Tiến độ sẽ tự tổng hợp."
+    },
+    "form": {
+      "name": "Tên",
+      "name_placeholder": "Tiêu đề epic",
+      "description": "Mô tả",
+      "description_placeholder": "Epic này về việc gì?",
+      "state": "Trạng thái",
+      "priority": "Độ ưu tiên",
+      "start_date": "Ngày bắt đầu",
+      "target_date": "Hạn hoàn thành",
+      "assignees": "Người phụ trách"
+    },
+    "attach": {
+      "action": "Thêm việc",
+      "title": "Thêm mục công việc vào epic",
+      "search_placeholder": "Tìm mục công việc trong dự án…",
+      "empty": "Không có mục công việc phù hợp.",
+      "submit": "Thêm {count}"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Chưa bắt đầu",
+      "started": "Đang làm",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã huỷ"
+    }
+  },
+  "thm_initiatives": {
+    "label": "Sáng kiến",
+    "create": "Tạo sáng kiến",
+    "edit": "Sửa sáng kiến",
+    "delete": "Xoá sáng kiến",
+    "delete_confirm": "Xoá sáng kiến \"{name}\"? Các dự án và epic đã liên kết không bị ảnh hưởng.",
+    "not_found": "Không tìm thấy sáng kiến hoặc bạn không có quyền xem.",
+    "project_count": "{count} dự án",
+    "epic_count": "{count} epic",
+    "projects": "Dự án",
+    "epics": "Epic",
+    "no_projects": "Chưa liên kết dự án nào.",
+    "no_epics": "Chưa liên kết epic nào.",
+    "not_a_member": "không phải thành viên",
+    "unlink": "Bỏ liên kết",
+    "link": "Liên kết",
+    "pick_project": "Chọn dự án…",
+    "pick_epic": "Chọn epic…",
+    "empty": {
+      "title": "Chưa có sáng kiến",
+      "description": "Sáng kiến gom các dự án và epic dưới một mục tiêu chung và tổng hợp tiến độ tại một nơi."
+    },
+    "form": {
+      "name": "Tên",
+      "name_placeholder": "Tên sáng kiến",
+      "description": "Mô tả",
+      "description_placeholder": "Sáng kiến này hướng tới điều gì?",
+      "status": "Trạng thái",
+      "lead": "Người phụ trách",
+      "start_date": "Ngày bắt đầu",
+      "end_date": "Ngày kết thúc"
+    },
+    "status": {
+      "planned": "Dự kiến",
+      "in_progress": "Đang thực hiện",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã huỷ"
+    },
+    "stats": {
+      "total": "Mục công việc",
+      "completed": "Hoàn thành",
+      "started": "Đang làm",
+      "unstarted": "Chưa bắt đầu",
+      "backlog": "Backlog",
+      "overdue": "Quá hạn"
     }
   }
 }

@@ -26,6 +26,7 @@ from .phase3 import urlpatterns as phase3_urls
 from .workflow import urlpatterns as workflow_urls
 from .project_template import urlpatterns as project_template_urls
 from .dashboard import urlpatterns as thm_dashboard_urls
+from .initiative import urlpatterns as thm_initiative_urls
 
 urlpatterns = [
     *analytic_urls,
@@ -52,4 +53,5 @@ urlpatterns = [
     *workflow_urls,
     *project_template_urls,
     *thm_dashboard_urls,
+    *thm_initiative_urls,
 ]

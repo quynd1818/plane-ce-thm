@@ -33,6 +33,7 @@ export interface IPartialProject {
   is_time_tracking_enabled: boolean;
   is_workflow_enabled: boolean;
   is_worklog_approval_enabled: boolean;
+  is_epic_enabled: boolean;
   worklog_approver_ids: string[];
   is_issue_type_enabled: boolean;
   guest_view_all_features?: boolean;
