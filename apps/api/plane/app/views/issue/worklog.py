@@ -9,6 +9,7 @@ from django.utils.dateparse import parse_date
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework.negotiation import DefaultContentNegotiation
 
 from plane.app.permissions import ROLE, allow_permission
 from plane.app.serializers.worklog import WorkLogCreateSerializer, WorkLogSerializer
@@ -19,6 +20,8 @@ from plane.utils.worklog_approval import can_modify_worklog, initial_status, is_
 
 
 class IssueWorkLogEndpoint(BaseAPIView):
+    rbac_policy = {"GET": "worklogs.read"}
+
     def get_queryset(self, slug, project_id, issue_id):
         return WorkLog.objects.filter(
             workspace__slug=slug,
@@ -176,6 +179,8 @@ def _apply_worklog_filters(queryset, params, project_id=None):
 
 
 class ProjectWorkLogSummaryEndpoint(BaseAPIView):
+    rbac_policy = {"GET": "worklogs.read"}
+
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id):
         queryset = WorkLog.objects.filter(
@@ -214,7 +219,22 @@ class ProjectWorkLogSummaryEndpoint(BaseAPIView):
         )
 
 
+def _csv_text(value):
+    # Spreadsheet programs may execute formulas in otherwise correctly quoted CSV.
+    return "'" + value if value.lstrip().startswith(("=", "+", "-", "@")) else value
+
+
+class WorklogReportNegotiation(DefaultContentNegotiation):
+    def filter_renderers(self, renderers, format):
+        return renderers if format == "csv" else super().filter_renderers(renderers, format)
+
+
 class ProjectWorkLogReportEndpoint(BaseAPIView):
+    content_negotiation_class = WorklogReportNegotiation
+    rbac_export = True
+
+    rbac_policy = {"GET": "worklogs.read"}
+
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id):
         queryset = WorkLog.objects.filter(
@@ -234,9 +254,9 @@ class ProjectWorkLogReportEndpoint(BaseAPIView):
             for worklog in queryset:
                 writer.writerow(
                     [
-                        worklog.issue.name,
-                        worklog.user.email,
-                        worklog.description,
+                        _csv_text(worklog.issue.name),
+                        _csv_text(worklog.user.email),
+                        _csv_text(worklog.description),
                         worklog.duration_seconds,
                         worklog.started_at.isoformat(),
                         worklog.ended_at.isoformat() if worklog.ended_at else "",

@@ -31,7 +31,10 @@ from plane.utils.paginator import BasePaginator
 from plane.utils.core.mixins import ReadReplicaControlMixin
 
 
-class TimezoneMixin:
+from plane.utils.project_rbac import ProjectRoleGuardMixin
+
+
+class TimezoneMixin(ProjectRoleGuardMixin):
     """
     This enables timezone conversion according
     to the user set timezone

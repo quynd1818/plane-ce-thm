@@ -47,6 +47,8 @@ from plane.utils.order_queryset import PROJECT_ORDER_BY_ALLOWLIST, sanitize_orde
 
 
 class ProjectViewSet(BaseViewSet):
+    rbac_policy = {"GET": "metadata"}
+    rbac_project_detail = True
     serializer_class = ProjectListSerializer
     model = Project
     webhook_event = "project"

@@ -350,6 +350,7 @@ class ProjectMemberViewSet(BaseViewSet):
 
 
 class ProjectMemberUserEndpoint(BaseAPIView):
+    rbac_policy = {"GET": "metadata"}
     def get(self, request, slug, project_id):
         project_member = ProjectMember.objects.get(
             project_id=project_id,
@@ -363,6 +364,7 @@ class ProjectMemberUserEndpoint(BaseAPIView):
 
 
 class UserProjectRolesEndpoint(BaseAPIView):
+    rbac_policy = {"GET": "metadata"}
     permission_classes = [WorkspaceUserPermission]
     use_read_replica = True
 

@@ -97,3 +97,4 @@ from .dashboard import Dashboard, DashboardWidget
 from .initiative import Initiative, InitiativeEpic, InitiativeProject
 
 from .description import Description, DescriptionVersion
+from .project_role import ProjectCustomRole, ProjectRoleAssignment

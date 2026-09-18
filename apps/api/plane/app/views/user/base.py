@@ -57,6 +57,7 @@ logger = logging.getLogger("plane")
 
 
 class UserEndpoint(BaseViewSet):
+    rbac_policy = {method: "metadata" for method in ("GET", "PATCH", "POST", "PUT", "DELETE")}
     serializer_class = UserSerializer
     model = User
     use_read_replica = True
@@ -349,6 +350,7 @@ class UserEndpoint(BaseViewSet):
 
 
 class UserSessionEndpoint(BaseAPIView):
+    rbac_policy = {method: "metadata" for method in ("GET", "PATCH", "POST", "PUT", "DELETE")}
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -363,6 +365,8 @@ class UserSessionEndpoint(BaseAPIView):
 
 
 class UpdateUserOnBoardedEndpoint(BaseAPIView):
+    rbac_policy = {method: "metadata" for method in ("GET", "PATCH", "POST", "PUT", "DELETE")}
+
     def patch(self, request):
         profile = Profile.objects.get(user_id=request.user.id)
         profile.is_onboarded = request.data.get("is_onboarded", False)
@@ -371,6 +375,8 @@ class UpdateUserOnBoardedEndpoint(BaseAPIView):
 
 
 class UpdateUserTourCompletedEndpoint(BaseAPIView):
+    rbac_policy = {method: "metadata" for method in ("GET", "PATCH", "POST", "PUT", "DELETE")}
+
     def patch(self, request):
         profile = Profile.objects.get(user_id=request.user.id)
         profile.is_tour_completed = request.data.get("is_tour_completed", False)
@@ -397,6 +403,8 @@ class UserActivityEndpoint(BaseAPIView, BasePaginator):
 
 
 class AccountEndpoint(BaseAPIView):
+    rbac_policy = {method: "metadata" for method in ("GET", "PATCH", "POST", "PUT", "DELETE")}
+
     def get(self, request, pk=None):
         if pk:
             account = Account.objects.get(pk=pk, user=request.user)
@@ -414,6 +422,8 @@ class AccountEndpoint(BaseAPIView):
 
 
 class ProfileEndpoint(BaseAPIView):
+    rbac_policy = {method: "metadata" for method in ("GET", "PATCH", "POST", "PUT", "DELETE")}
+
     @method_decorator(cache_control(private=True, max_age=12))
     @method_decorator(vary_on_cookie)
     def get(self, request):

@@ -27,12 +27,13 @@ from plane.api.rate_limit import ApiKeyRateThrottle
 from plane.utils.exception_logger import log_exception
 from plane.utils.paginator import BasePaginator
 from plane.utils.core.mixins import ReadReplicaControlMixin
+from plane.utils.project_rbac import ProjectRoleGuardMixin
 
 
 logger = logging.getLogger("plane.api")
 
 
-class TimezoneMixin:
+class TimezoneMixin(ProjectRoleGuardMixin):
     """
     This enables timezone conversion according
     to the user set timezone

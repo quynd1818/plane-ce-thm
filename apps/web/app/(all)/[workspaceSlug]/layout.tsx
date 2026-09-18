@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { WorkspaceRoleBoundary } from "@/components/project-roles/workspace-boundary";
 import { Outlet } from "react-router";
 import { AuthenticationWrapper } from "@/lib/wrappers/authentication-wrapper";
 import { WorkspaceContentWrapper } from "@/components/workspace/content-wrapper";
@@ -17,14 +18,16 @@ export default function WorkspaceLayout(props: Route.ComponentProps) {
 
   return (
     <AuthenticationWrapper>
-      <WorkspaceAuthWrapper>
-        <AppRailVisibilityProvider>
-          <WorkspaceContentWrapper>
-            <GlobalModals workspaceSlug={workspaceSlug} />
-            <Outlet />
-          </WorkspaceContentWrapper>
-        </AppRailVisibilityProvider>
-      </WorkspaceAuthWrapper>
+      <WorkspaceRoleBoundary workspaceSlug={workspaceSlug}>
+        <WorkspaceAuthWrapper>
+          <AppRailVisibilityProvider>
+            <WorkspaceContentWrapper>
+              <GlobalModals workspaceSlug={workspaceSlug} />
+              <Outlet />
+            </WorkspaceContentWrapper>
+          </AppRailVisibilityProvider>
+        </WorkspaceAuthWrapper>
+      </WorkspaceRoleBoundary>
     </AuthenticationWrapper>
   );
 }

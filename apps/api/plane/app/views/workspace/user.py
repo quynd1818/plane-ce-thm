@@ -66,6 +66,7 @@ from plane.utils.filters import IssueFilterSet
 
 
 class UserLastProjectWithWorkspaceEndpoint(BaseAPIView):
+    rbac_policy = {"GET": "metadata"}
     def get(self, request):
         user = User.objects.get(pk=request.user.id)
 

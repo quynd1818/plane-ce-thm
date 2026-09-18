@@ -51,6 +51,7 @@ from plane.utils.csv_utils import sanitize_csv_row
 
 
 class WorkSpaceViewSet(BaseViewSet):
+    rbac_policy = {"GET": "metadata"}
     model = Workspace
     serializer_class = WorkSpaceSerializer
     permission_classes = [WorkSpaceBasePermission]
@@ -173,6 +174,7 @@ class WorkSpaceViewSet(BaseViewSet):
 
 
 class UserWorkSpacesEndpoint(BaseAPIView):
+    rbac_policy = {"GET": "metadata"}
     search_fields = ["name"]
     filterset_fields = ["owner"]
     use_read_replica = True

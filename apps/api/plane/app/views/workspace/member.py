@@ -215,6 +215,7 @@ class WorkspaceMemberUserViewsEndpoint(BaseAPIView):
 
 
 class WorkspaceMemberUserEndpoint(BaseAPIView):
+    rbac_policy = {"GET": "metadata"}
     use_read_replica = True
 
     def get(self, request, slug):

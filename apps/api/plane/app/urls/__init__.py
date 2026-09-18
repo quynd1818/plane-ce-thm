@@ -28,7 +28,10 @@ from .project_template import urlpatterns as project_template_urls
 from .dashboard import urlpatterns as thm_dashboard_urls
 from .initiative import urlpatterns as thm_initiative_urls
 
+from .project_role import urlpatterns as project_role_urls
+
 urlpatterns = [
+    *project_role_urls,
     *analytic_urls,
     *asset_urls,
     *cycle_urls,
