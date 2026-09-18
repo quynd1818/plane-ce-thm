@@ -20,6 +20,7 @@ import type { TPageInstance } from "@/store/pages/base-page";
 // ui
 import { Banner } from "@makeplane/propel/components/banner";
 // local imports
+import { PageHierarchy } from "./page-hierarchy";
 import { PageNavigationPaneRoot } from "../navigation-pane";
 import { PageVersionsOverlay } from "../version";
 import { PagesVersionEditor } from "../version/editor";
@@ -170,6 +171,9 @@ export const PageRoot = observer(function PageRoot(props: TPageRootProps) {
           isNavigationPaneOpen={isNavigationPaneOpen}
           page={page}
         />
+        {projectId && (
+          <PageHierarchy page={page} storeType={storeType} projectId={projectId} workspaceSlug={workspaceSlug} />
+        )}
         {showContentTooLargeBanner && (
           <Banner
             placement="page"

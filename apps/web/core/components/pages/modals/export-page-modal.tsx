@@ -5,6 +5,7 @@
  */
 
 import { useState } from "react";
+import { pageExportFilename, pageExportHTML } from "@/helpers/page-export";
 import type { PageProps } from "@react-pdf/renderer";
 import { pdf } from "@react-pdf/renderer";
 import { Controller, useForm } from "react-hook-form";
@@ -27,7 +28,7 @@ type Props = {
   pageTitle: string;
 };
 
-type TExportFormats = "pdf" | "markdown";
+type TExportFormats = "pdf" | "markdown" | "docx";
 type TPageFormats = Exclude<PageProps["size"], undefined>;
 type TContentVariety = "everything" | "no-assets";
 
@@ -45,6 +46,7 @@ const EXPORT_FORMATS: {
     key: "pdf",
     label: "PDF",
   },
+  { key: "docx", label: "Word (.docx)" },
   {
     key: "markdown",
     label: "Markdown",
@@ -101,6 +103,17 @@ const defaultValues: TFormValues = {
   content_variety: "everything",
 };
 
+const initiateDownload = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
+};
+
 export function ExportPageModal(props: Props) {
   const { editorRef, isOpen, onClose, pageTitle } = props;
   // states
@@ -121,10 +134,7 @@ export function ExportPageModal(props: Props) {
   const selectedPageFormat = watch("page_format");
   const selectedContentVariety = watch("content_variety");
   const isPDFSelected = selectedExportFormat === "pdf";
-  const fileName = pageTitle
-    ?.toLowerCase()
-    ?.replace(/[^a-z0-9-_]/g, "-")
-    .replace(/-+/g, "-");
+  const fileName = pageExportFilename(pageTitle);
   // handle modal close
   const handleClose = () => {
     onClose();
@@ -133,21 +143,10 @@ export function ExportPageModal(props: Props) {
     }, 300);
   };
 
-  const initiateDownload = (blob: Blob, filename: string) => {
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = filename;
-    link.click();
-    setTimeout(() => {
-      URL.revokeObjectURL(url);
-    }, 1000);
-  };
-
   // handle export as a PDF
   const handleExportAsPDF = async () => {
     try {
-      const pageContent = `<h1 class="page-title">${pageTitle}</h1>${editorRef?.getDocument().html ?? "<p></p>"}`;
+      const pageContent = pageExportHTML(pageTitle, editorRef?.getDocument().html ?? "<p></p>");
       const parsedPageContent = await replaceCustomComponentsFromHTMLContent({
         htmlContent: pageContent,
         noAssets: selectedContentVariety === "no-assets",
@@ -156,7 +155,7 @@ export function ExportPageModal(props: Props) {
       const blob = await pdf(<PDFDocument content={parsedPageContent} pageFormat={selectedPageFormat} />).toBlob();
       initiateDownload(blob, `${fileName}-${selectedPageFormat.toString().toLowerCase()}.pdf`);
     } catch (error) {
-      throw new Error(`Error in exporting as a PDF: ${error}`);
+      throw new Error("Error in exporting as a PDF", { cause: error });
     }
   };
   // handle export as markdown
@@ -171,13 +170,25 @@ export function ExportPageModal(props: Props) {
       const blob = new Blob([parsedMarkdownContent], { type: "text/markdown" });
       initiateDownload(blob, `${fileName}.md`);
     } catch (error) {
-      throw new Error(`Error in exporting as markdown: ${error}`);
+      throw new Error("Error in exporting as markdown", { cause: error });
     }
   };
   // handle export
   const handleExport = async () => {
+    if (!editorRef || isExporting) return;
     setIsExporting(true);
     try {
+      let skippedImages = 0;
+      if (selectedExportFormat === "docx") {
+        const { exportWord } = await import("@/components/editor/word/document");
+        const content = await replaceCustomComponentsFromHTMLContent({
+          htmlContent: pageExportHTML(pageTitle, editorRef.getDocument().html),
+          noAssets: selectedContentVariety === "no-assets",
+        });
+        const result = await exportWord(content);
+        skippedImages = result.skippedImages;
+        initiateDownload(result.blob, `${fileName}.docx`);
+      }
       if (selectedExportFormat === "pdf") {
         await handleExportAsPDF();
       }
@@ -187,7 +198,9 @@ export function ExportPageModal(props: Props) {
       setToast({
         type: TOAST_TYPE.SUCCESS,
         title: "Success!",
-        message: "Page exported successfully.",
+        message: skippedImages
+          ? `Page exported. ${skippedImages} image(s) could not be included and were replaced by descriptions.`
+          : "Page exported successfully.",
       });
       handleClose();
     } catch (error) {
@@ -285,7 +298,13 @@ export function ExportPageModal(props: Props) {
           <Button variant="secondary" size="lg" onClick={handleClose}>
             Cancel
           </Button>
-          <Button variant="primary" size="lg" loading={isExporting} onClick={handleExport}>
+          <Button
+            variant="primary"
+            size="lg"
+            loading={isExporting}
+            disabled={!editorRef || isExporting}
+            onClick={handleExport}
+          >
             {isExporting ? "Exporting" : "Export"}
           </Button>
         </div>

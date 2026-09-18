@@ -85,6 +85,7 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
   // page properties
   id: string | undefined;
   name: string | undefined;
+  parent: string | null | undefined;
   logo_props: TLogoProps | undefined;
   description_json: object | undefined;
   description_html: string | undefined;
@@ -122,6 +123,7 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
 
     this.id = page?.id || undefined;
     this.name = page?.name;
+    this.parent = page?.parent;
     this.logo_props = page?.logo_props || undefined;
     this.description_json = page?.description_json || undefined;
     this.description_html = page?.description_html || undefined;
@@ -147,6 +149,7 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
       // page properties
       id: observable.ref,
       name: observable.ref,
+      parent: observable.ref,
       logo_props: observable.ref,
       description_json: observable.ref,
       description_html: observable.ref,
@@ -223,6 +226,7 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
     return {
       id: this.id,
       name: this.name,
+      parent: this.parent,
       description_json: this.description_json,
       description_html: this.description_html,
       color: this.color,
@@ -276,16 +280,16 @@ export class BasePage extends ExtendedBasePage implements TBasePage {
       runInAction(() => {
         Object.keys(pageData).forEach((key) => {
           const currentPageKey = key as keyof TPage;
-          set(this, key, pageData[currentPageKey] || undefined);
+          set(this, key, pageData[currentPageKey]);
         });
       });
 
-      return await this.services.update(currentPage);
+      return await this.services.update(pageData);
     } catch (error) {
       runInAction(() => {
         Object.keys(pageData).forEach((key) => {
           const currentPageKey = key as keyof TPage;
-          set(this, key, currentPage?.[currentPageKey] || undefined);
+          set(this, key, currentPage?.[currentPageKey]);
         });
       });
       throw error;

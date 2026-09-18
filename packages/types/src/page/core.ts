@@ -21,6 +21,7 @@ export type TPage = {
   is_locked: boolean;
   label_ids: string[] | undefined;
   name: string | undefined;
+  parent?: string | null;
   owned_by: string | undefined;
   project_ids?: string[] | undefined;
   updated_at: Date | undefined;

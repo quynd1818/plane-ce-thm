@@ -18,6 +18,7 @@ from plane.db.models import (
     Label,
     ProjectPage,
     Project,
+    ProjectMember,
     PageVersion,
 )
 
@@ -57,6 +58,37 @@ class PageSerializer(BaseSerializer):
             "project_ids",
         ]
         read_only_fields = ["workspace", "owned_by"]
+
+    def validate_parent(self, parent):
+        if parent is None:
+            return None
+        project_id = self.context.get("project_id")
+        actor_id = self.context.get("owned_by_id")
+        if not ProjectPage.objects.filter(project_id=project_id, page=parent).exists():
+            raise serializers.ValidationError("The parent must belong to this project.")
+        if parent.access == Page.PRIVATE_ACCESS and parent.owned_by_id != actor_id:
+            raise serializers.ValidationError("The parent page is not accessible.")
+        if (
+            parent.owned_by_id != actor_id
+            and ProjectMember.objects.filter(
+                project_id=project_id,
+                member_id=actor_id,
+                is_active=True,
+                role=5,
+                project__guest_view_all_features=False,
+            ).exists()
+        ):
+            raise serializers.ValidationError("The parent page is not accessible.")
+        if parent.archived_at or parent.is_locked:
+            raise serializers.ValidationError("The parent page is archived or locked.")
+        seen = {self.instance.pk} if self.instance else set()
+        ancestor = parent
+        while ancestor is not None:
+            if ancestor.pk in seen:
+                raise serializers.ValidationError("Pages cannot contain themselves or form a cycle.")
+            seen.add(ancestor.pk)
+            ancestor = ancestor.parent
+        return parent
 
     def create(self, validated_data):
         labels = validated_data.pop("labels", None)

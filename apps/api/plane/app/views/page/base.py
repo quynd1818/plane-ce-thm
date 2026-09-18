@@ -4,11 +4,12 @@
 
 # Python imports
 import json
+from functools import partial
 from datetime import datetime
 from django.core.serializers.json import DjangoJSONEncoder
 
 # Django imports
-from django.db import connection
+from django.db import connection, transaction
 from django.db.models import (
     Exists,
     OuterRef,
@@ -43,6 +44,7 @@ from plane.db.models import (
     ProjectMember,
     ProjectPage,
     Project,
+    Workspace,
     UserRecentVisit,
 )
 from plane.utils.error_codes import ERROR_CODES
@@ -62,7 +64,7 @@ def unarchive_archive_page_and_descendants(page_id, archived_at):
     sql = """
     WITH RECURSIVE descendants AS (
         SELECT id FROM pages WHERE id = %s
-        UNION ALL
+        UNION
         SELECT pages.id FROM pages, descendants WHERE pages.parent_id = descendants.id
     )
     UPDATE pages SET archived_at = %s WHERE id IN (SELECT id FROM descendants);
@@ -86,16 +88,16 @@ class PageViewSet(BaseViewSet):
             entity_identifier=OuterRef("pk"),
             workspace__slug=self.kwargs.get("slug"),
         )
-        return self.filter_queryset(
+        queryset = self.filter_queryset(
             super()
             .get_queryset()
             .filter(workspace__slug=self.kwargs.get("slug"))
             .filter(
+                projects__id=self.kwargs.get("project_id"),
                 projects__project_projectmember__member=self.request.user,
                 projects__project_projectmember__is_active=True,
                 projects__archived_at__isnull=True,
             )
-            .filter(parent__isnull=True)
             .filter(Q(owned_by=self.request.user) | Q(access=0))
             .prefetch_related("projects")
             .select_related("workspace")
@@ -141,7 +143,19 @@ class PageViewSet(BaseViewSet):
             .distinct()
         )
 
+        if ProjectMember.objects.filter(
+            project_id=self.kwargs.get("project_id"),
+            member=self.request.user,
+            is_active=True,
+            role=ROLE.GUEST.value,
+            project__guest_view_all_features=False,
+        ).exists():
+            queryset = queryset.filter(owned_by=self.request.user)
+        return queryset
+
+    @transaction.atomic
     def create(self, request, slug, project_id):
+        Workspace.objects.select_for_update().get(slug=slug)
         serializer = PageSerializer(
             data=request.data,
             context={
@@ -156,17 +170,23 @@ class PageViewSet(BaseViewSet):
         if serializer.is_valid():
             serializer.save()
             # capture the page transaction
-            page_transaction.delay(
-                new_description_html=request.data.get("description_html", "<p></p>"),
-                old_description_html=None,
-                page_id=serializer.data["id"],
+            transaction.on_commit(
+                partial(
+                    page_transaction.delay,
+                    new_description_html=request.data.get("description_html", "<p></p>"),
+                    old_description_html=None,
+                    page_id=serializer.data["id"],
+                )
             )
             page = self.get_queryset().get(pk=serializer.data["id"])
             serializer = PageDetailSerializer(page)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @transaction.atomic
     def partial_update(self, request, slug, project_id, page_id):
+        if "parent" in request.data:
+            Workspace.objects.select_for_update().get(slug=slug)
         try:
             page = Page.objects.get(
                 pk=page_id,
@@ -178,15 +198,6 @@ class PageViewSet(BaseViewSet):
             if page.is_locked:
                 return Response({"error": "Page is locked"}, status=status.HTTP_400_BAD_REQUEST)
 
-            parent = request.data.get("parent", None)
-            if parent:
-                _ = Page.objects.get(
-                    pk=parent,
-                    workspace__slug=slug,
-                    projects__id=project_id,
-                    project_pages__deleted_at__isnull=True,
-                )
-
             # Only update access if the page owner is the requesting  user
             if page.access != request.data.get("access", page.access) and page.owned_by_id != request.user.id:
                 return Response(
@@ -194,16 +205,24 @@ class PageViewSet(BaseViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            serializer = PageDetailSerializer(page, data=request.data, partial=True)
+            serializer = PageDetailSerializer(
+                page,
+                data=request.data,
+                partial=True,
+                context={"project_id": project_id, "owned_by_id": request.user.id},
+            )
             page_description = page.description_html
             if serializer.is_valid():
                 serializer.save()
                 # capture the page transaction
                 if request.data.get("description_html"):
-                    page_transaction.delay(
-                        new_description_html=request.data.get("description_html", "<p></p>"),
-                        old_description_html=page_description,
-                        page_id=page_id,
+                    transaction.on_commit(
+                        partial(
+                            page_transaction.delay,
+                            new_description_html=request.data.get("description_html", "<p></p>"),
+                            old_description_html=page_description,
+                            page_id=page_id,
+                        )
                     )
 
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -216,6 +235,8 @@ class PageViewSet(BaseViewSet):
 
     def retrieve(self, request, slug, project_id, page_id=None):
         page = self.get_queryset().filter(pk=page_id).first()
+        if page is None:
+            return Response({"error": "Page not found"}, status=status.HTTP_404_NOT_FOUND)
         project = Project.objects.get(pk=project_id)
         track_visit = request.query_params.get("track_visit", "true").lower() == "true"
 
@@ -441,7 +462,6 @@ class PageViewSet(BaseViewSet):
                 projects__project_projectmember__is_active=True,
                 projects__archived_at__isnull=True,
             )
-            .filter(parent__isnull=True)
             .filter(Q(owned_by=request.user) | Q(access=0))
             .annotate(
                 project=Exists(

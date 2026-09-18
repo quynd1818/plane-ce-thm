@@ -23,6 +23,7 @@ type Props = {
   projectId: string;
   isModalOpen: boolean;
   pageAccess?: EPageAccess;
+  parentId?: string;
   handleModalClose: () => void;
   redirectionEnabled?: boolean;
   storeType: EPageStoreType;
@@ -34,6 +35,7 @@ export function CreatePageModal(props: Props) {
     projectId,
     isModalOpen,
     pageAccess,
+    parentId,
     handleModalClose,
     redirectionEnabled = false,
     storeType,
@@ -65,7 +67,7 @@ export function CreatePageModal(props: Props) {
     if (!workspaceSlug || !projectId) return;
 
     try {
-      const pageData = await createPage(pageFormData);
+      const pageData = await createPage({ ...pageFormData, parent: parentId ?? null });
       if (pageData) {
         handleStateClear();
         if (redirectionEnabled) router.push(`/${workspaceSlug}/projects/${projectId}/pages/${pageData.id}`);
