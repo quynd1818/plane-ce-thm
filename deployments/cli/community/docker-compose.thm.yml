@@ -139,8 +139,10 @@ services:
         condition: any
     volumes:
       - logs_api:/code/plane/logs
+      - ${THM_CA_BUNDLE_HOST:-/opt/certs/thm-cds-ca.crt}:${THM_CA_BUNDLE_PATH:-/etc/ssl/certs/thm-cds-ca.crt}:ro
     environment:
       <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
+      REQUESTS_CA_BUNDLE: ${THM_CA_BUNDLE_PATH:-/etc/ssl/certs/thm-cds-ca.crt}
 
   worker:
     image: local/plane-backend:${APP_RELEASE:-latest}
@@ -151,8 +153,10 @@ services:
         condition: any
     volumes:
       - logs_worker:/code/plane/logs
+      - ${THM_CA_BUNDLE_HOST:-/opt/certs/thm-cds-ca.crt}:${THM_CA_BUNDLE_PATH:-/etc/ssl/certs/thm-cds-ca.crt}:ro
     environment:
       <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
+      REQUESTS_CA_BUNDLE: ${THM_CA_BUNDLE_PATH:-/etc/ssl/certs/thm-cds-ca.crt}
     depends_on:
       - api
 
@@ -165,8 +169,10 @@ services:
         condition: any
     volumes:
       - logs_beat-worker:/code/plane/logs
+      - ${THM_CA_BUNDLE_HOST:-/opt/certs/thm-cds-ca.crt}:${THM_CA_BUNDLE_PATH:-/etc/ssl/certs/thm-cds-ca.crt}:ro
     environment:
       <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
+      REQUESTS_CA_BUNDLE: ${THM_CA_BUNDLE_PATH:-/etc/ssl/certs/thm-cds-ca.crt}
     depends_on:
       - api
 
@@ -179,27 +185,24 @@ services:
         condition: on-failure
     volumes:
       - logs_migrator:/code/plane/logs
+      - ${THM_CA_BUNDLE_HOST:-/opt/certs/thm-cds-ca.crt}:${THM_CA_BUNDLE_PATH:-/etc/ssl/certs/thm-cds-ca.crt}:ro
     environment:
       <<: [*app-env, *db-env, *redis-env, *minio-env, *aws-s3-env, *proxy-env]
+      REQUESTS_CA_BUNDLE: ${THM_CA_BUNDLE_PATH:-/etc/ssl/certs/thm-cds-ca.crt}
 
   # Comment this if you already have a reverse proxy running
   proxy:
     image: local/plane-proxy:${APP_RELEASE:-latest}
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: any
+    restart: unless-stopped
     environment:
       <<: *proxy-env
+    # THM: the company nginx terminates TLS and forwards to this port on localhost.
     ports:
-      - target: 80
-        published: ${LISTEN_HTTP_PORT:-80}
-        protocol: tcp
-        mode: host
-      - target: 443
-        published: ${LISTEN_HTTPS_PORT:-443}
-        protocol: tcp
-        mode: host
+      - "127.0.0.1:${LISTEN_HTTP_PORT:-8080}:80"
+    # Caddyfile in the image points the bucket at hostname `plane-minio`;
+    # MinIO runs outside compose, so map that hostname to its real IP.
+    extra_hosts:
+      - "plane-minio:${MINIO_HOST:-10.24.55.18}"
     volumes:
       - proxy_config:/config
       - proxy_data:/data
