@@ -49,6 +49,9 @@ from plane.utils.filters import ComplexFilterBackend
 from plane.utils.filters import IssueFilterSet
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class WorkspaceViewViewSet(BaseViewSet):
     serializer_class = IssueViewSerializer
     model = IssueView
@@ -86,7 +89,9 @@ class WorkspaceViewViewSet(BaseViewSet):
     @allow_permission(allowed_roles=[], level="WORKSPACE", creator=True, model=IssueView)
     def partial_update(self, request, slug, pk):
         with transaction.atomic():
-            workspace_view = IssueView.objects.select_for_update().get(pk=pk, workspace__slug=slug)
+            workspace_view = (
+                scoped_queryset(IssueView.objects.all()).select_for_update().get(pk=pk, workspace__slug=slug)
+            )
 
             if workspace_view.is_locked:
                 return Response({"error": "view is locked"}, status=status.HTTP_400_BAD_REQUEST)
@@ -119,7 +124,7 @@ class WorkspaceViewViewSet(BaseViewSet):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN], level="WORKSPACE", creator=True, model=IssueView)
     def destroy(self, request, slug, pk):
-        workspace_view = IssueView.objects.get(pk=pk, workspace__slug=slug)
+        workspace_view = scoped_queryset(IssueView.objects.all()).get(pk=pk, workspace__slug=slug)
 
         workspace_member = WorkspaceMember.objects.filter(
             workspace__slug=slug, member=request.user, role=20, is_active=True
@@ -127,7 +132,7 @@ class WorkspaceViewViewSet(BaseViewSet):
         if workspace_member.exists() or workspace_view.owned_by == request.user:
             workspace_view.delete()
             # Delete the user favorite view
-            UserFavorite.objects.filter(
+            scoped_queryset(UserFavorite.objects.all()).filter(
                 workspace__slug=slug,
                 entity_identifier=pk,
                 project__isnull=True,
@@ -171,17 +176,21 @@ class WorkspaceViewIssuesViewSet(BaseViewSet):
         return (
             issues.annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -190,7 +199,8 @@ class WorkspaceViewIssuesViewSet(BaseViewSet):
                 .values("count")
             )
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -198,25 +208,25 @@ class WorkspaceViewIssuesViewSet(BaseViewSet):
             .prefetch_related(
                 Prefetch(
                     "issue_assignee",
-                    queryset=IssueAssignee.objects.all(),
+                    queryset=scoped_queryset(IssueAssignee.objects.all()).all(),
                 )
             )
             .prefetch_related(
                 Prefetch(
                     "label_issue",
-                    queryset=IssueLabel.objects.all(),
+                    queryset=scoped_queryset(IssueLabel.objects.all()).all(),
                 )
             )
             .prefetch_related(
                 Prefetch(
                     "issue_module",
-                    queryset=ModuleIssue.objects.all(),
+                    queryset=scoped_queryset(ModuleIssue.objects.all()).all(),
                 )
             )
         )
 
     def get_queryset(self):
-        return Issue.issue_objects.filter(workspace__slug=self.kwargs.get("slug"))
+        return scoped_queryset(Issue.issue_objects.all()).filter(workspace__slug=self.kwargs.get("slug"))
 
     @method_decorator(gzip_page)
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
@@ -267,7 +277,7 @@ class IssueViewViewSet(BaseViewSet):
         serializer.save(project_id=self.kwargs.get("project_id"), owned_by=self.request.user)
 
     def get_queryset(self):
-        subquery = UserFavorite.objects.filter(
+        subquery = scoped_queryset(UserFavorite.objects.all()).filter(
             user=self.request.user,
             entity_identifier=OuterRef("pk"),
             entity_type="view",
@@ -349,7 +359,11 @@ class IssueViewViewSet(BaseViewSet):
     @allow_permission(allowed_roles=[], creator=True, model=IssueView)
     def partial_update(self, request, slug, project_id, pk):
         with transaction.atomic():
-            issue_view = IssueView.objects.select_for_update().get(pk=pk, workspace__slug=slug, project_id=project_id)
+            issue_view = (
+                scoped_queryset(IssueView.objects.all())
+                .select_for_update()
+                .get(pk=pk, workspace__slug=slug, project_id=project_id)
+            )
 
             if issue_view.is_locked:
                 return Response({"error": "view is locked"}, status=status.HTTP_400_BAD_REQUEST)
@@ -370,7 +384,7 @@ class IssueViewViewSet(BaseViewSet):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN], creator=True, model=IssueView)
     def destroy(self, request, slug, project_id, pk):
-        project_view = IssueView.objects.get(pk=pk, project_id=project_id, workspace__slug=slug)
+        project_view = scoped_queryset(IssueView.objects.all()).get(pk=pk, project_id=project_id, workspace__slug=slug)
         if (
             ProjectMember.objects.filter(
                 workspace__slug=slug,
@@ -383,14 +397,14 @@ class IssueViewViewSet(BaseViewSet):
         ):
             project_view.delete()
             # Delete the user favorite view
-            UserFavorite.objects.filter(
+            scoped_queryset(UserFavorite.objects.all()).filter(
                 project_id=project_id,
                 workspace__slug=slug,
                 entity_identifier=pk,
                 entity_type="view",
             ).delete()
             # Delete the page from recent visit
-            UserRecentVisit.objects.filter(
+            scoped_queryset(UserRecentVisit.objects.all()).filter(
                 project_id=project_id,
                 workspace__slug=slug,
                 entity_identifier=pk,
@@ -418,7 +432,7 @@ class IssueViewFavoriteViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def create(self, request, slug, project_id):
-        _ = UserFavorite.objects.create(
+        _ = scoped_queryset(UserFavorite.objects.all()).create(
             user=request.user,
             entity_identifier=request.data.get("view"),
             entity_type="view",
@@ -428,7 +442,7 @@ class IssueViewFavoriteViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def destroy(self, request, slug, project_id, view_id):
-        view_favorite = UserFavorite.objects.get(
+        view_favorite = scoped_queryset(UserFavorite.objects.all()).get(
             project=project_id,
             user=request.user,
             workspace__slug=slug,

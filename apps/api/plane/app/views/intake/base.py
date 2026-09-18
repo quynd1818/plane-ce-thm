@@ -54,6 +54,9 @@ from plane.utils.host import base_host
 from plane.db.models.intake import SourceType
 
 
+from plane.utils.project_rbac_scope import scoped_queryset, scoped_aggregate
+
+
 class IntakeViewSet(BaseViewSet):
     serializer_class = IntakeSerializer
     model = Intake
@@ -66,7 +69,7 @@ class IntakeViewSet(BaseViewSet):
                 workspace__slug=self.kwargs.get("slug"),
                 project_id=self.kwargs.get("project_id"),
             )
-            .annotate(pending_issue_count=Count("issue_intake", filter=Q(issue_intake__status=-2)))
+            .annotate(pending_issue_count=scoped_aggregate(Count("issue_intake", filter=Q(issue_intake__status=-2))))
             .select_related("workspace", "project")
         )
 
@@ -81,7 +84,9 @@ class IntakeViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def destroy(self, request, slug, project_id, pk):
-        intake = Intake.objects.filter(workspace__slug=slug, project_id=project_id, pk=pk).first()
+        intake = (
+            scoped_queryset(Intake.objects.all()).filter(workspace__slug=slug, project_id=project_id, pk=pk).first()
+        )
         # Handle default intake delete
         if intake.is_default:
             return Response(
@@ -100,7 +105,8 @@ class IntakeIssueViewSet(BaseViewSet):
 
     def get_queryset(self):
         return (
-            Issue.objects.filter(
+            scoped_queryset(Issue.objects.all())
+            .filter(
                 project_id=self.kwargs.get("project_id"),
                 workspace__slug=self.kwargs.get("slug"),
             )
@@ -109,22 +115,28 @@ class IntakeIssueViewSet(BaseViewSet):
             .prefetch_related(
                 Prefetch(
                     "issue_intake",
-                    queryset=IntakeIssue.objects.only("status", "duplicate_to", "snoozed_till", "source"),
+                    queryset=scoped_queryset(IntakeIssue.objects.all()).only(
+                        "status", "duplicate_to", "snoozed_till", "source"
+                    ),
                 )
             )
             .annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -133,7 +145,8 @@ class IntakeIssueViewSet(BaseViewSet):
                 .values("count")
             )
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -176,14 +189,15 @@ class IntakeIssueViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def list(self, request, slug, project_id):
-        intake = Intake.objects.filter(workspace__slug=slug, project_id=project_id).first()
+        intake = scoped_queryset(Intake.objects.all()).filter(workspace__slug=slug, project_id=project_id).first()
         if not intake:
             return Response({"error": "Intake not found"}, status=status.HTTP_404_NOT_FOUND)
 
         project = Project.objects.get(pk=project_id)
         filters = issue_filters(request.GET, "GET", "issue__")
         intake_issue = (
-            IntakeIssue.objects.filter(intake_id=intake.id, project_id=project_id, **filters)
+            scoped_queryset(IntakeIssue.objects.all())
+            .filter(intake_id=intake.id, project_id=project_id, **filters)
             .select_related("issue")
             .prefetch_related("issue__labels")
             .annotate(
@@ -268,9 +282,11 @@ class IntakeIssueViewSet(BaseViewSet):
         )
         if serializer.is_valid():
             serializer.save()
-            intake_id = Intake.objects.filter(workspace__slug=slug, project_id=project_id).first()
+            intake_id = (
+                scoped_queryset(Intake.objects.all()).filter(workspace__slug=slug, project_id=project_id).first()
+            )
             # create an intake issue
-            intake_issue = IntakeIssue.objects.create(
+            intake_issue = scoped_queryset(IntakeIssue.objects.all()).create(
                 intake_id=intake_id.id,
                 project_id=project_id,
                 issue_id=serializer.data["id"],
@@ -297,7 +313,8 @@ class IntakeIssueViewSet(BaseViewSet):
                 is_creating=True,
             )
             intake_issue = (
-                IntakeIssue.objects.select_related("issue")
+                scoped_queryset(IntakeIssue.objects.all())
+                .select_related("issue")
                 .prefetch_related("issue__labels", "issue__assignees")
                 .annotate(
                     label_ids=Coalesce(
@@ -336,8 +353,8 @@ class IntakeIssueViewSet(BaseViewSet):
         skip_activity = request.data.pop("skip_activity", False)
         is_description_update = request.data.get("description_html") is not None
 
-        intake_id = Intake.objects.filter(workspace__slug=slug, project_id=project_id).first()
-        intake_issue = IntakeIssue.objects.get(
+        intake_id = scoped_queryset(Intake.objects.all()).filter(workspace__slug=slug, project_id=project_id).first()
+        intake_issue = scoped_queryset(IntakeIssue.objects.all()).get(
             issue_id=pk,
             workspace__slug=slug,
             project_id=project_id,
@@ -382,24 +399,28 @@ class IntakeIssueViewSet(BaseViewSet):
 
         # Validate issue data if provided
         if bool(issue_data):
-            issue = Issue.objects.annotate(
-                label_ids=Coalesce(
-                    ArrayAgg(
-                        "labels__id",
-                        distinct=True,
-                        filter=Q(~Q(labels__id__isnull=True) & Q(label_issue__deleted_at__isnull=True)),
+            issue = (
+                scoped_queryset(Issue.objects.all())
+                .annotate(
+                    label_ids=Coalesce(
+                        ArrayAgg(
+                            "labels__id",
+                            distinct=True,
+                            filter=Q(~Q(labels__id__isnull=True) & Q(label_issue__deleted_at__isnull=True)),
+                        ),
+                        Value([], output_field=ArrayField(UUIDField())),
                     ),
-                    Value([], output_field=ArrayField(UUIDField())),
-                ),
-                assignee_ids=Coalesce(
-                    ArrayAgg(
-                        "assignees__id",
-                        distinct=True,
-                        filter=Q(~Q(assignees__id__isnull=True) & Q(issue_assignee__deleted_at__isnull=True)),
+                    assignee_ids=Coalesce(
+                        ArrayAgg(
+                            "assignees__id",
+                            distinct=True,
+                            filter=Q(~Q(assignees__id__isnull=True) & Q(issue_assignee__deleted_at__isnull=True)),
+                        ),
+                        Value([], output_field=ArrayField(UUIDField())),
                     ),
-                    Value([], output_field=ArrayField(UUIDField())),
-                ),
-            ).get(pk=intake_issue.issue_id, workspace__slug=slug, project_id=project_id)
+                )
+                .get(pk=intake_issue.issue_id, workspace__slug=slug, project_id=project_id)
+            )
 
             if project_member and project_member.role <= ROLE.GUEST.value:
                 issue_data = {
@@ -475,7 +496,8 @@ class IntakeIssueViewSet(BaseViewSet):
 
         # Fetch and return the updated intake issue
         intake_issue = (
-            IntakeIssue.objects.select_related("issue")
+            scoped_queryset(IntakeIssue.objects.all())
+            .select_related("issue")
             .prefetch_related("issue__labels", "issue__assignees")
             .annotate(
                 label_ids=Coalesce(
@@ -504,10 +526,11 @@ class IntakeIssueViewSet(BaseViewSet):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], creator=True, model=Issue)
     def retrieve(self, request, slug, project_id, pk):
-        intake_id = Intake.objects.filter(workspace__slug=slug, project_id=project_id).first()
+        intake_id = scoped_queryset(Intake.objects.all()).filter(workspace__slug=slug, project_id=project_id).first()
         project = Project.objects.get(pk=project_id)
         intake_issue = (
-            IntakeIssue.objects.select_related("issue")
+            scoped_queryset(IntakeIssue.objects.all())
+            .select_related("issue")
             .prefetch_related("issue__labels", "issue__assignees")
             .annotate(
                 label_ids=Coalesce(
@@ -551,8 +574,8 @@ class IntakeIssueViewSet(BaseViewSet):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN], creator=True, model=Issue)
     def destroy(self, request, slug, project_id, pk):
-        intake_id = Intake.objects.filter(workspace__slug=slug, project_id=project_id).first()
-        intake_issue = IntakeIssue.objects.get(
+        intake_id = scoped_queryset(Intake.objects.all()).filter(workspace__slug=slug, project_id=project_id).first()
+        intake_issue = scoped_queryset(IntakeIssue.objects.all()).get(
             issue_id=pk,
             workspace__slug=slug,
             project_id=project_id,
@@ -562,7 +585,9 @@ class IntakeIssueViewSet(BaseViewSet):
         # Check the issue status
         if intake_issue.status in [-2, -1, 0, 2]:
             # Delete the issue also
-            issue = Issue.objects.filter(workspace__slug=slug, project_id=project_id, pk=pk).first()
+            issue = (
+                scoped_queryset(Issue.objects.all()).filter(workspace__slug=slug, project_id=project_id, pk=pk).first()
+            )
             issue.delete()
 
         intake_issue.delete()
@@ -581,7 +606,7 @@ class IntakeWorkItemDescriptionVersionEndpoint(BaseAPIView):
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id, work_item_id, pk=None):
         project = Project.objects.get(pk=project_id)
-        issue = Issue.objects.get(workspace__slug=slug, project_id=project_id, pk=work_item_id)
+        issue = scoped_queryset(Issue.objects.all()).get(workspace__slug=slug, project_id=project_id, pk=work_item_id)
 
         if (
             ProjectMember.objects.filter(
@@ -600,7 +625,7 @@ class IntakeWorkItemDescriptionVersionEndpoint(BaseAPIView):
             )
 
         if pk:
-            issue_description_version = IssueDescriptionVersion.objects.get(
+            issue_description_version = scoped_queryset(IssueDescriptionVersion.objects.all()).get(
                 workspace__slug=slug,
                 project_id=project_id,
                 issue_id=work_item_id,
@@ -625,7 +650,7 @@ class IntakeWorkItemDescriptionVersionEndpoint(BaseAPIView):
             "updated_by",
         ]
 
-        issue_description_versions_queryset = IssueDescriptionVersion.objects.filter(
+        issue_description_versions_queryset = scoped_queryset(IssueDescriptionVersion.objects.all()).filter(
             workspace__slug=slug, project_id=project_id, issue_id=work_item_id
         )
 

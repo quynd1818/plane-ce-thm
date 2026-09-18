@@ -43,6 +43,9 @@ from plane.db.models import (
 )
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class GlobalSearchEndpoint(BaseAPIView):
     """Endpoint to search across multiple fields in the workspace and
     also show related workspace if found
@@ -93,7 +96,7 @@ class GlobalSearchEndpoint(BaseAPIView):
                 else:
                     q |= Q(**{f"{field}__icontains": query})
 
-        issues = Issue.issue_objects.filter(
+        issues = scoped_queryset(Issue.issue_objects.all()).filter(
             q,
             project__project_projectmember__member=self.request.user,
             project__project_projectmember__is_active=True,
@@ -120,7 +123,7 @@ class GlobalSearchEndpoint(BaseAPIView):
             for field in fields:
                 q |= Q(**{f"{field}__icontains": query})
 
-        cycles = Cycle.objects.filter(
+        cycles = scoped_queryset(Cycle.objects.all()).filter(
             q,
             project__project_projectmember__member=self.request.user,
             project__project_projectmember__is_active=True,
@@ -144,7 +147,7 @@ class GlobalSearchEndpoint(BaseAPIView):
             for field in fields:
                 q |= Q(**{f"{field}__icontains": query})
 
-        modules = Module.objects.filter(
+        modules = scoped_queryset(Module.objects.all()).filter(
             q,
             project__project_projectmember__member=self.request.user,
             project__project_projectmember__is_active=True,
@@ -169,7 +172,8 @@ class GlobalSearchEndpoint(BaseAPIView):
                 q |= Q(**{f"{field}__icontains": query})
 
         pages = (
-            Page.objects.filter(
+            scoped_queryset(Page.objects.all())
+            .filter(
                 q,
                 projects__project_projectmember__member=self.request.user,
                 projects__project_projectmember__is_active=True,
@@ -195,9 +199,11 @@ class GlobalSearchEndpoint(BaseAPIView):
         )
 
         if workspace_search == "false" and project_id:
-            project_subquery = ProjectPage.objects.filter(page_id=OuterRef("id"), project_id=project_id).values_list(
-                "project_id", flat=True
-            )[:1]
+            project_subquery = (
+                scoped_queryset(ProjectPage.objects.all())
+                .filter(page_id=OuterRef("id"), project_id=project_id)
+                .values_list("project_id", flat=True)[:1]
+            )
 
             pages = pages.annotate(project_id=Subquery(project_subquery)).filter(project_id=project_id)
 
@@ -214,7 +220,7 @@ class GlobalSearchEndpoint(BaseAPIView):
             for field in fields:
                 q |= Q(**{f"{field}__icontains": query})
 
-        issue_views = IssueView.objects.filter(
+        issue_views = scoped_queryset(IssueView.objects.all()).filter(
             q,
             project__project_projectmember__member=self.request.user,
             project__project_projectmember__is_active=True,
@@ -244,13 +250,17 @@ class GlobalSearchEndpoint(BaseAPIView):
                 else:
                     q |= Q(**{f"{field}__icontains": query})
 
-        issues = Issue.objects.filter(
-            q,
-            project__project_projectmember__member=self.request.user,
-            project__project_projectmember__is_active=True,
-            project__archived_at__isnull=True,
-            workspace__slug=slug,
-        ).filter(models.Q(issue_intake__status=0) | models.Q(issue_intake__status=-2))
+        issues = (
+            scoped_queryset(Issue.objects.all())
+            .filter(
+                q,
+                project__project_projectmember__member=self.request.user,
+                project__project_projectmember__is_active=True,
+                project__archived_at__isnull=True,
+                workspace__slug=slug,
+            )
+            .filter(models.Q(issue_intake__status=0) | models.Q(issue_intake__status=-2))
+        )
 
         if workspace_search == "false" and project_id:
             issues = issues.filter(project_id=project_id)
@@ -398,7 +408,8 @@ class SearchEndpoint(BaseAPIView):
                                 q |= Q(**{f"{field}__icontains": query})
 
                     issues = (
-                        Issue.issue_objects.filter(
+                        scoped_queryset(Issue.issue_objects.all())
+                        .filter(
                             q,
                             project__project_projectmember__member=self.request.user,
                             project__project_projectmember__is_active=True,
@@ -429,7 +440,8 @@ class SearchEndpoint(BaseAPIView):
                             q |= Q(**{f"{field}__icontains": query})
 
                     cycles = (
-                        Cycle.objects.filter(
+                        scoped_queryset(Cycle.objects.all())
+                        .filter(
                             q,
                             project__project_projectmember__member=self.request.user,
                             project__project_projectmember__is_active=True,
@@ -477,7 +489,8 @@ class SearchEndpoint(BaseAPIView):
                             q |= Q(**{f"{field}__icontains": query})
 
                     modules = (
-                        Module.objects.filter(
+                        scoped_queryset(Module.objects.all())
+                        .filter(
                             q,
                             project__project_projectmember__member=self.request.user,
                             project__project_projectmember__is_active=True,
@@ -506,7 +519,8 @@ class SearchEndpoint(BaseAPIView):
                             q |= Q(**{f"{field}__icontains": query})
 
                     pages = (
-                        Page.objects.filter(
+                        scoped_queryset(Page.objects.all())
+                        .filter(
                             q,
                             projects__project_projectmember__member=self.request.user,
                             projects__project_projectmember__is_active=True,
@@ -603,7 +617,8 @@ class SearchEndpoint(BaseAPIView):
                                 q |= Q(**{f"{field}__icontains": query})
 
                     issues = (
-                        Issue.issue_objects.filter(
+                        scoped_queryset(Issue.issue_objects.all())
+                        .filter(
                             q,
                             project__project_projectmember__member=self.request.user,
                             project__project_projectmember__is_active=True,
@@ -633,7 +648,8 @@ class SearchEndpoint(BaseAPIView):
                             q |= Q(**{f"{field}__icontains": query})
 
                     cycles = (
-                        Cycle.objects.filter(
+                        scoped_queryset(Cycle.objects.all())
+                        .filter(
                             q,
                             project__project_projectmember__member=self.request.user,
                             project__project_projectmember__is_active=True,
@@ -680,7 +696,8 @@ class SearchEndpoint(BaseAPIView):
                             q |= Q(**{f"{field}__icontains": query})
 
                     modules = (
-                        Module.objects.filter(
+                        scoped_queryset(Module.objects.all())
+                        .filter(
                             q,
                             project__project_projectmember__member=self.request.user,
                             project__project_projectmember__is_active=True,
@@ -708,7 +725,8 @@ class SearchEndpoint(BaseAPIView):
                             q |= Q(**{f"{field}__icontains": query})
 
                     pages = (
-                        Page.objects.filter(
+                        scoped_queryset(Page.objects.all())
+                        .filter(
                             q,
                             projects__project_projectmember__member=self.request.user,
                             projects__project_projectmember__is_active=True,

@@ -10,6 +10,9 @@ from plane.app.views.base import BaseAPIView
 from plane.db.models import Intake, IntakeForm, Issue, Project, RecurringIssue, WorkLog
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class ProjectPhase3Mixin(BaseAPIView):
     def project_queryset(self, model, slug, project_id):
         return model.objects.filter(
@@ -28,7 +31,7 @@ class IntakeFormEndpoint(ProjectPhase3Mixin):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def post(self, request, slug, project_id):
-        intake = Intake.objects.filter(project_id=project_id, workspace__slug=slug).first()
+        intake = scoped_queryset(Intake.objects.all()).filter(project_id=project_id, workspace__slug=slug).first()
         if not intake:
             return Response({"detail": "Intake not found."}, status=status.HTTP_404_NOT_FOUND)
         serializer = IntakeFormSerializer(data=request.data)
@@ -59,9 +62,12 @@ class PublicIntakeFormEndpoint(BaseAPIView):
     permission_classes = []
 
     def get_form(self, public_key):
-        return IntakeForm.objects.filter(public_key=public_key, is_active=True, deleted_at__isnull=True).select_related(
-            "project", "intake"
-        ).first()
+        return (
+            scoped_queryset(IntakeForm.objects.all())
+            .filter(public_key=public_key, is_active=True, deleted_at__isnull=True)
+            .select_related("project", "intake")
+            .first()
+        )
 
     def get(self, request, public_key):
         form = self.get_form(public_key)
@@ -99,7 +105,7 @@ class PublicIntakeFormEndpoint(BaseAPIView):
         submission_properties = {
             key: value for key, value in values.items() if key not in {"title", "name", "description"}
         }
-        issue = Issue.objects.create(
+        issue = scoped_queryset(Issue.objects.all()).create(
             project=form.project,
             workspace=form.workspace,
             name=title,
@@ -121,7 +127,9 @@ class PublicIntakeFormEndpoint(BaseAPIView):
 class RecurringIssueEndpoint(ProjectPhase3Mixin):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def get(self, request, slug, project_id):
-        return Response(RecurringIssueSerializer(self.project_queryset(RecurringIssue, slug, project_id), many=True).data)
+        return Response(
+            RecurringIssueSerializer(self.project_queryset(RecurringIssue, slug, project_id), many=True).data
+        )
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def post(self, request, slug, project_id):
@@ -157,16 +165,16 @@ class RecurringIssueDetailEndpoint(ProjectPhase3Mixin):
 class ProjectDashboardSummaryEndpoint(ProjectPhase3Mixin):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def get(self, request, slug, project_id):
-        issues = Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id)
-        worklogs = WorkLog.objects.filter(workspace__slug=slug, project_id=project_id)
+        issues = scoped_queryset(Issue.issue_objects.all()).filter(workspace__slug=slug, project_id=project_id)
+        worklogs = scoped_queryset(WorkLog.objects.all()).filter(workspace__slug=slug, project_id=project_id)
         return Response(
             {
                 "work_items": {
                     "total": issues.count(),
                     "completed": issues.filter(state__group="completed").count(),
-                    "overdue": issues.filter(target_date__lt=timezone.now().date()).exclude(
-                        state__group__in=["completed", "cancelled"]
-                    ).count(),
+                    "overdue": issues.filter(target_date__lt=timezone.now().date())
+                    .exclude(state__group__in=["completed", "cancelled"])
+                    .count(),
                     "unassigned": issues.filter(issue_assignee__isnull=True).count(),
                 },
                 "worklogs": {

@@ -26,6 +26,9 @@ from plane.utils.cache import invalidate_cache
 from plane.bgtasks.issue_activities_task import issue_activity
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 def generate_random_name(length=10):
     letters = string.ascii_lowercase
     return "".join(random.choice(letters) for i in range(length))
@@ -201,7 +204,7 @@ class EstimatePointEndpoint(BaseViewSet):
         )
         # update all the issues with the new estimate
         if new_estimate_id:
-            issues = Issue.objects.filter(
+            issues = scoped_queryset(Issue.objects.all()).filter(
                 project_id=project_id,
                 workspace__slug=slug,
                 estimate_point_id=estimate_point_id,
@@ -220,7 +223,7 @@ class EstimatePointEndpoint(BaseViewSet):
                 )
                 issues.update(estimate_point_id=new_estimate_id)
         else:
-            issues = Issue.objects.filter(
+            issues = scoped_queryset(Issue.objects.all()).filter(
                 project_id=project_id,
                 workspace__slug=slug,
                 estimate_point_id=estimate_point_id,

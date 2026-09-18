@@ -46,6 +46,9 @@ from plane.utils.project_template import apply_template
 from plane.utils.order_queryset import PROJECT_ORDER_BY_ALLOWLIST, sanitize_order_by
 
 
+from plane.utils.project_rbac_scope import scoped_queryset, scoped_aggregate
+
+
 class ProjectViewSet(BaseViewSet):
     rbac_policy = {"GET": "metadata"}
     rbac_project_detail = True
@@ -67,7 +70,7 @@ class ProjectViewSet(BaseViewSet):
             .select_related("workspace", "workspace__owner", "default_assignee", "project_lead")
             .annotate(
                 is_favorite=Exists(
-                    UserFavorite.objects.filter(
+                    scoped_queryset(UserFavorite.objects.all()).filter(
                         user=self.request.user,
                         entity_identifier=OuterRef("pk"),
                         entity_type="project",
@@ -165,12 +168,14 @@ class ProjectViewSet(BaseViewSet):
                 ).values("role")
             )
             .annotate(
-                intake_count=Count(
-                    "project_intakeissue",
-                    filter=Q(
-                        project_intakeissue__status=IntakeIssueStatus.PENDING.value,
-                        project_intakeissue__deleted_at__isnull=True,
-                    ),
+                intake_count=scoped_aggregate(
+                    Count(
+                        "project_intakeissue",
+                        filter=Q(
+                            project_intakeissue__status=IntakeIssueStatus.PENDING.value,
+                            project_intakeissue__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(inbox_view=F("intake_view"))
@@ -376,9 +381,9 @@ class ProjectViewSet(BaseViewSet):
         if serializer.is_valid():
             serializer.save()
             if intake_view:
-                intake = Intake.objects.filter(project=project, is_default=True).first()
+                intake = scoped_queryset(Intake.objects.all()).filter(project=project, is_default=True).first()
                 if not intake:
-                    Intake.objects.create(
+                    scoped_queryset(Intake.objects.all()).create(
                         name=f"{project.name} Intake",
                         project=project,
                         is_default=True,
@@ -434,7 +439,7 @@ class ProjectViewSet(BaseViewSet):
             DeployBoard.objects.filter(project_id=pk, workspace__slug=slug).delete()
 
             # Delete the user favorite
-            UserFavorite.objects.filter(project_id=pk, workspace__slug=slug).delete()
+            scoped_queryset(UserFavorite.objects.all()).filter(project_id=pk, workspace__slug=slug).delete()
 
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
@@ -450,7 +455,7 @@ class ProjectArchiveUnarchiveEndpoint(BaseAPIView):
         project = Project.objects.get(pk=project_id, workspace__slug=slug)
         project.archived_at = timezone.now()
         project.save()
-        UserFavorite.objects.filter(workspace__slug=slug, project=project_id).delete()
+        scoped_queryset(UserFavorite.objects.all()).filter(workspace__slug=slug, project=project_id).delete()
         return Response({"archived_at": str(project.archived_at)}, status=status.HTTP_200_OK)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
@@ -532,7 +537,7 @@ class ProjectFavoritesViewSet(BaseViewSet):
         serializer.save(user=self.request.user)
 
     def create(self, request, slug):
-        _ = UserFavorite.objects.create(
+        _ = scoped_queryset(UserFavorite.objects.all()).create(
             user=request.user,
             entity_type="project",
             entity_identifier=request.data.get("project"),
@@ -541,7 +546,7 @@ class ProjectFavoritesViewSet(BaseViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def destroy(self, request, slug, project_id):
-        project_favorite = UserFavorite.objects.get(
+        project_favorite = scoped_queryset(UserFavorite.objects.all()).get(
             entity_identifier=project_id,
             entity_type="project",
             project=project_id,

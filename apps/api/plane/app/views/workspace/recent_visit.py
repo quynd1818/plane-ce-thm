@@ -14,6 +14,9 @@ from ..base import BaseViewSet
 from plane.app.permissions import allow_permission, ROLE
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class UserRecentVisitViewSet(BaseViewSet):
     model = UserRecentVisit
     use_read_replica = True
@@ -23,7 +26,9 @@ class UserRecentVisitViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def list(self, request, slug):
-        user_recent_visits = UserRecentVisit.objects.filter(workspace__slug=slug, user=request.user)
+        user_recent_visits = scoped_queryset(UserRecentVisit.objects.all()).filter(
+            workspace__slug=slug, user=request.user
+        )
 
         entity_name = request.query_params.get("entity_name")
 

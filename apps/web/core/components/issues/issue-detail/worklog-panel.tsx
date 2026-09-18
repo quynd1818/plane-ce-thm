@@ -1,3 +1,4 @@
+import { useUserPermissions } from "@/hooks/store/user";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useTranslation } from "@plane/i18n";
@@ -23,6 +24,9 @@ const getDurationSeconds = (log: TWorkLog, currentTime: number) => {
 
 export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspaceSlug, projectId, issueId }: Props) {
   const { t } = useTranslation();
+  const { hasProjectCapability } = useUserPermissions();
+  const can = (action: string) => hasProjectCapability(`worklogs.${action}`, projectId, workspaceSlug);
+  const canRead = can("read");
   const [logs, setLogs] = useState<TWorkLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [duration, setDuration] = useState("30");
@@ -55,8 +59,8 @@ export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspace
   }, [workspaceSlug, projectId, issueId, t]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (canRead) void refresh();
+  }, [refresh, canRead]);
 
   useEffect(() => {
     if (!activeTimer) return;
@@ -124,6 +128,7 @@ export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspace
     }
   };
 
+  if (!canRead) return null;
   return (
     <section className="mt-5 border-t border-subtle-1 pt-4">
       <div className="flex items-center justify-between">
@@ -134,6 +139,7 @@ export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspace
         <button
           type="button"
           className="h-7 w-full rounded border border-subtle-1 text-body-xs-medium"
+          disabled={!can(activeTimer ? "update" : "create")}
           onClick={toggleTimer}
         >
           {activeTimer ? "Stop timer" : "Start timer"}
@@ -156,6 +162,7 @@ export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspace
           <button
             type="button"
             className="h-7 rounded bg-accent-primary px-2 text-body-xs-medium text-on-color"
+            disabled={!can("create")}
             onClick={addLog}
           >
             Add
@@ -170,16 +177,26 @@ export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspace
               <span className="ml-2 shrink-0">{formatDuration(getDurationSeconds(log, currentTime))}</span>
               {!(log.is_timer && !log.ended_at) && canModify(log) && (
                 <div className="ml-2 flex shrink-0 gap-2">
-                  <button type="button" className="text-secondary" onClick={() => beginEdit(log)}>
+                  <button
+                    type="button"
+                    className="text-secondary"
+                    disabled={!can("update")}
+                    onClick={() => beginEdit(log)}
+                  >
                     Edit
                   </button>
-                  <button type="button" className="text-danger-primary" onClick={() => void deleteLog(log.id)}>
+                  <button
+                    type="button"
+                    className="text-danger-primary"
+                    disabled={!can("delete")}
+                    onClick={() => void deleteLog(log.id)}
+                  >
                     Delete
                   </button>
                 </div>
               )}
             </div>
-            {isApprovalEnabled && isApprover && (
+            {isApprovalEnabled && isApprover && can("review") && (
               <WorklogReviewActions
                 workspaceSlug={workspaceSlug}
                 projectId={projectId}

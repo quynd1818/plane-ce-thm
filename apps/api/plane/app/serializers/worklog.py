@@ -1,7 +1,10 @@
+from plane.utils.project_rbac_scope import ScopedPrimaryKeyRelatedField
 from rest_framework import serializers
 
 from plane.db.models import Issue, WorkLog
 from .user import UserLiteSerializer
+
+
 
 
 class WorkLogSerializer(serializers.ModelSerializer):
@@ -60,7 +63,7 @@ class WorkLogSerializer(serializers.ModelSerializer):
 
 
 class WorkLogCreateSerializer(WorkLogSerializer):
-    issue = serializers.PrimaryKeyRelatedField(queryset=Issue.objects.all(), write_only=True)
+    issue = ScopedPrimaryKeyRelatedField(queryset=Issue.objects.all(), write_only=True)
 
     def validate_issue(self, issue):
         project_id = self.context["project_id"]

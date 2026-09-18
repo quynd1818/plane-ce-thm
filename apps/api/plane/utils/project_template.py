@@ -42,6 +42,9 @@ from plane.db.models import (
 )
 
 # Project columns that describe *how the project works* and are safe to copy.
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 PROJECT_SETTING_FIELDS = (
     "network",
     "cycle_view",
@@ -104,7 +107,11 @@ def capture_project(project: Project, include_work_items: bool = False) -> dict:
     """Snapshot ``project`` into ``template_data``."""
     states = list(State.objects.filter(project=project, is_triage=False).order_by("sequence"))
     labels = list(Label.objects.filter(project=project).select_related("parent").order_by("sort_order", "name"))
-    modules = list(Module.objects.filter(project=project, archived_at__isnull=True).order_by("sort_order", "name"))
+    modules = list(
+        scoped_queryset(Module.objects.all())
+        .filter(project=project, archived_at__isnull=True)
+        .order_by("sort_order", "name")
+    )
 
     data = {
         "project": {field: getattr(project, field) for field in PROJECT_SETTING_FIELDS},
@@ -167,7 +174,8 @@ def capture_project(project: Project, include_work_items: bool = False) -> dict:
 
     if include_work_items:
         issues = (
-            Issue.issue_objects.filter(project=project, parent__isnull=True)
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(project=project, parent__isnull=True)
             .select_related("state")
             .prefetch_related("label_issue__label", "issue_module__module")
             .order_by("sequence_id")[:MAX_WORK_ITEMS]
@@ -251,7 +259,7 @@ def apply_template(project: Project, template_data: dict, user, source_project=N
     for m in data.get("modules") or []:
         if not m.get("name") or m["name"] in modules_by_name:
             continue
-        modules_by_name[m["name"]] = Module.objects.create(
+        modules_by_name[m["name"]] = scoped_queryset(Module.objects.all()).create(
             name=m["name"],
             description=m.get("description") or "",
             status=m.get("status") or "planned",
@@ -304,7 +312,7 @@ def apply_template(project: Project, template_data: dict, user, source_project=N
                     defaults,
                     State.objects.filter(project=source_project, is_triage=False),
                     Label.objects.filter(project=source_project),
-                    Module.objects.filter(project=source_project, archived_at__isnull=True),
+                    scoped_queryset(Module.objects.all()).filter(project=source_project, archived_at__isnull=True),
                 ),
             }
         WorkItemTemplate.objects.create(
@@ -330,7 +338,7 @@ def apply_template(project: Project, template_data: dict, user, source_project=N
         issue.save(created_by_id=user.id)
         for name in item.get("labels") or []:
             if name in labels_by_name:
-                IssueLabel.objects.create(issue=issue, label=labels_by_name[name], **audit)
+                scoped_queryset(IssueLabel.objects.all()).create(issue=issue, label=labels_by_name[name], **audit)
         for name in item.get("modules") or []:
             if name in modules_by_name:
-                ModuleIssue.objects.create(issue=issue, module=modules_by_name[name], **audit)
+                scoped_queryset(ModuleIssue.objects.all()).create(issue=issue, module=modules_by_name[name], **audit)

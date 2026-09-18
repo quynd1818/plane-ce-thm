@@ -50,6 +50,9 @@ from plane.utils.filters import ComplexFilterBackend
 from plane.utils.filters import IssueFilterSet
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueArchiveViewSet(BaseViewSet):
     serializer_class = IssueFlatSerializer
     model = Issue
@@ -61,12 +64,15 @@ class IssueArchiveViewSet(BaseViewSet):
         return (
             issues.annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
                 link_count=Subquery(
-                    IssueLink.objects.filter(issue=OuterRef("id"))
+                    scoped_queryset(IssueLink.objects.all())
+                    .filter(issue=OuterRef("id"))
                     .values("issue")
                     .annotate(count=Count("id"))
                     .values("count")
@@ -74,7 +80,8 @@ class IssueArchiveViewSet(BaseViewSet):
             )
             .annotate(
                 attachment_count=Subquery(
-                    FileAsset.objects.filter(
+                    scoped_queryset(FileAsset.objects.all())
+                    .filter(
                         issue_id=OuterRef("id"),
                         entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                     )
@@ -85,7 +92,8 @@ class IssueArchiveViewSet(BaseViewSet):
             )
             .annotate(
                 sub_issues_count=Subquery(
-                    Issue.issue_objects.filter(parent=OuterRef("id"))
+                    scoped_queryset(Issue.issue_objects.all())
+                    .filter(parent=OuterRef("id"))
                     .values("parent")
                     .annotate(count=Count("id"))
                     .values("count")
@@ -96,7 +104,8 @@ class IssueArchiveViewSet(BaseViewSet):
 
     def get_queryset(self):
         return (
-            Issue.objects.filter(Q(type__isnull=True) | Q(type__is_epic=False))
+            scoped_queryset(Issue.objects.all())
+            .filter(Q(type__isnull=True) | Q(type__is_epic=False))
             .filter(archived_at__isnull=False)
             .filter(project_id=self.kwargs.get("project_id"))
             .filter(workspace__slug=self.kwargs.get("slug"))
@@ -225,18 +234,18 @@ class IssueArchiveViewSet(BaseViewSet):
             .prefetch_related(
                 Prefetch(
                     "issue_reactions",
-                    queryset=IssueReaction.objects.select_related("issue", "actor"),
+                    queryset=scoped_queryset(IssueReaction.objects.all()).select_related("issue", "actor"),
                 )
             )
             .prefetch_related(
                 Prefetch(
                     "issue_link",
-                    queryset=IssueLink.objects.select_related("created_by"),
+                    queryset=scoped_queryset(IssueLink.objects.all()).select_related("created_by"),
                 )
             )
             .annotate(
                 is_subscribed=Exists(
-                    IssueSubscriber.objects.filter(
+                    scoped_queryset(IssueSubscriber.objects.all()).filter(
                         workspace__slug=slug,
                         project_id=project_id,
                         issue_id=OuterRef("pk"),
@@ -255,7 +264,7 @@ class IssueArchiveViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def archive(self, request, slug, project_id, pk=None):
-        issue = Issue.issue_objects.get(workspace__slug=slug, project_id=project_id, pk=pk)
+        issue = scoped_queryset(Issue.issue_objects.all()).get(workspace__slug=slug, project_id=project_id, pk=pk)
         if issue.state.group not in ["completed", "cancelled"]:
             return Response(
                 {"error": "Can only archive completed or cancelled state group issue"},
@@ -279,7 +288,7 @@ class IssueArchiveViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def unarchive(self, request, slug, project_id, pk=None):
-        issue = Issue.objects.get(
+        issue = scoped_queryset(Issue.objects.all()).get(
             workspace__slug=slug,
             project_id=project_id,
             archived_at__isnull=False,
@@ -312,8 +321,10 @@ class BulkArchiveIssuesEndpoint(BaseAPIView):
         if not len(issue_ids):
             return Response({"error": "Issue IDs are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        issues = Issue.objects.filter(workspace__slug=slug, project_id=project_id, pk__in=issue_ids).select_related(
-            "state"
+        issues = (
+            scoped_queryset(Issue.objects.all())
+            .filter(workspace__slug=slug, project_id=project_id, pk__in=issue_ids)
+            .select_related("state")
         )
         bulk_archive_issues = []
         for issue in issues:
@@ -338,6 +349,6 @@ class BulkArchiveIssuesEndpoint(BaseAPIView):
             )
             issue.archived_at = timezone.now().date()
             bulk_archive_issues.append(issue)
-        Issue.objects.bulk_update(bulk_archive_issues, ["archived_at"])
+        scoped_queryset(Issue.objects.all()).bulk_update(bulk_archive_issues, ["archived_at"])
 
         return Response({"archived_at": str(timezone.now().date())}, status=status.HTTP_200_OK)

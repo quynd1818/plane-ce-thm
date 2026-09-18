@@ -42,6 +42,9 @@ from .. import BaseViewSet
 from plane.utils.host import base_host
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class ModuleIssueViewSet(BaseViewSet):
     serializer_class = ModuleIssueSerializer
     model = ModuleIssue
@@ -54,17 +57,21 @@ class ModuleIssueViewSet(BaseViewSet):
         return (
             issues.annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -73,7 +80,8 @@ class ModuleIssueViewSet(BaseViewSet):
                 .values("count")
             )
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -83,7 +91,7 @@ class ModuleIssueViewSet(BaseViewSet):
 
     def get_queryset(self):
         return (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all()).filter(
                 project_id=self.kwargs.get("project_id"),
                 workspace__slug=self.kwargs.get("slug"),
                 issue_module__module_id=self.kwargs.get("module_id"),
@@ -215,13 +223,15 @@ class ModuleIssueViewSet(BaseViewSet):
         project = Project.objects.get(pk=project_id)
         # Scope to workspace+project to prevent cross-tenant IDOR
         issues = list(
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 workspace__slug=slug,
                 project_id=project_id,
                 pk__in=issues,
-            ).values_list("id", flat=True)
+            )
+            .values_list("id", flat=True)
         )
-        _ = ModuleIssue.objects.bulk_create(
+        _ = scoped_queryset(ModuleIssue.objects.all()).bulk_create(
             [
                 ModuleIssue(
                     issue_id=str(issue),
@@ -261,7 +271,7 @@ class ModuleIssueViewSet(BaseViewSet):
         project = Project.objects.get(pk=project_id)
 
         if modules:
-            _ = ModuleIssue.objects.bulk_create(
+            _ = scoped_queryset(ModuleIssue.objects.all()).bulk_create(
                 [
                     ModuleIssue(
                         issue_id=issue_id,
@@ -293,7 +303,7 @@ class ModuleIssueViewSet(BaseViewSet):
             ]
 
         for module_id in removed_modules:
-            module_issue = ModuleIssue.objects.filter(
+            module_issue = scoped_queryset(ModuleIssue.objects.all()).filter(
                 workspace__slug=slug,
                 project_id=project_id,
                 module_id=module_id,
@@ -324,7 +334,7 @@ class ModuleIssueViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def destroy(self, request, slug, project_id, module_id, issue_id):
-        module_issue = ModuleIssue.objects.filter(
+        module_issue = scoped_queryset(ModuleIssue.objects.all()).filter(
             workspace__slug=slug,
             project_id=project_id,
             module_id=module_id,

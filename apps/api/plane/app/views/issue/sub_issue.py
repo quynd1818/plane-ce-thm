@@ -7,7 +7,7 @@ import json
 
 # Django imports
 from django.utils import timezone
-from django.db.models import OuterRef, Func, F, Q, Value, UUIDField, Subquery, Count, IntegerField
+from django.db.models import OuterRef, F, Value, UUIDField, Subquery, Count, IntegerField
 from django.utils.decorators import method_decorator
 from django.views.decorators.gzip import gzip_page
 from django.contrib.postgres.aggregates import ArrayAgg
@@ -30,6 +30,9 @@ from plane.utils.host import base_host
 from plane.utils.order_queryset import order_issue_queryset
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class SubIssuesEndpoint(BaseAPIView):
     permission_classes = [ProjectEntityPermission]
 
@@ -40,18 +43,20 @@ class SubIssuesEndpoint(BaseAPIView):
         # in it, so an unscoped filter leaks sub-issue metadata across projects in the
         # same workspace.
         sub_issues = (
-            Issue.issue_objects.filter(
-                parent_id=issue_id, workspace__slug=slug, project_id=project_id
-            )
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(parent_id=issue_id, workspace__slug=slug, project_id=project_id)
             .annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
                 link_count=Coalesce(
                     Subquery(
-                        IssueLink.objects.filter(issue=OuterRef("id"))
+                        scoped_queryset(IssueLink.objects.all())
+                        .filter(issue=OuterRef("id"))
                         .order_by()
                         .values("issue")
                         .annotate(count=Count("id"))
@@ -64,7 +69,8 @@ class SubIssuesEndpoint(BaseAPIView):
             .annotate(
                 attachment_count=Coalesce(
                     Subquery(
-                        FileAsset.objects.filter(
+                        scoped_queryset(FileAsset.objects.all())
+                        .filter(
                             issue_id=OuterRef("id"),
                             entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                         )
@@ -80,7 +86,8 @@ class SubIssuesEndpoint(BaseAPIView):
             .annotate(
                 sub_issues_count=Coalesce(
                     Subquery(
-                        Issue.issue_objects.filter(parent=OuterRef("id"))
+                        scoped_queryset(Issue.issue_objects.all())
+                        .filter(parent=OuterRef("id"))
                         .order_by()
                         .values("parent")
                         .annotate(count=Count("id"))
@@ -93,7 +100,8 @@ class SubIssuesEndpoint(BaseAPIView):
             .annotate(
                 label_ids=Coalesce(
                     Subquery(
-                        IssueLabel.objects.filter(issue_id=OuterRef("id"), deleted_at__isnull=True)
+                        scoped_queryset(IssueLabel.objects.all())
+                        .filter(issue_id=OuterRef("id"), deleted_at__isnull=True)
                         .order_by()
                         .values("issue_id")
                         .annotate(arr=ArrayAgg("label_id", distinct=True))
@@ -104,7 +112,8 @@ class SubIssuesEndpoint(BaseAPIView):
                 ),
                 assignee_ids=Coalesce(
                     Subquery(
-                        IssueAssignee.objects.filter(
+                        scoped_queryset(IssueAssignee.objects.all())
+                        .filter(
                             issue_id=OuterRef("id"),
                             assignee__member_project__is_active=True,
                             deleted_at__isnull=True,
@@ -119,7 +128,8 @@ class SubIssuesEndpoint(BaseAPIView):
                 ),
                 module_ids=Coalesce(
                     Subquery(
-                        ModuleIssue.objects.filter(
+                        scoped_queryset(ModuleIssue.objects.all())
+                        .filter(
                             issue_id=OuterRef("id"),
                             module__archived_at__isnull=True,
                             deleted_at__isnull=True,
@@ -211,9 +221,11 @@ class SubIssuesEndpoint(BaseAPIView):
         # SECURITY: bind the parent issue to the URL workspace + project. A bare
         # pk lookup let any project member re-parent issues under a parent in a
         # different project/workspace.
-        parent_issue = Issue.issue_objects.filter(
-            pk=issue_id, workspace__slug=slug, project_id=project_id
-        ).first()
+        parent_issue = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(pk=issue_id, workspace__slug=slug, project_id=project_id)
+            .first()
+        )
         if parent_issue is None:
             return Response(
                 {"error": "Parent issue not found"},
@@ -228,14 +240,14 @@ class SubIssuesEndpoint(BaseAPIView):
             )
 
         # Scope to workspace + project to prevent cross-project/cross-tenant IDOR
-        sub_issues = Issue.issue_objects.filter(
+        sub_issues = scoped_queryset(Issue.issue_objects.all()).filter(
             id__in=sub_issue_ids, workspace__slug=slug, project_id=project_id
         )
 
         for sub_issue in sub_issues:
             sub_issue.parent = parent_issue
 
-        _ = Issue.objects.bulk_update(sub_issues, ["parent"], batch_size=10)
+        _ = scoped_queryset(Issue.objects.all()).bulk_update(sub_issues, ["parent"], batch_size=10)
 
         # Only the issues that were actually re-parented — i.e. the project-scoped
         # `sub_issues`, not the raw caller-supplied ids. Otherwise a cross-project id
@@ -243,9 +255,11 @@ class SubIssuesEndpoint(BaseAPIView):
         # does an unscoped Issue.objects.get and bumps updated_at on a foreign issue.
         scoped_sub_issue_ids = [str(sub_issue.id) for sub_issue in sub_issues]
 
-        updated_sub_issues = Issue.issue_objects.filter(
-            id__in=scoped_sub_issue_ids, workspace__slug=slug, project_id=project_id
-        ).annotate(state_group=F("state__group"))
+        updated_sub_issues = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(id__in=scoped_sub_issue_ids, workspace__slug=slug, project_id=project_id)
+            .annotate(state_group=F("state__group"))
+        )
 
         # Track the issue
         _ = [

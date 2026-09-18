@@ -74,6 +74,9 @@ from plane.utils.openapi import (
 )
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class ProjectListCreateAPIEndpoint(BaseAPIView):
     """Project List and Create Endpoint"""
 
@@ -113,13 +116,15 @@ class ProjectListCreateAPIEndpoint(BaseAPIView):
                 .values("count")
             )
             .annotate(
-                total_cycles=Cycle.objects.filter(project_id=OuterRef("id"))
+                total_cycles=scoped_queryset(Cycle.objects.all())
+                .filter(project_id=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                total_modules=Module.objects.filter(project_id=OuterRef("id"))
+                total_modules=scoped_queryset(Module.objects.all())
+                .filter(project_id=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -467,13 +472,15 @@ class ProjectDetailAPIEndpoint(BaseAPIView):
                 .values("count")
             )
             .annotate(
-                total_cycles=Cycle.objects.filter(project_id=OuterRef("id"))
+                total_cycles=scoped_queryset(Cycle.objects.all())
+                .filter(project_id=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                total_modules=Module.objects.filter(project_id=OuterRef("id"))
+                total_modules=scoped_queryset(Module.objects.all())
+                .filter(project_id=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -572,9 +579,9 @@ class ProjectDetailAPIEndpoint(BaseAPIView):
             if serializer.is_valid():
                 serializer.save()
                 if serializer.data["intake_view"]:
-                    intake = Intake.objects.filter(project=project, is_default=True).first()
+                    intake = scoped_queryset(Intake.objects.all()).filter(project=project, is_default=True).first()
                     if not intake:
-                        Intake.objects.create(
+                        scoped_queryset(Intake.objects.all()).create(
                             name=f"{project.name} Intake",
                             project=project,
                             is_default=True,
@@ -628,7 +635,9 @@ class ProjectDetailAPIEndpoint(BaseAPIView):
         """
         project = Project.objects.get(pk=pk, workspace__slug=slug)
         # Delete the user favorite cycle
-        UserFavorite.objects.filter(entity_type="project", entity_identifier=pk, project_id=pk).delete()
+        scoped_queryset(UserFavorite.objects.all()).filter(
+            entity_type="project", entity_identifier=pk, project_id=pk
+        ).delete()
         project.delete()
         webhook_activity.delay(
             event="project",
@@ -672,7 +681,7 @@ class ProjectArchiveUnarchiveAPIEndpoint(BaseAPIView):
         project = Project.objects.get(pk=project_id, workspace__slug=slug)
         project.archived_at = timezone.now()
         project.save()
-        UserFavorite.objects.filter(workspace__slug=slug, project=project_id).delete()
+        scoped_queryset(UserFavorite.objects.all()).filter(workspace__slug=slug, project=project_id).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @project_docs(
@@ -767,32 +776,37 @@ class ProjectSummaryAPIEndpoint(BaseAPIView):
                 .values("count")
             ),
             "cycles": lambda: (
-                Cycle.objects.filter(project_id=OuterRef("pk"))
+                scoped_queryset(Cycle.objects.all())
+                .filter(project_id=OuterRef("pk"))
                 .values("project_id")
                 .annotate(count=Count("*"))
                 .values("count")
             ),
             "modules": lambda: (
-                Module.objects.filter(project_id=OuterRef("pk"))
+                scoped_queryset(Module.objects.all())
+                .filter(project_id=OuterRef("pk"))
                 .values("project_id")
                 .annotate(count=Count("*"))
                 .values("count")
             ),
             "issues": lambda: (
-                Issue.objects.filter(project_id=OuterRef("pk"))
+                scoped_queryset(Issue.objects.all())
+                .filter(project_id=OuterRef("pk"))
                 .exclude(state__group=StateGroup.TRIAGE.value)
                 .values("project_id")
                 .annotate(count=Count("*"))
                 .values("count")
             ),
             "intakes": lambda: (
-                IntakeIssue.objects.filter(project_id=OuterRef("pk"))
+                scoped_queryset(IntakeIssue.objects.all())
+                .filter(project_id=OuterRef("pk"))
                 .values("project_id")
                 .annotate(count=Count("*"))
                 .values("count")
             ),
             "pages": lambda: (
-                ProjectPage.objects.filter(project_id=OuterRef("pk"))
+                scoped_queryset(ProjectPage.objects.all())
+                .filter(project_id=OuterRef("pk"))
                 .values("project_id")
                 .annotate(count=Count("*"))
                 .values("count")

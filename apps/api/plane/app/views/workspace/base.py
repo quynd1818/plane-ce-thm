@@ -50,6 +50,9 @@ from plane.utils.url import contains_url
 from plane.utils.csv_utils import sanitize_csv_row
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class WorkSpaceViewSet(BaseViewSet):
     rbac_policy = {"GET": "metadata"}
     model = Workspace
@@ -235,7 +238,8 @@ class WeekInMonth(Func):
 class UserWorkspaceDashboardEndpoint(BaseAPIView):
     def get(self, request, slug):
         issue_activities = (
-            IssueActivity.objects.filter(
+            scoped_queryset(IssueActivity.objects.all())
+            .filter(
                 actor=request.user,
                 workspace__slug=slug,
                 created_at__date__gte=date.today() + relativedelta(months=-3),
@@ -249,7 +253,8 @@ class UserWorkspaceDashboardEndpoint(BaseAPIView):
         month = request.GET.get("month", 1)
 
         completed_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 assignees__in=[request.user],
                 workspace__slug=slug,
                 completed_at__month=month,
@@ -262,48 +267,68 @@ class UserWorkspaceDashboardEndpoint(BaseAPIView):
             .order_by("week_in_month")
         )
 
-        assigned_issues = Issue.issue_objects.filter(workspace__slug=slug, assignees__in=[request.user]).count()
+        assigned_issues = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(workspace__slug=slug, assignees__in=[request.user])
+            .count()
+        )
 
-        pending_issues_count = Issue.issue_objects.filter(
-            ~Q(state__group__in=["completed", "cancelled"]),
-            workspace__slug=slug,
-            assignees__in=[request.user],
-        ).count()
+        pending_issues_count = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
+                ~Q(state__group__in=["completed", "cancelled"]),
+                workspace__slug=slug,
+                assignees__in=[request.user],
+            )
+            .count()
+        )
 
-        completed_issues_count = Issue.issue_objects.filter(
-            workspace__slug=slug, assignees__in=[request.user], state__group="completed"
-        ).count()
+        completed_issues_count = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(workspace__slug=slug, assignees__in=[request.user], state__group="completed")
+            .count()
+        )
 
         issues_due_week = (
-            Issue.issue_objects.filter(workspace__slug=slug, assignees__in=[request.user])
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(workspace__slug=slug, assignees__in=[request.user])
             .annotate(target_week=ExtractWeek("target_date"))
             .filter(target_week=timezone.now().date().isocalendar()[1])
             .count()
         )
 
         state_distribution = (
-            Issue.issue_objects.filter(workspace__slug=slug, assignees__in=[request.user])
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(workspace__slug=slug, assignees__in=[request.user])
             .annotate(state_group=F("state__group"))
             .values("state_group")
             .annotate(state_count=Count("state_group"))
             .order_by("state_group")
         )
 
-        overdue_issues = Issue.issue_objects.filter(
-            ~Q(state__group__in=["completed", "cancelled"]),
-            workspace__slug=slug,
-            assignees__in=[request.user],
-            target_date__lt=timezone.now(),
-            completed_at__isnull=True,
-        ).values("id", "name", "workspace__slug", "project_id", "target_date")
+        overdue_issues = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
+                ~Q(state__group__in=["completed", "cancelled"]),
+                workspace__slug=slug,
+                assignees__in=[request.user],
+                target_date__lt=timezone.now(),
+                completed_at__isnull=True,
+            )
+            .values("id", "name", "workspace__slug", "project_id", "target_date")
+        )
 
-        upcoming_issues = Issue.issue_objects.filter(
-            ~Q(state__group__in=["completed", "cancelled"]),
-            start_date__gte=timezone.now(),
-            workspace__slug=slug,
-            assignees__in=[request.user],
-            completed_at__isnull=True,
-        ).values("id", "name", "workspace__slug", "project_id", "start_date")
+        upcoming_issues = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
+                ~Q(state__group__in=["completed", "cancelled"]),
+                start_date__gte=timezone.now(),
+                workspace__slug=slug,
+                assignees__in=[request.user],
+                completed_at__isnull=True,
+            )
+            .values("id", "name", "workspace__slug", "project_id", "start_date")
+        )
 
         return Response(
             {
@@ -353,14 +378,18 @@ class ExportWorkspaceUserActivityEndpoint(BaseAPIView):
         if not request.data.get("date"):
             return Response({"error": "Date is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        user_activities = IssueActivity.objects.filter(
-            ~Q(field__in=["comment", "vote", "reaction", "draft"]),
-            workspace__slug=slug,
-            created_at__date=request.data.get("date"),
-            project__project_projectmember__member=request.user,
-            project__project_projectmember__is_active=True,
-            actor_id=user_id,
-        ).select_related("actor", "workspace", "issue", "project")[:10000]
+        user_activities = (
+            scoped_queryset(IssueActivity.objects.all())
+            .filter(
+                ~Q(field__in=["comment", "vote", "reaction", "draft"]),
+                workspace__slug=slug,
+                created_at__date=request.data.get("date"),
+                project__project_projectmember__member=request.user,
+                project__project_projectmember__is_active=True,
+                actor_id=user_id,
+            )
+            .select_related("actor", "workspace", "issue", "project")[:10000]
+        )
 
         header = [
             "Actor name",

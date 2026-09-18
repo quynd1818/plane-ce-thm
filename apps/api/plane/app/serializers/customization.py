@@ -1,3 +1,4 @@
+from plane.utils.project_rbac_scope import ScopedPrimaryKeyRelatedField
 from rest_framework import serializers
 
 from plane.db.models import IssueType, ProjectCustomProperty, ProjectIssueType, WorkItemTemplate
@@ -27,9 +28,7 @@ class WorkItemTemplateSerializer(serializers.ModelSerializer):
 
 
 class ProjectIssueTypeSerializer(serializers.ModelSerializer):
-    issue_type_id = serializers.PrimaryKeyRelatedField(
-        source="issue_type", queryset=IssueType.objects.all(), write_only=True
-    )
+    issue_type_id = ScopedPrimaryKeyRelatedField(source="issue_type", queryset=IssueType.objects.all(), write_only=True)
     name = serializers.CharField(source="issue_type.name", read_only=True)
     description = serializers.CharField(source="issue_type.description", read_only=True)
 

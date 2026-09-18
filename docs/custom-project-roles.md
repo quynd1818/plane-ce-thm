@@ -1,58 +1,71 @@
 # Custom project roles (THM)
 
-## Shipped scope
+## Scope and effective permissions
 
-Administrators can configure named roles and assign one role to an existing Member in each project. Built-in Admin / Member / Guest memberships remain in the database; custom roles restrict access, never elevate it. This first release covers accounting and legal-property workflows, not an arbitrary permission editor for every CE feature.
+A custom role restricts **only the project where it is assigned**. Other projects retain their own custom role or built-in role. Workspace navigation, search, dashboards, notifications and export history remain available; their project data is filtered before aggregation and pagination.
 
-| Capability        | Access                                                                                             |
-| ----------------- | -------------------------------------------------------------------------------------------------- |
-| `worklogs.read`   | Project worklog report, totals, individual worklogs                                                |
-| `worklogs.export` | CSV report download; requires `worklogs.read`                                                      |
-| `issues.read`     | Search/paginate work item names, sequence numbers and custom-property values in the focused screen |
-| `properties.edit` | Change values for explicitly selected active property keys; requires `issues.read`                 |
+Effective access is the intersection of the built-in membership, custom capabilities, and existing ownership/privacy/workflow rules. A custom role never elevates a Member into an Admin. Active project Members and project Admins can receive roles when their workspace membership is Member. Workspace Admins and Guests are not eligible. Only an unrestricted administrator can manage roles or assignments; a restricted project Admin cannot remove their own restrictions.
 
-Accounting preset: worklog read + CSV export. Legal preset: issue-property read + selected property edits. Property editing never grants changes to issue title, description, state, assignees, property definitions, or other properties. The read capability exposes all custom-property values; this is field-level **write** permission, not field-level redaction.
+## Permission catalog
 
-Only active Members with an active Member workspace membership can receive roles. Admin and Guest accounts cannot receive roles. Existing ownership, membership and worklog rules continue to apply; custom permissions do not bypass them.
+The role editor groups capabilities by feature. Read is required for other actions on the same feature. The backend catalog is the authoritative list.
 
-## Restricted workspace mode — operational impact
+| Feature                                     | Actions                                                                               |
+| ------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Work items / epics                          | Read, create, update, delete, archive/restore, export                                 |
+| Comments, attachments                       | Read, create, update, delete                                                          |
+| Cycles, modules                             | Read, create, update, delete, archive/restore                                         |
+| Pages                                       | Read, create, update, delete, archive/restore, lock/unlock, change visibility, export |
+| Views, intake, worklogs                     | Read, create, update, delete                                                          |
+| Worklogs                                    | Separate CSV export and approval/review                                               |
+| States, labels, estimates, types, templates | Read, create, update, delete within existing CE authority                             |
+| Workflow, recurring work items              | Read, create, update, delete                                                          |
+| Members, project settings                   | Read, create, update, delete; existing administrator checks still apply               |
+| Project lifecycle                           | Archive/restore, publish                                                              |
+| Analytics and dashboards                    | Read, create, update, delete, export                                                  |
+| Custom properties                           | Read names/values, edit selected property keys, create/update/delete definitions      |
 
-**Assigning any custom role puts that user into restricted mode for the entire workspace. Every project they need must have an explicit custom-role assignment. Built-in privileges in other projects in that workspace do not grant access while restricted mode is active.** This is displayed above the assignment controls.
+Navigation metadata such as project names, member rosters and state/label choices remains readable under existing membership checks. This does not expose work item/page content. Workspace and instance administration continue to use their built-in roles; the catalog governs project features, not instance administration.
 
-This conservative boundary prevents existing cross-project relations, workspace search, dashboards, exports, notifications, asset routes and API-token endpoints from disclosing or modifying restricted project data. Those endpoints are denied rather than returning partially filtered results. A project identifier or a project ID in a body/query cannot bypass the boundary. Personal profile/settings and workspace/project metadata needed for navigation remain available.
+Accounting preset grants worklog read/export. Legal preset grants `properties.read` and `properties.edit` for selected keys. A read-only preset grants feature read capabilities. Accounting/legal roles retain a focused project screen; expanded roles use the normal CE feature screens. Disabled roles grant no project content access. Role access refreshes on focus and every 30 seconds; API checks use the primary database on each request.
 
-Users enter a focused workspace screen with project links and only the permitted worklog/property tools. No ordinary project data component mounts before authorization is loaded. API failures show an error and Retry; disabled roles show a no-access message. The UI rechecks role access on focus and every 30 seconds. The server reads authorization from the primary database on every request.
-
-Users without a custom role retain the original CE behavior. Other workspaces are unaffected. Unscoped aggregate endpoints are unavailable if the user has a restricted assignment anywhere. Existing downloaded files, emails, cached browser content and publicly published content cannot be revoked by this API permission system.
+`properties.read` exposes work item names, sequence numbers and all property values without description/content. `issues.read` exposes full work items. Property keys restrict writes, not field-level visibility. Updates merge submitted keys, preserving other values. Role names have no special authority.
 
 ## Administration
 
-1. Open **Project settings → Customization → Custom project roles** as project admin (or workspace admin who belongs to the project).
-2. Create a named role or use Accounting / Legal preset. Select active custom properties for Legal.
-3. Assign it to each required Member/project. Assignment changes affect the next API request.
-4. Disable a role to suspend access without restoring built-in permissions.
-5. Remove assignments explicitly to restore built-in access. Restricted mode ends only after the user's final assignment in that workspace is removed. A role with assignments cannot be deleted (409).
+1. Open **Project settings → Customization → Custom project roles**.
+2. Create a role, choose feature actions, and select property keys if granting property edits.
+3. Assign one role to the relevant project membership. No assignments are created automatically.
+4. Disable a role to suspend its grants. Remove an assignment explicitly to restore that project's built-in permissions.
 
-Inactive/soft-deleted memberships retain the restriction until an administrator explicitly removes their assignment. They cannot use the role's tools. The manager includes inactive memberships so administrators can release those assignments. Removing an assignment uses a hard delete to make the one-to-one slot reusable; deleting a role uses soft deletion. Changing or soft-deleting a role does not grant broader permissions.
+Roles with assignments cannot be deleted (409). Inactive/soft-deleted memberships retain the assignment restriction until an administrator removes it, preventing accidental restoration. Assignment removal hard-deletes the one-to-one link so reassignment remains possible.
 
-Role/property names are not privileges. A role grants only the enumerated capabilities. Property grants use stable project property **keys**: administrators should not reuse a key for a semantically different property without reviewing role grants. Unknown or inactive properties are rejected when editing values. Updates merge only submitted keys under an issue-row lock, preserve other properties and append an `IssueActivity` attributed to the actor.
+## Enforcement and extension points
 
-## API and implementation
+- App/session and public/API-token endpoints use the shared guard and explicit `project_rbac_policies.py` catalog. Unclassified routes targeting an assigned project fail closed.
+- `scoped_queryset` filters project data, related-key validation and export history. `scoped_aggregate` filters reverse-relation counts/sums. Add these scopes when implementing a new workspace query; a project URL guard alone cannot protect aggregates.
+- Cross-project work item mutations authorize both ends. Object IDs must belong to the project in the URL. Generic page updates also check separate lock, archive and visibility capabilities.
+- Role-bearing requests bypass response caches and return `Cache-Control: private, no-store`. Request context is reset after dispatch, including errors.
+- Export workers recheck grants using the initiating user. Related comments/modules/parents/relations are filtered too. Default issue exports include only permitted projects.
+- Live editor connections check page access even for an already-cached document. Read-only connections cannot apply Yjs updates; subsequent client messages recheck access. API persistence remains independently protected. PDF export checks `pages.export`; local Word/Markdown export controls honor the same capability.
+
+Previously downloaded content, public published content, and copies of already-readable content cannot be revoked by these permissions. Export controls govern built-in export operations; they do not provide DRM.
+
+## APIs
 
 - `GET/POST .../projects/{project}/custom-roles/`
 - `PATCH/DELETE .../projects/{project}/custom-roles/{role}/`
-- `PUT .../projects/{project}/role-assignments/{membership}/` with `custom_role_id` (UUID or null)
+- `PUT .../projects/{project}/role-assignments/{membership}/` with `custom_role_id` or null
 - `GET .../projects/{project}/custom-role/me/`
 - `GET .../workspaces/{slug}/role-access/`
-- `GET .../projects/{project}/role-issues/?search=&offset=` (50 items/page)
-- `PATCH .../projects/{project}/role-issues/{issue}/` with only `custom_properties`
+- `GET .../projects/{project}/role-issues/?search=&offset=` (50 rows/page)
+- `PATCH .../projects/{project}/role-issues/{issue}/` with `custom_properties`
+- `GET .../projects/{project}/pages/{page}/access-check/` (optional `action=export`)
 
-The shared guard is installed on both app/session and public/token API base classes. Views opt into a capability with `rbac_policy`; unclassified endpoints deny restricted users. `metadata` is an explicit exemption and must never be used for project data or cross-project mutations. Do not extend permissions simply by changing a frontend checkbox.
+## Migration and rollout
 
-Worklog CSV uses the existing endpoint. Renderer negotiation now accepts its `format=csv` query parameter, export checks are separate from read checks, and cells starting with spreadsheet formula characters are escaped. Exported data remains governed by existing worklog date/status filters and approval defaults.
+Apply migrations `0133_project_custom_roles` and `0134_expand_project_role_permissions` and release API, web, workers and live together. Migration 0134 converts legacy `issues.read` grants into `properties.read`, preserving the older Legal role's limited content access. Administrators explicitly grant the new full `issues.read` permission when appropriate.
 
-## Rollout / validation
+An API rollback alone would discard enforcement. Review/remove expanded roles deliberately before rolling back, or retain this guard. Reversing the data migration does not make expanded capabilities compatible with the old API.
 
-Run migration `0133_project_custom_roles` before releasing the API/web changes. There is no automatic role assignment, backfill or change to existing member permissions. Do not roll back the API alone while assignments exist: an old API does not enforce these restrictions. Remove assignments deliberately before reverting the feature, or keep the guard in place.
-
-Contract tests cover report/export separation, forbidden issue/worklog/timer writes, direct API-token calls, field validation and preservation, cross-project targets, workspace aggregate denial, role revocation, admin-only assignment/removal, inactive memberships, disabled/deleted roles and CSV formula escaping. UI tests cover scoped tools, failed saves, assignment, fail-closed workspace entry and projects without explicit roles.
+Tests cover mixed-project access, granular reads/writes, token calls, cross-project IDs, field preservation, analytics filtering, cache revocation, export worker checks, legacy migration, endpoint classification, UI routing and live-editor authorization.

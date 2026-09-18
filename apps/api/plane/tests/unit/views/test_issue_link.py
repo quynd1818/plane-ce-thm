@@ -46,7 +46,7 @@ class TestIssueLinkPartialUpdate:
     @patch("plane.app.views.issue.link.issue_activity")
     @patch("plane.app.views.issue.link.crawl_work_item_link_title")
     @patch("plane.app.views.issue.link.IssueLinkSerializer")
-    @patch("plane.app.views.issue.link.IssueLink.objects.get")
+    @patch("plane.app.views.issue.link.IssueLink.objects.all")
     def test_partial_update_does_not_recrawl_when_url_unchanged(
         self, mock_get_link, mock_serializer_cls, mock_crawl, mock_activity, mock_base_host
     ):
@@ -55,7 +55,7 @@ class TestIssueLinkPartialUpdate:
         mock_instance = MagicMock()
         mock_instance.id = self.link_id
         mock_instance.url = initial_url
-        mock_get_link.return_value = mock_instance
+        mock_get_link.return_value.get.return_value = mock_instance
 
         # Mock serializer behavior
         mock_serializer_instance = MagicMock()
@@ -90,7 +90,7 @@ class TestIssueLinkPartialUpdate:
     @patch("plane.app.views.issue.link.issue_activity")
     @patch("plane.app.views.issue.link.crawl_work_item_link_title")
     @patch("plane.app.views.issue.link.IssueLinkSerializer")
-    @patch("plane.app.views.issue.link.IssueLink.objects.get")
+    @patch("plane.app.views.issue.link.IssueLink.objects.all")
     def test_partial_update_triggers_crawl_when_url_changed(
         self, mock_get_link, mock_serializer_cls, mock_crawl, mock_activity, mock_base_host
     ):
@@ -101,7 +101,7 @@ class TestIssueLinkPartialUpdate:
         mock_instance = MagicMock()
         mock_instance.id = self.link_id
         mock_instance.url = initial_url
-        mock_get_link.return_value = mock_instance
+        mock_get_link.return_value.get.return_value = mock_instance
 
         mock_serializer_instance = MagicMock()
         mock_serializer_instance.is_valid.return_value = True
@@ -153,7 +153,7 @@ class TestIssueLinkDetailPatch:
     @patch("plane.api.views.issue.issue_activity")
     @patch("plane.api.views.issue.crawl_work_item_link_title")
     @patch("plane.api.views.issue.IssueLinkSerializer")
-    @patch("plane.api.views.issue.IssueLink.objects.get")
+    @patch("plane.api.views.issue.IssueLink.objects.all")
     def test_patch_does_not_recrawl_when_url_unchanged(
         self, mock_get_link, mock_serializer_cls, mock_crawl, mock_activity
     ):
@@ -161,7 +161,7 @@ class TestIssueLinkDetailPatch:
         mock_instance = MagicMock()
         mock_instance.id = self.link_id
         mock_instance.url = initial_url
-        mock_get_link.return_value = mock_instance
+        mock_get_link.return_value.get.return_value = mock_instance
 
         mock_serializer_instance = MagicMock()
         mock_serializer_instance.is_valid.return_value = True
@@ -183,16 +183,14 @@ class TestIssueLinkDetailPatch:
     @patch("plane.api.views.issue.issue_activity")
     @patch("plane.api.views.issue.crawl_work_item_link_title")
     @patch("plane.api.views.issue.IssueLinkSerializer")
-    @patch("plane.api.views.issue.IssueLink.objects.get")
-    def test_patch_triggers_crawl_when_url_changed(
-        self, mock_get_link, mock_serializer_cls, mock_crawl, mock_activity
-    ):
+    @patch("plane.api.views.issue.IssueLink.objects.all")
+    def test_patch_triggers_crawl_when_url_changed(self, mock_get_link, mock_serializer_cls, mock_crawl, mock_activity):
         initial_url = "https://github.com/makeplane/plane"
         new_url = "https://github.com/makeplane/plane/pull/123"
         mock_instance = MagicMock()
         mock_instance.id = self.link_id
         mock_instance.url = initial_url
-        mock_get_link.return_value = mock_instance
+        mock_get_link.return_value.get.return_value = mock_instance
 
         mock_serializer_instance = MagicMock()
         mock_serializer_instance.is_valid.return_value = True

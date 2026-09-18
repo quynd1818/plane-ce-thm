@@ -16,6 +16,9 @@ from django.utils import timezone
 
 from plane.db.models import Issue, IssueType, ProjectIssueType, ProjectMember
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 EPIC_TYPE_NAME = "Epic"
 STATE_GROUPS = ("backlog", "unstarted", "started", "completed", "cancelled")
 
@@ -50,7 +53,7 @@ def ensure_project_epic_type(project, user=None) -> IssueType:
 
 
 def epic_queryset(workspace_id=None, project_id=None):
-    qs = Issue.issue_objects.filter(type__is_epic=True)
+    qs = scoped_queryset(Issue.issue_objects.all()).filter(type__is_epic=True)
     if workspace_id:
         qs = qs.filter(workspace_id=workspace_id)
     if project_id:
@@ -72,7 +75,7 @@ def rollup_for_epics(epic_ids, user) -> dict:
     epics' direct children."""
     today = timezone.now().date()
     rows = (
-        visible_issues(Issue.issue_objects.filter(parent_id__in=list(epic_ids)), user)
+        visible_issues(scoped_queryset(Issue.issue_objects.all()).filter(parent_id__in=list(epic_ids)), user)
         .values("parent_id")
         .annotate(
             total=Count("id"),

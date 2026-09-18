@@ -163,7 +163,7 @@ class BaseViewSet(TimezoneMixin, ReadReplicaControlMixin, ModelViewSet, BasePagi
 
     def get_queryset(self):
         try:
-            return self.model.objects.all()
+            return self.scope_queryset(self.model.objects.all())
         except Exception as e:
             log_exception(e)
             raise APIException("Please check the view", status.HTTP_400_BAD_REQUEST)

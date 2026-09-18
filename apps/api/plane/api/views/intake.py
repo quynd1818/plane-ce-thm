@@ -52,6 +52,9 @@ from plane.utils.openapi import (
 )
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IntakeIssueListCreateAPIEndpoint(BaseAPIView):
     """Intake Work Item List and Create Endpoint"""
 
@@ -62,18 +65,23 @@ class IntakeIssueListCreateAPIEndpoint(BaseAPIView):
     use_read_replica = True
 
     def get_queryset(self):
-        intake = Intake.objects.filter(
-            workspace__slug=self.kwargs.get("slug"),
-            project_id=self.kwargs.get("project_id"),
-        ).first()
+        intake = (
+            scoped_queryset(Intake.objects.all())
+            .filter(
+                workspace__slug=self.kwargs.get("slug"),
+                project_id=self.kwargs.get("project_id"),
+            )
+            .first()
+        )
 
         project = Project.objects.get(workspace__slug=self.kwargs.get("slug"), pk=self.kwargs.get("project_id"))
 
         if intake is None or not project.intake_view:
-            return IntakeIssue.objects.none()
+            return scoped_queryset(IntakeIssue.objects.all()).none()
 
         return (
-            IntakeIssue.objects.filter(
+            scoped_queryset(IntakeIssue.objects.all())
+            .filter(
                 Q(snoozed_till__gte=timezone.now()) | Q(snoozed_till__isnull=True),
                 workspace__slug=self.kwargs.get("slug"),
                 project_id=self.kwargs.get("project_id"),
@@ -114,9 +122,9 @@ class IntakeIssueListCreateAPIEndpoint(BaseAPIView):
         return self.paginate(
             request=request,
             queryset=(issue_queryset),
-            on_results=lambda intake_issues: IntakeIssueSerializer(
-                intake_issues, many=True, fields=self.fields, expand=self.expand
-            ).data,
+            on_results=lambda intake_issues: (
+                IntakeIssueSerializer(intake_issues, many=True, fields=self.fields, expand=self.expand).data
+            ),
         )
 
     @intake_docs(
@@ -149,7 +157,7 @@ class IntakeIssueListCreateAPIEndpoint(BaseAPIView):
         if not request.data.get("issue", {}).get("name", False):
             return Response({"error": "Name is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        intake = Intake.objects.filter(workspace__slug=slug, project_id=project_id).first()
+        intake = scoped_queryset(Intake.objects.all()).filter(workspace__slug=slug, project_id=project_id).first()
 
         project = Project.objects.get(workspace__slug=slug, pk=project_id)
 
@@ -192,7 +200,7 @@ class IntakeIssueListCreateAPIEndpoint(BaseAPIView):
         raw_description_html = issue_data.get("description_html", "<p></p>")
         _, _, sanitized_description_html = validate_html_content(raw_description_html)
         safe_description_html = sanitized_description_html if sanitized_description_html is not None else "<p></p>"
-        issue = Issue.objects.create(
+        issue = scoped_queryset(Issue.objects.all()).create(
             name=issue_data.get("name"),
             description_json=description_json,
             description_html=safe_description_html,
@@ -202,7 +210,7 @@ class IntakeIssueListCreateAPIEndpoint(BaseAPIView):
         )
 
         # create an intake issue
-        intake_issue = IntakeIssue.objects.create(
+        intake_issue = scoped_queryset(IntakeIssue.objects.all()).create(
             intake_id=intake.id,
             project_id=project_id,
             issue=issue,
@@ -236,18 +244,23 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
     filterset_fields = ["status"]
 
     def get_queryset(self):
-        intake = Intake.objects.filter(
-            workspace__slug=self.kwargs.get("slug"),
-            project_id=self.kwargs.get("project_id"),
-        ).first()
+        intake = (
+            scoped_queryset(Intake.objects.all())
+            .filter(
+                workspace__slug=self.kwargs.get("slug"),
+                project_id=self.kwargs.get("project_id"),
+            )
+            .first()
+        )
 
         project = Project.objects.get(workspace__slug=self.kwargs.get("slug"), pk=self.kwargs.get("project_id"))
 
         if intake is None or not project.intake_view:
-            return IntakeIssue.objects.none()
+            return scoped_queryset(IntakeIssue.objects.all()).none()
 
         return (
-            IntakeIssue.objects.filter(
+            scoped_queryset(IntakeIssue.objects.all())
+            .filter(
                 Q(snoozed_till__gte=timezone.now()) | Q(snoozed_till__isnull=True),
                 workspace__slug=self.kwargs.get("slug"),
                 project_id=self.kwargs.get("project_id"),
@@ -311,7 +324,7 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
         Modify an existing intake work item's properties or status for triage processing.
         Supports status changes like accept, reject, or mark as duplicate.
         """
-        intake = Intake.objects.filter(workspace__slug=slug, project_id=project_id).first()
+        intake = scoped_queryset(Intake.objects.all()).filter(workspace__slug=slug, project_id=project_id).first()
 
         project = Project.objects.get(workspace__slug=slug, pk=project_id)
 
@@ -323,7 +336,7 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
             )
 
         # Get the intake issue
-        intake_issue = IntakeIssue.objects.get(
+        intake_issue = scoped_queryset(IntakeIssue.objects.all()).get(
             issue_id=issue_id,
             workspace__slug=slug,
             project_id=project_id,
@@ -352,28 +365,32 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
 
         # Validate issue data if provided
         if bool(issue_data):
-            issue = Issue.objects.annotate(
-                label_ids=Coalesce(
-                    ArrayAgg(
-                        "labels__id",
-                        distinct=True,
-                        filter=Q(~Q(labels__id__isnull=True) & Q(label_issue__deleted_at__isnull=True)),
-                    ),
-                    Value([], output_field=ArrayField(UUIDField())),
-                ),
-                assignee_ids=Coalesce(
-                    ArrayAgg(
-                        "assignees__id",
-                        distinct=True,
-                        filter=Q(
-                            ~Q(assignees__id__isnull=True)
-                            & Q(assignees__member_project__is_active=True)
-                            & Q(issue_assignee__deleted_at__isnull=True)
+            issue = (
+                scoped_queryset(Issue.objects.all())
+                .annotate(
+                    label_ids=Coalesce(
+                        ArrayAgg(
+                            "labels__id",
+                            distinct=True,
+                            filter=Q(~Q(labels__id__isnull=True) & Q(label_issue__deleted_at__isnull=True)),
                         ),
+                        Value([], output_field=ArrayField(UUIDField())),
                     ),
-                    Value([], output_field=ArrayField(UUIDField())),
-                ),
-            ).get(pk=issue_id, workspace__slug=slug, project_id=project_id)
+                    assignee_ids=Coalesce(
+                        ArrayAgg(
+                            "assignees__id",
+                            distinct=True,
+                            filter=Q(
+                                ~Q(assignees__id__isnull=True)
+                                & Q(assignees__member_project__is_active=True)
+                                & Q(issue_assignee__deleted_at__isnull=True)
+                            ),
+                        ),
+                        Value([], output_field=ArrayField(UUIDField())),
+                    ),
+                )
+                .get(pk=issue_id, workspace__slug=slug, project_id=project_id)
+            )
 
             # Only allow guests to edit name and description
             if project_member.role <= 5:
@@ -457,7 +474,7 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
         Permanently remove an intake work item from the triage queue.
         Also deletes the underlying work item if it hasn't been accepted yet.
         """
-        intake = Intake.objects.filter(workspace__slug=slug, project_id=project_id).first()
+        intake = scoped_queryset(Intake.objects.all()).filter(workspace__slug=slug, project_id=project_id).first()
 
         project = Project.objects.get(workspace__slug=slug, pk=project_id)
 
@@ -469,7 +486,7 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
             )
 
         # Get the intake issue
-        intake_issue = IntakeIssue.objects.get(
+        intake_issue = scoped_queryset(IntakeIssue.objects.all()).get(
             issue_id=issue_id,
             workspace__slug=slug,
             project_id=project_id,
@@ -479,7 +496,11 @@ class IntakeIssueDetailAPIEndpoint(BaseAPIView):
         # Check the issue status
         if intake_issue.status in [-2, -1, 0, 2]:
             # Delete the issue also
-            issue = Issue.objects.filter(workspace__slug=slug, project_id=project_id, pk=issue_id).first()
+            issue = (
+                scoped_queryset(Issue.objects.all())
+                .filter(workspace__slug=slug, project_id=project_id, pk=issue_id)
+                .first()
+            )
             if issue.created_by_id != request.user.id and (
                 not ProjectMember.objects.filter(
                     workspace__slug=slug,

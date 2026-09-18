@@ -15,6 +15,9 @@ from plane.db.models import ExporterHistory, Project, Workspace
 from .. import BaseAPIView
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class ExportIssuesEndpoint(BaseAPIView):
     model = ExporterHistory
     serializer_class = ExporterHistorySerializer
@@ -28,6 +31,8 @@ class ExportIssuesEndpoint(BaseAPIView):
         multiple = request.data.get("multiple", False)
         project_ids = request.data.get("project", [])
 
+        from plane.utils.project_rbac import require_project_capability
+
         if provider in ["csv", "xlsx", "json"]:
             if not project_ids:
                 project_ids = Project.objects.filter(
@@ -36,9 +41,19 @@ class ExportIssuesEndpoint(BaseAPIView):
                     project_projectmember__is_active=True,
                     archived_at__isnull=True,
                 ).values_list("id", flat=True)
-                project_ids = [str(project_id) for project_id in project_ids]
+                project_ids = [
+                    str(project_id)
+                    for project_id in scoped_queryset(
+                        Project.objects.filter(pk__in=project_ids), request, "issues.export", "id"
+                    ).values_list("id", flat=True)
+                ]
+                if not project_ids:
+                    return Response({"error": "No projects available for export."}, status=403)
 
-            exporter = ExporterHistory.objects.create(
+            for project_id in project_ids:
+                require_project_capability(request, project_id, "issues.export")
+
+            exporter = scoped_queryset(ExporterHistory.objects.all()).create(
                 workspace=workspace,
                 project=project_ids,
                 initiated_by=request.user,
@@ -66,8 +81,10 @@ class ExportIssuesEndpoint(BaseAPIView):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def get(self, request, slug):
-        exporter_history = ExporterHistory.objects.filter(workspace__slug=slug, type="issue_exports").select_related(
-            "workspace", "initiated_by"
+        exporter_history = (
+            scoped_queryset(ExporterHistory.objects.all())
+            .filter(workspace__slug=slug, type="issue_exports")
+            .select_related("workspace", "initiated_by")
         )
 
         if request.GET.get("per_page", False) and request.GET.get("cursor", False):

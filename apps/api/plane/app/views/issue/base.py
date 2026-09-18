@@ -77,6 +77,9 @@ from plane.utils.timezone_converter import user_timezone_converter
 from .. import BaseAPIView, BaseViewSet
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueListEndpoint(BaseAPIView):
     filter_backends = (ComplexFilterBackend,)
     filterset_class = IssueFilterSet
@@ -91,7 +94,9 @@ class IssueListEndpoint(BaseAPIView):
         issue_ids = [issue_id for issue_id in issue_ids.split(",") if issue_id != ""]
 
         # Base queryset with basic filters
-        queryset = Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id, pk__in=issue_ids)
+        queryset = scoped_queryset(Issue.issue_objects.all()).filter(
+            workspace__slug=slug, project_id=project_id, pk__in=issue_ids
+        )
 
         # Restrict guests without full feature access to issues they created,
         # mirroring IssueViewSet.list.
@@ -123,17 +128,21 @@ class IssueListEndpoint(BaseAPIView):
         issue_queryset = (
             issue_queryset.annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -142,7 +151,8 @@ class IssueListEndpoint(BaseAPIView):
                 .values("count")
             )
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -216,10 +226,14 @@ class IssueViewSet(BaseViewSet):
         return IssueCreateSerializer if self.action in ["create", "update", "partial_update"] else IssueSerializer
 
     def get_queryset(self):
-        issues = Issue.issue_objects.filter(
-            project_id=self.kwargs.get("project_id"),
-            workspace__slug=self.kwargs.get("slug"),
-        ).distinct()
+        issues = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
+                project_id=self.kwargs.get("project_id"),
+                workspace__slug=self.kwargs.get("slug"),
+            )
+            .distinct()
+        )
 
         return issues
 
@@ -227,12 +241,15 @@ class IssueViewSet(BaseViewSet):
         issues = (
             issues.annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
                 link_count=Subquery(
-                    IssueLink.objects.filter(issue=OuterRef("id"))
+                    scoped_queryset(IssueLink.objects.all())
+                    .filter(issue=OuterRef("id"))
                     .values("issue")
                     .annotate(count=Count("id"))
                     .values("count")
@@ -240,7 +257,8 @@ class IssueViewSet(BaseViewSet):
             )
             .annotate(
                 attachment_count=Subquery(
-                    FileAsset.objects.filter(
+                    scoped_queryset(FileAsset.objects.all())
+                    .filter(
                         issue_id=OuterRef("id"),
                         entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                     )
@@ -251,7 +269,8 @@ class IssueViewSet(BaseViewSet):
             )
             .annotate(
                 sub_issues_count=Subquery(
-                    Issue.issue_objects.filter(parent=OuterRef("id"))
+                    scoped_queryset(Issue.issue_objects.all())
+                    .filter(parent=OuterRef("id"))
                     .values("parent")
                     .annotate(count=Count("id"))
                     .values("count")
@@ -494,16 +513,22 @@ class IssueViewSet(BaseViewSet):
         project = Project.objects.get(pk=project_id, workspace__slug=slug)
 
         issue = (
-            Issue.objects.filter(
+            scoped_queryset(Issue.objects.all())
+            .filter(
                 project_id=self.kwargs.get("project_id"),
                 workspace__slug=self.kwargs.get("slug"),
                 pk=pk,
             )
             .select_related("state")
-            .annotate(cycle_id=Subquery(CycleIssue.objects.filter(issue=OuterRef("id")).values("cycle_id")[:1]))
+            .annotate(
+                cycle_id=Subquery(
+                    scoped_queryset(CycleIssue.objects.all()).filter(issue=OuterRef("id")).values("cycle_id")[:1]
+                )
+            )
             .annotate(
                 link_count=Subquery(
-                    IssueLink.objects.filter(issue=OuterRef("id"))
+                    scoped_queryset(IssueLink.objects.all())
+                    .filter(issue=OuterRef("id"))
                     .values("issue")
                     .annotate(count=Count("id"))
                     .values("count")
@@ -511,7 +536,8 @@ class IssueViewSet(BaseViewSet):
             )
             .annotate(
                 attachment_count=Subquery(
-                    FileAsset.objects.filter(
+                    scoped_queryset(FileAsset.objects.all())
+                    .filter(
                         issue_id=OuterRef("id"),
                         entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                     )
@@ -522,7 +548,8 @@ class IssueViewSet(BaseViewSet):
             )
             .annotate(
                 sub_issues_count=Subquery(
-                    Issue.issue_objects.filter(parent=OuterRef("id"))
+                    scoped_queryset(Issue.issue_objects.all())
+                    .filter(parent=OuterRef("id"))
                     .values("parent")
                     .annotate(count=Count("id"))
                     .values("count")
@@ -531,7 +558,8 @@ class IssueViewSet(BaseViewSet):
             .annotate(
                 label_ids=Coalesce(
                     Subquery(
-                        IssueLabel.objects.filter(issue_id=OuterRef("pk"))
+                        scoped_queryset(IssueLabel.objects.all())
+                        .filter(issue_id=OuterRef("pk"))
                         .values("issue_id")
                         .annotate(arr=ArrayAgg("label_id", distinct=True))
                         .values("arr")
@@ -540,7 +568,8 @@ class IssueViewSet(BaseViewSet):
                 ),
                 assignee_ids=Coalesce(
                     Subquery(
-                        IssueAssignee.objects.filter(
+                        scoped_queryset(IssueAssignee.objects.all())
+                        .filter(
                             issue_id=OuterRef("pk"),
                             assignee__member_project__is_active=True,
                         )
@@ -552,7 +581,8 @@ class IssueViewSet(BaseViewSet):
                 ),
                 module_ids=Coalesce(
                     Subquery(
-                        ModuleIssue.objects.filter(
+                        scoped_queryset(ModuleIssue.objects.all())
+                        .filter(
                             issue_id=OuterRef("pk"),
                             module__archived_at__isnull=True,
                         )
@@ -566,18 +596,18 @@ class IssueViewSet(BaseViewSet):
             .prefetch_related(
                 Prefetch(
                     "issue_reactions",
-                    queryset=IssueReaction.objects.select_related("issue", "actor"),
+                    queryset=scoped_queryset(IssueReaction.objects.all()).select_related("issue", "actor"),
                 )
             )
             .prefetch_related(
                 Prefetch(
                     "issue_link",
-                    queryset=IssueLink.objects.select_related("created_by"),
+                    queryset=scoped_queryset(IssueLink.objects.all()).select_related("created_by"),
                 )
             )
             .annotate(
                 is_subscribed=Exists(
-                    IssueSubscriber.objects.filter(
+                    scoped_queryset(IssueSubscriber.objects.all()).filter(
                         workspace__slug=slug,
                         project_id=project_id,
                         issue_id=OuterRef("pk"),
@@ -717,11 +747,11 @@ class IssueViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN], creator=True, model=Issue)
     def destroy(self, request, slug, project_id, pk=None):
-        issue = Issue.objects.get(workspace__slug=slug, project_id=project_id, pk=pk)
+        issue = scoped_queryset(Issue.objects.all()).get(workspace__slug=slug, project_id=project_id, pk=pk)
 
         issue.delete()
         # delete the issue from recent visits
-        UserRecentVisit.objects.filter(
+        scoped_queryset(UserRecentVisit.objects.all()).filter(
             project_id=project_id,
             workspace__slug=slug,
             entity_identifier=pk,
@@ -746,21 +776,11 @@ class ProjectUserDisplayPropertyEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def patch(self, request, slug, project_id):
         try:
-            issue_property = ProjectUserProperty.objects.get(
-                user=request.user, 
-                project_id=project_id
-            )
+            issue_property = ProjectUserProperty.objects.get(user=request.user, project_id=project_id)
         except ProjectUserProperty.DoesNotExist:
-            issue_property = ProjectUserProperty.objects.create(
-                user=request.user, 
-                project_id=project_id
-            )
+            issue_property = ProjectUserProperty.objects.create(user=request.user, project_id=project_id)
 
-        serializer = ProjectUserPropertySerializer(
-            issue_property, 
-            data=request.data,
-            partial=True
-        )
+        serializer = ProjectUserPropertySerializer(issue_property, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -780,15 +800,17 @@ class BulkDeleteIssuesEndpoint(BaseAPIView):
         if not len(issue_ids):
             return Response({"error": "Issue IDs are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        issues = Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id, pk__in=issue_ids)
+        issues = scoped_queryset(Issue.issue_objects.all()).filter(
+            workspace__slug=slug, project_id=project_id, pk__in=issue_ids
+        )
 
         total_issues = len(issues)
 
         # First, delete all related cycle issues
-        CycleIssue.objects.filter(issue__in=issues).delete()
+        scoped_queryset(CycleIssue.objects.all()).filter(issue__in=issues).delete()
 
         # Then, delete all related module issues
-        ModuleIssue.objects.filter(issue__in=issues).delete()
+        scoped_queryset(ModuleIssue.objects.all()).filter(issue__in=issues).delete()
 
         # Finally, delete the issues themselves
         issues.delete()
@@ -806,7 +828,8 @@ class DeletedIssuesListViewSet(BaseAPIView):
         if request.GET.get("updated_at__gt", None) is not None:
             filters = {"updated_at__gt": request.GET.get("updated_at__gt")}
         deleted_issues = (
-            Issue.all_objects.filter(workspace__slug=slug, project_id=project_id)
+            scoped_queryset(Issue.all_objects.all())
+            .filter(workspace__slug=slug, project_id=project_id)
             .filter(Q(archived_at__isnull=False) | Q(deleted_at__isnull=False))
             .filter(**filters)
             .values_list("id", flat=True)
@@ -820,14 +843,21 @@ class IssuePaginatedViewSet(BaseViewSet):
         workspace_slug = self.kwargs.get("slug")
         project_id = self.kwargs.get("project_id")
 
-        issue_queryset = Issue.issue_objects.filter(workspace__slug=workspace_slug, project_id=project_id)
+        issue_queryset = scoped_queryset(Issue.issue_objects.all()).filter(
+            workspace__slug=workspace_slug, project_id=project_id
+        )
 
         return (
             issue_queryset.select_related("state")
-            .annotate(cycle_id=Subquery(CycleIssue.objects.filter(issue=OuterRef("id")).values("cycle_id")[:1]))
+            .annotate(
+                cycle_id=Subquery(
+                    scoped_queryset(CycleIssue.objects.all()).filter(issue=OuterRef("id")).values("cycle_id")[:1]
+                )
+            )
             .annotate(
                 link_count=Subquery(
-                    IssueLink.objects.filter(issue=OuterRef("id"))
+                    scoped_queryset(IssueLink.objects.all())
+                    .filter(issue=OuterRef("id"))
                     .values("issue")
                     .annotate(count=Count("id"))
                     .values("count")
@@ -835,7 +865,8 @@ class IssuePaginatedViewSet(BaseViewSet):
             )
             .annotate(
                 attachment_count=Subquery(
-                    FileAsset.objects.filter(
+                    scoped_queryset(FileAsset.objects.all())
+                    .filter(
                         issue_id=OuterRef("id"),
                         entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                     )
@@ -846,7 +877,8 @@ class IssuePaginatedViewSet(BaseViewSet):
             )
             .annotate(
                 sub_issues_count=Subquery(
-                    Issue.issue_objects.filter(parent=OuterRef("id"))
+                    scoped_queryset(Issue.issue_objects.all())
+                    .filter(parent=OuterRef("id"))
                     .values("parent")
                     .annotate(count=Count("id"))
                     .values("count")
@@ -903,7 +935,7 @@ class IssuePaginatedViewSet(BaseViewSet):
             required_fields.append("description_html")
 
         # querying issues
-        base_queryset = Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id)
+        base_queryset = scoped_queryset(Issue.issue_objects.all()).filter(workspace__slug=slug, project_id=project_id)
 
         base_queryset = base_queryset.order_by("updated_at")
         queryset = self.get_queryset().order_by("updated_at")
@@ -929,7 +961,8 @@ class IssuePaginatedViewSet(BaseViewSet):
         queryset = queryset.annotate(
             label_ids=Coalesce(
                 Subquery(
-                    IssueLabel.objects.filter(issue_id=OuterRef("pk"))
+                    scoped_queryset(IssueLabel.objects.all())
+                    .filter(issue_id=OuterRef("pk"))
                     .values("issue_id")
                     .annotate(arr=ArrayAgg("label_id", distinct=True))
                     .values("arr")
@@ -938,7 +971,8 @@ class IssuePaginatedViewSet(BaseViewSet):
             ),
             assignee_ids=Coalesce(
                 Subquery(
-                    IssueAssignee.objects.filter(
+                    scoped_queryset(IssueAssignee.objects.all())
+                    .filter(
                         issue_id=OuterRef("pk"),
                         assignee__member_project__is_active=True,
                     )
@@ -950,7 +984,8 @@ class IssuePaginatedViewSet(BaseViewSet):
             ),
             module_ids=Coalesce(
                 Subquery(
-                    ModuleIssue.objects.filter(
+                    scoped_queryset(ModuleIssue.objects.all())
+                    .filter(
                         issue_id=OuterRef("pk"),
                         module__archived_at__isnull=True,
                     )
@@ -982,17 +1017,21 @@ class IssueDetailEndpoint(BaseAPIView):
         return (
             issues.annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -1001,7 +1040,8 @@ class IssueDetailEndpoint(BaseAPIView):
                 .values("count")
             )
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -1009,19 +1049,19 @@ class IssueDetailEndpoint(BaseAPIView):
             .prefetch_related(
                 Prefetch(
                     "issue_assignee",
-                    queryset=IssueAssignee.objects.all(),
+                    queryset=scoped_queryset(IssueAssignee.objects.all()).all(),
                 )
             )
             .prefetch_related(
                 Prefetch(
                     "label_issue",
-                    queryset=IssueLabel.objects.all(),
+                    queryset=scoped_queryset(IssueLabel.objects.all()).all(),
                 )
             )
             .prefetch_related(
                 Prefetch(
                     "issue_module",
-                    queryset=ModuleIssue.objects.all(),
+                    queryset=scoped_queryset(ModuleIssue.objects.all()).all(),
                 )
             )
         )
@@ -1033,7 +1073,8 @@ class IssueDetailEndpoint(BaseAPIView):
         # check for the project member role, if the role is 5 then check for the guest_view_all_features
         #  if it is true then show all the issues else show only the issues created by the user
         permission_subquery = (
-            Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id, id=OuterRef("id"))
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(workspace__slug=slug, project_id=project_id, id=OuterRef("id"))
             .filter(
                 Q(
                     project__project_projectmember__member=self.request.user,
@@ -1057,8 +1098,10 @@ class IssueDetailEndpoint(BaseAPIView):
             .values("id")
         )
         # Main issue query
-        issue = Issue.issue_objects.filter(workspace__slug=slug, project_id=project_id).filter(
-            Exists(permission_subquery)
+        issue = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(workspace__slug=slug, project_id=project_id)
+            .filter(Exists(permission_subquery))
         )
 
         # Add additional prefetch based on expand parameter
@@ -1067,14 +1110,14 @@ class IssueDetailEndpoint(BaseAPIView):
                 issue = issue.prefetch_related(
                     Prefetch(
                         "issue_relation",
-                        queryset=IssueRelation.objects.select_related("related_issue"),
+                        queryset=scoped_queryset(IssueRelation.objects.all()).select_related("related_issue"),
                     )
                 )
             if "issue_related" in self.expand:
                 issue = issue.prefetch_related(
                     Prefetch(
                         "issue_related",
-                        queryset=IssueRelation.objects.select_related("issue"),
+                        queryset=scoped_queryset(IssueRelation.objects.all()).select_related("issue"),
                     )
                 )
 
@@ -1099,9 +1142,9 @@ class IssueDetailEndpoint(BaseAPIView):
             order_by=order_by_param,
             queryset=issue,
             total_count_queryset=total_issue_queryset,
-            on_results=lambda issue: IssueListDetailSerializer(
-                issue, many=True, fields=self.fields, expand=self.expand
-            ).data,
+            on_results=lambda issue: (
+                IssueListDetailSerializer(issue, many=True, fields=self.fields, expand=self.expand).data
+            ),
         )
 
 
@@ -1133,7 +1176,9 @@ class IssueBulkUpdateDateEndpoint(BaseAPIView):
         epoch = int(timezone.now().timestamp())
 
         # Fetch all relevant issues in a single query
-        issues = list(Issue.objects.filter(id__in=issue_ids, workspace__slug=slug, project_id=project_id))
+        issues = list(
+            scoped_queryset(Issue.objects.all()).filter(id__in=issue_ids, workspace__slug=slug, project_id=project_id)
+        )
         issues_dict = {str(issue.id): issue for issue in issues}
         issues_to_update = []
 
@@ -1180,7 +1225,7 @@ class IssueBulkUpdateDateEndpoint(BaseAPIView):
                 issues_to_update.append(issue)
 
         # Bulk update issues
-        Issue.objects.bulk_update(issues_to_update, ["start_date", "target_date"])
+        scoped_queryset(Issue.objects.all()).bulk_update(issues_to_update, ["start_date", "target_date"])
 
         return Response({"message": "Issues updated successfully"}, status=status.HTTP_200_OK)
 
@@ -1188,8 +1233,10 @@ class IssueBulkUpdateDateEndpoint(BaseAPIView):
 class IssueMetaEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="PROJECT")
     def get(self, request, slug, project_id, issue_id):
-        issue = Issue.issue_objects.only("sequence_id", "project__identifier").get(
-            id=issue_id, project_id=project_id, workspace__slug=slug
+        issue = (
+            scoped_queryset(Issue.issue_objects.all())
+            .only("sequence_id", "project__identifier")
+            .get(id=issue_id, project_id=project_id, workspace__slug=slug)
         )
         return Response(
             {
@@ -1233,19 +1280,26 @@ class IssueDetailIdentifierEndpoint(BaseAPIView):
 
         # Fetch the issue
         issue = (
-            Issue.objects.filter(project_id=project.id)
+            scoped_queryset(Issue.objects.all())
+            .filter(project_id=project.id)
             .filter(workspace__slug=slug)
             .select_related("workspace", "project", "state", "parent")
             .prefetch_related("assignees", "labels", "issue_module__module")
-            .annotate(cycle_id=Subquery(CycleIssue.objects.filter(issue=OuterRef("id")).values("cycle_id")[:1]))
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                cycle_id=Subquery(
+                    scoped_queryset(CycleIssue.objects.all()).filter(issue=OuterRef("id")).values("cycle_id")[:1]
+                )
+            )
+            .annotate(
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -1254,7 +1308,8 @@ class IssueDetailIdentifierEndpoint(BaseAPIView):
                 .values("count")
             )
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -1297,18 +1352,18 @@ class IssueDetailIdentifierEndpoint(BaseAPIView):
             .prefetch_related(
                 Prefetch(
                     "issue_reactions",
-                    queryset=IssueReaction.objects.select_related("issue", "actor"),
+                    queryset=scoped_queryset(IssueReaction.objects.all()).select_related("issue", "actor"),
                 )
             )
             .prefetch_related(
                 Prefetch(
                     "issue_link",
-                    queryset=IssueLink.objects.select_related("created_by"),
+                    queryset=scoped_queryset(IssueLink.objects.all()).select_related("created_by"),
                 )
             )
             .annotate(
                 is_subscribed=Exists(
-                    IssueSubscriber.objects.filter(
+                    scoped_queryset(IssueSubscriber.objects.all()).filter(
                         workspace__slug=slug,
                         project_id=project.id,
                         issue__sequence_id=issue_identifier,
@@ -1318,7 +1373,7 @@ class IssueDetailIdentifierEndpoint(BaseAPIView):
             )
             .annotate(
                 is_intake=Exists(
-                    IntakeIssue.objects.filter(
+                    scoped_queryset(IntakeIssue.objects.all()).filter(
                         issue=OuterRef("id"),
                         status__in=[-2, 0],
                         workspace__slug=slug,

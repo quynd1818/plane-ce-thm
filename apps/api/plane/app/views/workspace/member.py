@@ -27,6 +27,9 @@ from plane.utils.cache import invalidate_cache
 from .. import BaseViewSet
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class WorkSpaceMemberViewSet(BaseViewSet):
     serializer_class = WorkspaceMemberAdminSerializer
     model = WorkspaceMember
@@ -220,7 +223,8 @@ class WorkspaceMemberUserEndpoint(BaseAPIView):
 
     def get(self, request, slug):
         draft_issue_count = (
-            DraftIssue.objects.filter(created_by=request.user, workspace_id=OuterRef("workspace_id"))
+            scoped_queryset(DraftIssue.objects.all())
+            .filter(created_by=request.user, workspace_id=OuterRef("workspace_id"))
             .values("workspace_id")
             .annotate(count=Count("id"))
             .values("count")

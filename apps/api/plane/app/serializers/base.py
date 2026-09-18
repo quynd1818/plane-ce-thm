@@ -3,10 +3,21 @@
 # See the LICENSE file for details.
 
 from rest_framework import serializers
+from plane.utils.project_rbac_scope import model_is_visible, ScopedPrimaryKeyRelatedField
+
+
+from plane.utils.project_rbac_scope import scoped_queryset
 
 
 class BaseSerializer(serializers.ModelSerializer):
+    serializer_related_field = ScopedPrimaryKeyRelatedField
+
     id = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    def to_representation(self, instance):
+        if not model_is_visible(instance):
+            return None
+        return super().to_representation(instance)
 
 
 class DynamicBaseSerializer(BaseSerializer):
@@ -121,6 +132,8 @@ class DynamicBaseSerializer(BaseSerializer):
 
     def to_representation(self, instance):
         response = super().to_representation(instance)
+        if response is None:
+            return None
 
         # Ensure 'expand' is iterable before processing
         if self.expand:
@@ -189,7 +202,7 @@ class DynamicBaseSerializer(BaseSerializer):
 
                 if issue_id:
                     # Fetch related issue_attachments
-                    issue_attachments = FileAsset.objects.filter(
+                    issue_attachments = scoped_queryset(FileAsset.objects.all()).filter(
                         issue_id=issue_id,
                         entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                     )

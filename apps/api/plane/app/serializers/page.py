@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from plane.utils.project_rbac_scope import ScopedPrimaryKeyRelatedField
+
 # Third party imports
 from rest_framework import serializers
 import base64
@@ -23,10 +25,13 @@ from plane.db.models import (
 )
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class PageSerializer(BaseSerializer):
     is_favorite = serializers.BooleanField(read_only=True)
     labels = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=Label.objects.all()),
+        child=ScopedPrimaryKeyRelatedField(queryset=Label.objects.all()),
         write_only=True,
         required=False,
     )
@@ -64,7 +69,7 @@ class PageSerializer(BaseSerializer):
             return None
         project_id = self.context.get("project_id")
         actor_id = self.context.get("owned_by_id")
-        if not ProjectPage.objects.filter(project_id=project_id, page=parent).exists():
+        if not scoped_queryset(ProjectPage.objects.all()).filter(project_id=project_id, page=parent).exists():
             raise serializers.ValidationError("The parent must belong to this project.")
         if parent.access == Page.PRIVATE_ACCESS and parent.owned_by_id != actor_id:
             raise serializers.ValidationError("The parent page is not accessible.")
@@ -102,7 +107,7 @@ class PageSerializer(BaseSerializer):
         project = Project.objects.get(pk=project_id)
 
         # Create the page
-        page = Page.objects.create(
+        page = scoped_queryset(Page.objects.all()).create(
             **validated_data,
             description_json=description_json,
             description_binary=description_binary,
@@ -112,7 +117,7 @@ class PageSerializer(BaseSerializer):
         )
 
         # Create the project page
-        ProjectPage.objects.create(
+        scoped_queryset(ProjectPage.objects.all()).create(
             workspace_id=page.workspace_id,
             project_id=project_id,
             page_id=page.id,

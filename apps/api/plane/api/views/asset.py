@@ -47,11 +47,14 @@ from plane.utils.openapi import (
 from plane.utils.exception_logger import log_exception
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class UserAssetEndpoint(BaseAPIView):
     """This endpoint is used to upload user profile images."""
 
     def asset_delete(self, asset_id):
-        asset = FileAsset.objects.filter(id=asset_id).first()
+        asset = scoped_queryset(FileAsset.objects.all()).filter(id=asset_id).first()
         if asset is None:
             return
         asset.is_deleted = True
@@ -152,7 +155,7 @@ class UserAssetEndpoint(BaseAPIView):
         asset_key = f"{uuid.uuid4().hex}-{name}"
 
         # Create a File Asset
-        asset = FileAsset.objects.create(
+        asset = scoped_queryset(FileAsset.objects.all()).create(
             attributes={"name": name, "type": type, "size": size_limit},
             asset=asset_key,
             size=size_limit,
@@ -209,7 +212,7 @@ class UserAssetEndpoint(BaseAPIView):
         This endpoint should be called after completing the S3 upload to mark the asset as uploaded.
         """
         # get the asset id
-        asset = FileAsset.objects.get(id=asset_id, user_id=request.user.id)
+        asset = scoped_queryset(FileAsset.objects.all()).get(id=asset_id, user_id=request.user.id)
         # get the storage metadata
         asset.is_uploaded = True
         # get the storage metadata
@@ -236,7 +239,7 @@ class UserAssetEndpoint(BaseAPIView):
         Delete a user profile asset (avatar or cover image) and remove its reference from the user profile.
         This performs a soft delete by marking the asset as deleted and updating the user's profile.
         """
-        asset = FileAsset.objects.get(id=asset_id, user_id=request.user.id)
+        asset = scoped_queryset(FileAsset.objects.all()).get(id=asset_id, user_id=request.user.id)
         asset.is_deleted = True
         asset.deleted_at = timezone.now()
         # get the entity and save the asset id for the request field
@@ -249,7 +252,7 @@ class UserServerAssetEndpoint(BaseAPIView):
     """This endpoint is used to upload user profile images."""
 
     def asset_delete(self, asset_id):
-        asset = FileAsset.objects.filter(id=asset_id).first()
+        asset = scoped_queryset(FileAsset.objects.all()).filter(id=asset_id).first()
         if asset is None:
             return
         asset.is_deleted = True
@@ -325,7 +328,7 @@ class UserServerAssetEndpoint(BaseAPIView):
         asset_key = f"{uuid.uuid4().hex}-{name}"
 
         # Create a File Asset
-        asset = FileAsset.objects.create(
+        asset = scoped_queryset(FileAsset.objects.all()).create(
             attributes={"name": name, "type": type, "size": size_limit},
             asset=asset_key,
             size=size_limit,
@@ -365,7 +368,7 @@ class UserServerAssetEndpoint(BaseAPIView):
         This endpoint should be called after completing the S3 upload to mark the asset as uploaded.
         """
         # get the asset id
-        asset = FileAsset.objects.get(id=asset_id, user_id=request.user.id)
+        asset = scoped_queryset(FileAsset.objects.all()).get(id=asset_id, user_id=request.user.id)
         # get the storage metadata
         asset.is_uploaded = True
         # get the storage metadata
@@ -393,7 +396,7 @@ class UserServerAssetEndpoint(BaseAPIView):
         remove its reference from the user profile. This performs a soft delete by marking the
         asset as deleted and updating the user's profile.
         """
-        asset = FileAsset.objects.get(id=asset_id, user_id=request.user.id)
+        asset = scoped_queryset(FileAsset.objects.all()).get(id=asset_id, user_id=request.user.id)
         asset.is_deleted = True
         asset.deleted_at = timezone.now()
         # get the entity and save the asset id for the request field
@@ -435,7 +438,9 @@ class GenericAssetEndpoint(BaseAPIView):
             workspace = Workspace.objects.get(slug=slug)
 
             # Get the asset
-            asset = FileAsset.objects.get(id=asset_id, workspace_id=workspace.id, is_deleted=False)
+            asset = scoped_queryset(FileAsset.objects.all()).get(
+                id=asset_id, workspace_id=workspace.id, is_deleted=False
+            )
 
             # Check if the asset exists and is uploaded
             if not asset.is_uploaded:
@@ -450,9 +455,7 @@ class GenericAssetEndpoint(BaseAPIView):
             # (default MinIO self-hosted setup).
             storage = S3Storage(request=request, is_server=True)
             asset_mime_type = (asset.attributes.get("type") or "").split(";")[0].strip().lower()
-            disposition = (
-                "attachment" if asset_mime_type in settings.SCRIPT_CAPABLE_MIME_TYPES else "inline"
-            )
+            disposition = "attachment" if asset_mime_type in settings.SCRIPT_CAPABLE_MIME_TYPES else "inline"
             presigned_url = storage.generate_presigned_url(
                 object_name=asset.asset.name,
                 filename=asset.attributes.get("name"),
@@ -547,12 +550,16 @@ class GenericAssetEndpoint(BaseAPIView):
 
         # Check for existing asset with same external details if provided
         if external_id and external_source:
-            existing_asset = FileAsset.objects.filter(
-                workspace__slug=slug,
-                external_source=external_source,
-                external_id=external_id,
-                is_deleted=False,
-            ).first()
+            existing_asset = (
+                scoped_queryset(FileAsset.objects.all())
+                .filter(
+                    workspace__slug=slug,
+                    external_source=external_source,
+                    external_id=external_id,
+                    is_deleted=False,
+                )
+                .first()
+            )
 
             if existing_asset:
                 return Response(
@@ -565,7 +572,9 @@ class GenericAssetEndpoint(BaseAPIView):
                 )
 
         # Create a File Asset
-        asset = FileAsset.objects.create(
+        asset = scoped_queryset(
+            FileAsset.objects.all()
+        ).create(
             attributes={"name": name, "type": type, "size": size_limit},
             asset=asset_key,
             size=size_limit,
@@ -618,7 +627,7 @@ class GenericAssetEndpoint(BaseAPIView):
         and trigger metadata extraction.
         """
         try:
-            asset = FileAsset.objects.get(id=asset_id, workspace__slug=slug, is_deleted=False)
+            asset = scoped_queryset(FileAsset.objects.all()).get(id=asset_id, workspace__slug=slug, is_deleted=False)
 
             # Update is_uploaded status
             asset.is_uploaded = request.data.get("is_uploaded", asset.is_uploaded)

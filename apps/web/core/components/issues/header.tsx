@@ -46,7 +46,7 @@ export const IssuesHeader = observer(function IssuesHeader() {
   const { currentProjectDetails, loader } = useProject();
 
   const { toggleCreateIssueModal } = useCommandPalette();
-  const { allowPermissions } = useUserPermissions();
+  const { allowPermissions, hasProjectCapability } = useUserPermissions();
   const { isMobile } = usePlatformOS();
 
   const SPACE_APP_URL =
@@ -55,10 +55,9 @@ export const IssuesHeader = observer(function IssuesHeader() {
   const publishedURL = `${SPACE_APP_URL}/issues/${currentProjectDetails?.anchor}`;
 
   const issuesCount = getGroupIssueCount(undefined, undefined, false);
-  const canUserCreateIssue = allowPermissions(
-    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
-    EUserPermissionsLevel.PROJECT
-  );
+  const canUserCreateIssue =
+    hasProjectCapability("issues.create") &&
+    allowPermissions([EUserPermissions.ADMIN, EUserPermissions.MEMBER], EUserPermissionsLevel.PROJECT);
 
   return (
     <Header>

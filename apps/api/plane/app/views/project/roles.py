@@ -38,10 +38,17 @@ class CustomRoleSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         permissions = set(attrs.get("permissions", self.instance.permissions if self.instance else []))
         keys = set(attrs.get("property_keys", self.instance.property_keys if self.instance else []))
+        for permission in permissions:
+            resource, action = permission.rsplit(".", 1)
+            prerequisite = f"{resource}.read"
+            if action != "read" and prerequisite in CAPABILITIES and prerequisite not in permissions:
+                raise serializers.ValidationError(f"{permission} requires {prerequisite}.")
         if "worklogs.export" in permissions and "worklogs.read" not in permissions:
             raise serializers.ValidationError("Export requires worklogs.read.")
-        if "properties.edit" in permissions and ("issues.read" not in permissions or not keys):
-            raise serializers.ValidationError("Property editing requires issues.read and at least one property key.")
+        if "properties.edit" in permissions and ("properties.read" not in permissions or not keys):
+            raise serializers.ValidationError(
+                "Property editing requires properties.read and at least one property key."
+            )
         if keys and "properties.edit" not in permissions:
             raise serializers.ValidationError("Property keys require properties.edit.")
         valid_keys = set(
@@ -81,7 +88,7 @@ class ProjectCustomRoleEndpoint(BaseAPIView):
                         "name": m.member.display_name or m.member.email,
                         "eligible": m.is_active
                         and m.deleted_at is None
-                        and m.role == 15
+                        and m.role in (15, 20)
                         and m.member_id not in workspace_admins,
                         "custom_role_id": assignments.get(str(m.id)),
                     }
@@ -158,13 +165,14 @@ class ProjectRoleAssignmentEndpoint(BaseAPIView):
         if (
             not member.is_active
             or member.deleted_at is not None
-            or member.role != 15
+            or member.role not in (15, 20)
             or not WorkspaceMember.objects.filter(
                 workspace_id=member.workspace_id, member_id=member.member_id, role=15, is_active=True
             ).exists()
         ):
             raise ValidationError(
-                "Custom roles can only restrict active Members. Admin and Guest roles cannot be assigned."
+                "Custom roles require an active Member or project Admin. "
+                "Workspace admins and Guests cannot be restricted."
             )
         assignment, _ = ProjectRoleAssignment.all_objects.update_or_create(
             membership=member,
@@ -203,7 +211,7 @@ class ProjectRoleMeEndpoint(BaseAPIView):
 
 
 class RoleIssueEndpoint(BaseAPIView):
-    rbac_policy = {"GET": "issues.read"}
+    rbac_policy = {"GET": "properties.read"}
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def get(self, request, slug, project_id):

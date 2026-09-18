@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
 from rest_framework import serializers
 
 from plane.db.models import UserFavorite, Cycle, Module, Issue, IssueView, Page, Project
@@ -82,7 +84,7 @@ class UserFavoriteSerializer(serializers.ModelSerializer):
         entity_model, entity_serializer = get_entity_model_and_serializer(entity_type)
         if entity_model and entity_serializer:
             try:
-                entity = entity_model.objects.get(pk=entity_identifier)
+                entity = scoped_queryset(entity_model.objects.all()).get(pk=entity_identifier)
                 return entity_serializer(entity).data
             except entity_model.DoesNotExist:
                 return None

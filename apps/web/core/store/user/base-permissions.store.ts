@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import type { TProjectCustomRole } from "@/services/project/roles.service";
+
 import { unset, set } from "lodash-es";
 import { action, makeObservable, observable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
@@ -34,6 +36,9 @@ export interface IBaseUserPermissionStore {
   workspaceUserInfo: Record<string, IWorkspaceMemberMe>; // workspaceSlug -> IWorkspaceMemberMe
   projectUserInfo: Record<string, Record<string, TProjectMembership>>; // workspaceSlug -> projectId -> TProjectMembership
   workspaceProjectsPermissions: Record<string, IUserProjectsRole>; // workspaceSlug -> IUserProjectsRole
+  customProjectRoles: Record<string, Record<string, TProjectCustomRole | null>>;
+  setCustomProjectRoles: (workspaceSlug: string, roles: Record<string, TProjectCustomRole | null>) => void;
+  hasProjectCapability: (capability: string, projectId?: string, workspaceSlug?: string) => boolean;
   // computed helpers
   workspaceInfoBySlug: (workspaceSlug: string) => IWorkspaceMemberMe | undefined;
   getWorkspaceRoleByWorkspaceSlug: (workspaceSlug: string) => TUserPermissions | EUserWorkspaceRoles | undefined;
@@ -70,6 +75,7 @@ export class BaseUserPermissionStore implements IBaseUserPermissionStore {
   workspaceUserInfo: Record<string, IWorkspaceMemberMe> = {};
   projectUserInfo: Record<string, Record<string, TProjectMembership>> = {};
   workspaceProjectsPermissions: Record<string, IUserProjectsRole> = {};
+  customProjectRoles: Record<string, Record<string, TProjectCustomRole | null>> = {};
   // observables
 
   constructor(protected store: RootStore) {
@@ -79,6 +85,8 @@ export class BaseUserPermissionStore implements IBaseUserPermissionStore {
       workspaceUserInfo: observable,
       projectUserInfo: observable,
       workspaceProjectsPermissions: observable,
+      customProjectRoles: observable,
+      setCustomProjectRoles: action,
       // computed
       // actions
       fetchUserWorkspaceInfo: action,
@@ -89,6 +97,17 @@ export class BaseUserPermissionStore implements IBaseUserPermissionStore {
       leaveProject: action,
     });
   }
+
+  setCustomProjectRoles = (workspaceSlug: string, roles: Record<string, TProjectCustomRole | null>) => {
+    this.customProjectRoles[workspaceSlug] = roles;
+  };
+
+  hasProjectCapability = (capability: string, projectId?: string, workspaceSlug?: string): boolean => {
+    const slug = workspaceSlug ?? this.store.router.workspaceSlug;
+    const id = projectId ?? this.store.router.projectId;
+    const role = slug && id ? this.customProjectRoles[slug]?.[id] : undefined;
+    return !role || (role.is_active && role.permissions.includes(capability));
+  };
 
   // computed helpers
   /**

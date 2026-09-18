@@ -25,6 +25,9 @@ from django.utils import timezone
 
 from plane.db.models import Issue, ProjectMember, WorkLog
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 FILTER_KEYS = (
     "project_ids",
     "state_ids",
@@ -120,9 +123,11 @@ def base_issue_queryset(workspace_id, user, dashboard_project_id, filters: dict)
     if wanted:
         project_ids &= wanted
     if not project_ids:
-        return Issue.issue_objects.none()
+        return scoped_queryset(Issue.issue_objects.all()).none()
 
-    qs = Issue.issue_objects.filter(workspace_id=workspace_id, project_id__in=list(project_ids))
+    qs = scoped_queryset(scoped_queryset(Issue.issue_objects.all(), user), user, "analytics.read").filter(
+        workspace_id=workspace_id, project_id__in=list(project_ids)
+    )
     if not filters.get("include_sub_issues", True):
         qs = qs.filter(parent__isnull=True)
 
@@ -206,8 +211,10 @@ MONTH_FIELDS = {
 
 def _rows_for_worklog_hours(issue_qs, group_by: str, workspace_id):
     """Logged hours are summed on WorkLog, joined through the issue."""
-    wl = WorkLog.objects.filter(workspace_id=workspace_id, issue__in=issue_qs.values("id")).exclude(
-        is_timer=True, ended_at__isnull=True
+    wl = (
+        scoped_queryset(WorkLog.objects.all())
+        .filter(workspace_id=workspace_id, issue__in=issue_qs.values("id"))
+        .exclude(is_timer=True, ended_at__isnull=True)
     )
     # approval-aware: only approved logs when the project requires approval
     wl = wl.filter(Q(project__is_worklog_approval_enabled=False) | Q(status="approved"))
@@ -264,7 +271,7 @@ def compute_widget(widget, workspace_id, user) -> dict:
     limit = int((widget.config or {}).get("limit") or DEFAULT_LIMIT)
     matched = base_issue_queryset(workspace_id, user, widget.dashboard.project_id, filters)
     # re-select by id so filter joins (assignees, labels, ...) never duplicate rows in the aggregates
-    qs = Issue.issue_objects.filter(id__in=matched.values("id"))
+    qs = scoped_queryset(Issue.issue_objects.all()).filter(id__in=matched.values("id"))
 
     if metric == "worklog_hours":
         groups, total = _rows_for_worklog_hours(qs, group_by, workspace_id)

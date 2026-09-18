@@ -36,6 +36,9 @@ from plane.utils.openapi import (
 )
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class StateListCreateAPIEndpoint(BaseAPIView):
     """State List and Create Endpoint"""
 
@@ -237,7 +240,7 @@ class StateDetailAPIEndpoint(BaseAPIView):
             )
 
         # Check for any issues in the state
-        issue_exist = Issue.objects.filter(state=state_id).exists()
+        issue_exist = scoped_queryset(Issue.objects.all()).filter(state=state_id).exists()
 
         if issue_exist:
             return Response(

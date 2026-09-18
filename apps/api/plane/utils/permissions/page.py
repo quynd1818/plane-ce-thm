@@ -10,6 +10,9 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 
 # Permission Mappings for workspace members
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 ADMIN = ROLE.ADMIN.value
 MEMBER = ROLE.MEMBER.value
 GUEST = ROLE.GUEST.value
@@ -45,12 +48,16 @@ class ProjectPagePermission(BasePermission):
             # (GHSA-g49r / GHSA-ghcr). Require an *active* ProjectPage link (both
             # conditions on the same relation so they match one row) so a page
             # removed from the project (soft-deleted link) is also denied.
-            page = Page.objects.filter(
-                id=page_id,
-                workspace__slug=slug,
-                project_pages__project_id=project_id,
-                project_pages__deleted_at__isnull=True,
-            ).first()
+            page = (
+                scoped_queryset(Page.objects.all())
+                .filter(
+                    id=page_id,
+                    workspace__slug=slug,
+                    project_pages__project_id=project_id,
+                    project_pages__deleted_at__isnull=True,
+                )
+                .first()
+            )
             if page is None:
                 return False
 

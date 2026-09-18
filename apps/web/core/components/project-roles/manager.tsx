@@ -43,20 +43,36 @@ export function ProjectRoleManager({ workspaceSlug, projectId }: { workspaceSlug
       </div>
     );
   if (!data) return <p role="status">Loading custom roles…</p>;
+  const groups = [...new Set(Object.keys(data.capabilities).map((key) => key.split(".")[0]))];
   return (
     <section className="space-y-5">
       <div>
         <h2 className="text-lg font-semibold">Custom project roles</h2>
         <p className="text-sm text-tertiary">
-          Restrict a Member to the permissions selected here. Admins and Guests keep their built-in roles.
+          Select permissions within the member’s built-in project role. Project admins can also be restricted; workspace
+          admins and Guests keep their built-in roles.
         </p>
         <p className="text-sm text-tertiary">
-          Assigned members use restricted access across this workspace: each project they need must have an explicit
-          custom role. Workspace-wide search, reports, notifications and other aggregate APIs are unavailable while they
-          have a custom role in that workspace.
+          Roles apply only to this project. Other projects keep their existing permissions. Workspace search and reports
+          include only data the viewer is allowed to read.
         </p>
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          disabled={busy}
+          className={inputClass}
+          onClick={() => {
+            setEditingId(undefined);
+            setDraft({
+              ...emptyRole,
+              name: "Read only",
+              permissions: Object.keys(data.capabilities).filter((key) => key.endsWith(".read")),
+            });
+          }}
+        >
+          Read-only preset
+        </button>
         <button
           type="button"
           disabled={busy}
@@ -74,7 +90,7 @@ export function ProjectRoleManager({ workspaceSlug, projectId }: { workspaceSlug
           className={inputClass}
           onClick={() => {
             setEditingId(undefined);
-            setDraft({ ...emptyRole, name: "Legal", permissions: ["issues.read", "properties.edit"] });
+            setDraft({ ...emptyRole, name: "Legal", permissions: ["properties.read", "properties.edit"] });
           }}
         >
           Legal preset
@@ -102,34 +118,49 @@ export function ProjectRoleManager({ workspaceSlug, projectId }: { workspaceSlug
               onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             />
           </label>
-          {Object.entries(data.capabilities).map(([key, label]) => (
-            <label key={key} className="text-sm flex gap-2">
-              <input
-                type="checkbox"
-                checked={draft.permissions.includes(key)}
-                onChange={(e) =>
-                  setDraft((current) => {
-                    const permissions = new Set(current.permissions);
-                    if (e.target.checked) {
-                      permissions.add(key);
-                      if (key === "worklogs.export") permissions.add("worklogs.read");
-                      if (key === "properties.edit") permissions.add("issues.read");
-                    } else {
-                      permissions.delete(key);
-                      if (key === "worklogs.read") permissions.delete("worklogs.export");
-                      if (key === "issues.read") permissions.delete("properties.edit");
-                    }
-                    return {
-                      ...current,
-                      permissions: [...permissions],
-                      property_keys: permissions.has("properties.edit") ? current.property_keys : [],
-                    };
-                  })
-                }
-              />
-              {label}
-            </label>
-          ))}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {groups.map((group) => (
+              <fieldset key={group} className="space-y-2 rounded border border-subtle-1 p-3">
+                <legend className="px-1 font-medium capitalize">{group}</legend>
+                {Object.entries(data.capabilities)
+                  .filter(([key]) => key.startsWith(`${group}.`))
+                  .map(([key, label]) => (
+                    <label key={key} className="text-sm flex gap-2">
+                      <input
+                        type="checkbox"
+                        checked={draft.permissions.includes(key)}
+                        onChange={(e) =>
+                          setDraft((current) => {
+                            const permissions = new Set(current.permissions);
+                            if (e.target.checked) {
+                              permissions.add(key);
+                              const read = `${key.split(".")[0]}.read`;
+                              if (read in data.capabilities) permissions.add(read);
+                              if (key === "worklogs.export") permissions.add("worklogs.read");
+                              if (key === "properties.edit") permissions.add("properties.read");
+                            } else {
+                              permissions.delete(key);
+                              if (key.endsWith(".read"))
+                                for (const permission of permissions) {
+                                  if (permission.startsWith(`${key.split(".")[0]}.`)) permissions.delete(permission);
+                                }
+                              if (key === "worklogs.read") permissions.delete("worklogs.export");
+                              if (key === "properties.read") permissions.delete("properties.edit");
+                            }
+                            return {
+                              ...current,
+                              permissions: [...permissions],
+                              property_keys: permissions.has("properties.edit") ? current.property_keys : [],
+                            };
+                          })
+                        }
+                      />
+                      {label}
+                    </label>
+                  ))}
+              </fieldset>
+            ))}
+          </div>
           {draft.permissions.includes("properties.edit") && (
             <div className="space-y-2">
               <p className="text-sm font-medium">Properties this role may edit</p>
@@ -212,8 +243,7 @@ export function ProjectRoleManager({ workspaceSlug, projectId }: { workspaceSlug
       </div>
       <h3 className="font-medium">Member assignments</h3>
       <p className="text-sm text-tertiary">
-        Removing the final custom-role assignment in this workspace restores built-in permissions. Removing just one
-        assignment keeps restricted mode active.
+        Removing an assignment restores the built-in permissions in this project only.
       </p>
       {data.members.map((member) => (
         <label key={member.id} className="text-sm flex flex-wrap items-center justify-between gap-2">
@@ -225,12 +255,7 @@ export function ProjectRoleManager({ workspaceSlug, projectId }: { workspaceSlug
             value={member.custom_role_id ?? ""}
             onChange={(e) => {
               const value = e.target.value || null;
-              if (
-                value === null &&
-                !window.confirm(
-                  "Remove this assignment? Removing the final custom role in the workspace restores built-in permissions."
-                )
-              )
+              if (value === null && !window.confirm("Restore this member’s built-in permissions in this project?"))
                 return;
               void run(() => projectRolesService.assign(workspaceSlug, projectId, member.id, value));
             }}

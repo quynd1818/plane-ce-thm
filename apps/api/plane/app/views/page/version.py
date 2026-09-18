@@ -13,6 +13,9 @@ from plane.app.serializers import PageVersionSerializer, PageVersionDetailSerial
 from plane.app.permissions import ProjectPagePermission
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class PageVersionEndpoint(BaseAPIView):
     permission_classes = [ProjectPagePermission]
 
@@ -27,7 +30,8 @@ class PageVersionEndpoint(BaseAPIView):
             # page__project_pages join can never make get() raise
             # MultipleObjectsReturned (a 500).
             page_version = (
-                PageVersion.objects.filter(
+                scoped_queryset(PageVersion.objects.all())
+                .filter(
                     workspace__slug=slug,
                     page__project_pages__project_id=project_id,
                     page__project_pages__deleted_at__isnull=True,
@@ -42,7 +46,7 @@ class PageVersionEndpoint(BaseAPIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         # Return all page versions scoped to an active ProjectPage link for the
         # URL project (defense in depth).
-        page_versions = PageVersion.objects.filter(
+        page_versions = scoped_queryset(PageVersion.objects.all()).filter(
             workspace__slug=slug,
             page__project_pages__project_id=project_id,
             page__project_pages__deleted_at__isnull=True,

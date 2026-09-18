@@ -321,7 +321,7 @@ export function RestrictedProjectPanel(props: Props) {
       ) : (
         <>
           {role.permissions.includes("worklogs.read") && <RestrictedWorklogs {...props} />}
-          {role.permissions.includes("issues.read") && <RestrictedIssues {...props} />}
+          {role.permissions.includes("properties.read") && <RestrictedIssues {...props} />}
         </>
       )}
     </main>

@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from plane.utils.project_rbac_scope import ScopedPrimaryKeyRelatedField
+
 # Django imports
 from django.utils import timezone
 
@@ -30,21 +32,24 @@ from plane.utils.content_validator import (
 from plane.app.permissions import ROLE
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class DraftIssueCreateSerializer(BaseSerializer):
     # ids
-    state_id = serializers.PrimaryKeyRelatedField(
+    state_id = ScopedPrimaryKeyRelatedField(
         source="state", queryset=State.objects.all(), required=False, allow_null=True
     )
-    parent_id = serializers.PrimaryKeyRelatedField(
+    parent_id = ScopedPrimaryKeyRelatedField(
         source="parent", queryset=Issue.objects.all(), required=False, allow_null=True
     )
     label_ids = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=Label.objects.all()),
+        child=ScopedPrimaryKeyRelatedField(queryset=Label.objects.all()),
         write_only=True,
         required=False,
     )
     assignee_ids = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
+        child=ScopedPrimaryKeyRelatedField(queryset=User.objects.all()),
         write_only=True,
         required=False,
     )
@@ -121,10 +126,12 @@ class DraftIssueCreateSerializer(BaseSerializer):
         # # Check parent issue is from workspace as it can be cross workspace
         if (
             attrs.get("parent")
-            and not Issue.objects.filter(
+            and not scoped_queryset(Issue.objects.all())
+            .filter(
                 project_id=self.context.get("project_id"),
                 pk=attrs.get("parent").id,
-            ).exists()
+            )
+            .exists()
         ):
             raise serializers.ValidationError("Parent is not valid issue_id please pass a valid issue_id")
 
@@ -150,7 +157,9 @@ class DraftIssueCreateSerializer(BaseSerializer):
         project_id = self.context["project_id"]
 
         # Create Issue
-        issue = DraftIssue.objects.create(**validated_data, workspace_id=workspace_id, project_id=project_id)
+        issue = scoped_queryset(DraftIssue.objects.all()).create(
+            **validated_data, workspace_id=workspace_id, project_id=project_id
+        )
 
         # Issue Audit Users
         created_by_id = issue.created_by_id
@@ -299,7 +308,7 @@ class DraftIssueCreateSerializer(BaseSerializer):
 
 class DraftIssueSerializer(BaseSerializer):
     # ids
-    cycle_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    cycle_id = ScopedPrimaryKeyRelatedField(read_only=True)
     module_ids = serializers.ListField(child=serializers.UUIDField(), required=False)
 
     # Many to many

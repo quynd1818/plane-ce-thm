@@ -23,6 +23,14 @@ export abstract class PageCoreService extends APIService {
     super();
   }
 
+  async checkAccess(pageId: string, action?: "export"): Promise<{ can_edit: boolean }> {
+    const response = await this.get(`${this.basePath}/pages/${pageId}/access-check/`, {
+      headers: this.getHeader(),
+      params: action ? { action } : undefined,
+    });
+    return response.data as { can_edit: boolean };
+  }
+
   async fetchDetails(pageId: string): Promise<TPage> {
     try {
       const response = await this.get(`${this.basePath}/pages/${pageId}/`, {

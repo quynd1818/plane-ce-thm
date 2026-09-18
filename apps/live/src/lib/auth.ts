@@ -4,6 +4,9 @@
  * See the LICENSE file for details.
  */
 
+import type { ConnectionConfiguration, beforeHandleMessagePayload } from "@hocuspocus/server";
+import { getPageService } from "@/services/page/handler";
+
 // plane imports
 import type { IncomingHttpHeaders } from "http";
 import type { TUserDetails } from "@plane/editor";
@@ -24,10 +27,14 @@ import type { HocusPocusServerContext, TDocumentTypes } from "@/types";
 export const onAuthenticate = async ({
   requestHeaders,
   requestParameters,
+  documentName,
+  connection,
   context,
   token,
 }: {
   requestHeaders: IncomingHttpHeaders;
+  documentName: string;
+  connection: ConnectionConfiguration;
   context: HocusPocusServerContext;
   requestParameters: URLSearchParams;
   token: string;
@@ -66,10 +73,13 @@ export const onAuthenticate = async ({
   context.userId = userId;
   context.workspaceSlug = requestParameters.get("workspaceSlug");
 
-  return await handleAuthentication({
+  const authenticated = await handleAuthentication({
     cookie: context.cookie,
     userId: context.userId,
   });
+  const access = await getPageService(context.documentType, context).checkAccess(documentName);
+  connection.readOnly = !access.can_edit;
+  return authenticated;
 };
 
 export const handleAuthentication = async ({ cookie, userId }: { cookie: string; userId: string }) => {
@@ -94,4 +104,11 @@ export const handleAuthentication = async ({ cookie, userId }: { cookie: string;
     logger.error("Authentication failed", appError);
     throw new AppError("Authentication unsuccessful", { code: appError.code });
   }
+};
+
+// Recheck before processing a client update so role revocations cannot write into
+// a shared Yjs document using another participant's persistence credentials.
+export const beforeHandleMessage = async ({ context, documentName, connection }: beforeHandleMessagePayload) => {
+  const access = await getPageService(context.documentType, context).checkAccess(documentName);
+  connection.readOnly = !access.can_edit;
 };

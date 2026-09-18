@@ -20,6 +20,9 @@ from .base import (
 )
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 def get_issue_attachments_dict(issues_queryset: QuerySet) -> Dict[str, List[str]]:
     """Get attachments dictionary for the given issues queryset.
 
@@ -29,10 +32,14 @@ def get_issue_attachments_dict(issues_queryset: QuerySet) -> Dict[str, List[str]
     Returns:
         Dictionary mapping issue IDs to lists of attachment IDs
     """
-    file_assets = FileAsset.objects.filter(
-        issue_id__in=issues_queryset.values_list("id", flat=True),
-        entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
-    ).annotate(work_item_id=F("issue_id"), asset_id=F("id"))
+    file_assets = (
+        scoped_queryset(FileAsset.objects.all())
+        .filter(
+            issue_id__in=issues_queryset.values_list("id", flat=True),
+            entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
+        )
+        .annotate(work_item_id=F("issue_id"), asset_id=F("id"))
+    )
 
     attachment_dict = defaultdict(list)
     for asset in file_assets:
@@ -53,7 +60,8 @@ def get_issue_last_cycles_dict(issues_queryset: QuerySet) -> Dict[str, Optional[
     # Fetch all cycle issues for the given issues, ordered by created_at descending
     # select_related is used to fetch cycle data in the same query
     cycle_issues = (
-        CycleIssue.objects.filter(issue_id__in=issues_queryset.values_list("id", flat=True))
+        scoped_queryset(CycleIssue.objects.all())
+        .filter(issue_id__in=issues_queryset.values_list("id", flat=True))
         .select_related("cycle")
         .order_by("issue_id", "-created_at")
     )
@@ -126,7 +134,7 @@ class IssueExportSchema(ExportSchema):
         return i.state.name if i.state else None
 
     def prepare_module_name(self, i):
-        return [m.module.name for m in i.issue_module.all()]
+        return [m.module.name for m in scoped_queryset(i.issue_module.all())]
 
     def prepare_created_by(self, i):
         return self._get_created_by(i)
@@ -141,7 +149,7 @@ class IssueExportSchema(ExportSchema):
                 "created_at": self._format_date(comment.created_at),
                 "created_by": self._get_created_by(comment),
             }
-            for comment in i.issue_comments.all()
+            for comment in scoped_queryset(i.issue_comments.all())
         ]
 
     def prepare_estimate(self, i):
@@ -195,10 +203,10 @@ class IssueExportSchema(ExportSchema):
 
         relations = {
             r.relation_type: f"{r.related_issue.project.identifier}-{r.related_issue.sequence_id}"
-            for r in i.issue_relation.all()
+            for r in scoped_queryset(i.issue_relation.all())
         }
         reverse_relations = {}
-        for relation in i.issue_related.all():
+        for relation in scoped_queryset(i.issue_related.all()):
             reverse_relations[IssueRelationChoices._REVERSE_MAPPING[relation.relation_type]] = (
                 f"{relation.issue.project.identifier}-{relation.issue.sequence_id}"
             )

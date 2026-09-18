@@ -34,6 +34,9 @@ from plane.utils.issue_filters import issue_filters
 from plane.app.permissions import allow_permission, ROLE
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class AnalyticsEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def get(self, request, slug):
@@ -59,7 +62,7 @@ class AnalyticsEndpoint(BaseAPIView):
         filters = issue_filters(request.GET, "GET")
 
         # Get the issues for the workspace with the additional filters applied
-        queryset = Issue.issue_objects.filter(workspace__slug=slug, **filters)
+        queryset = scoped_queryset(Issue.issue_objects.all()).filter(workspace__slug=slug, **filters)
 
         # Get the total issue count
         total_issues = queryset.count()
@@ -70,7 +73,8 @@ class AnalyticsEndpoint(BaseAPIView):
         state_details = {}
         if x_axis in ["state_id"] or segment in ["state_id"]:
             state_details = (
-                Issue.issue_objects.filter(workspace__slug=slug, **filters)
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(workspace__slug=slug, **filters)
                 .distinct("state_id")
                 .order_by("state_id")
                 .values("state_id", "state__name", "state__color")
@@ -79,7 +83,8 @@ class AnalyticsEndpoint(BaseAPIView):
         label_details = {}
         if x_axis in ["labels__id"] or segment in ["labels__id"]:
             label_details = (
-                Issue.objects.filter(
+                scoped_queryset(Issue.objects.all())
+                .filter(
                     workspace__slug=slug,
                     **filters,
                     labels__id__isnull=False,
@@ -93,7 +98,8 @@ class AnalyticsEndpoint(BaseAPIView):
         assignee_details = {}
         if x_axis in ["assignees__id"] or segment in ["assignees__id"]:
             assignee_details = (
-                Issue.issue_objects.filter(
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     Q(Q(assignees__avatar__isnull=False) | Q(assignees__avatar_asset__isnull=False)),
                     workspace__slug=slug,
                     **filters,
@@ -132,7 +138,8 @@ class AnalyticsEndpoint(BaseAPIView):
         cycle_details = {}
         if x_axis in ["issue_cycle__cycle_id"] or segment in ["issue_cycle__cycle_id"]:
             cycle_details = (
-                Issue.issue_objects.filter(
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     workspace__slug=slug,
                     **filters,
                     issue_cycle__cycle_id__isnull=False,
@@ -146,7 +153,8 @@ class AnalyticsEndpoint(BaseAPIView):
         module_details = {}
         if x_axis in ["issue_module__module_id"] or segment in ["issue_module__module_id"]:
             module_details = (
-                Issue.issue_objects.filter(
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     workspace__slug=slug,
                     **filters,
                     issue_module__module_id__isnull=False,
@@ -192,7 +200,7 @@ class SavedAnalyticEndpoint(BaseAPIView):
         analytic_view = AnalyticView.objects.get(pk=analytic_id, workspace__slug=slug)
 
         filter = analytic_view.query
-        queryset = Issue.issue_objects.filter(**filter)
+        queryset = scoped_queryset(Issue.issue_objects.all()).filter(**filter)
 
         x_axis = analytic_view.query_dict.get("x_axis", False)
         y_axis = analytic_view.query_dict.get("y_axis", False)
@@ -252,7 +260,7 @@ class DefaultAnalyticsEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def get(self, request, slug):
         filters = issue_filters(request.GET, "GET")
-        base_issues = Issue.issue_objects.filter(workspace__slug=slug, **filters)
+        base_issues = scoped_queryset(Issue.issue_objects.all()).filter(workspace__slug=slug, **filters)
 
         total_issues = base_issues.count()
 
@@ -413,7 +421,8 @@ class ProjectStatsEndpoint(BaseAPIView):
         annotations = {}
         if "total_issues" in requested_fields:
             annotations["total_issues"] = (
-                Issue.issue_objects.filter(project_id=OuterRef("pk"))
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(project_id=OuterRef("pk"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -421,7 +430,8 @@ class ProjectStatsEndpoint(BaseAPIView):
 
         if "completed_issues" in requested_fields:
             annotations["completed_issues"] = (
-                Issue.issue_objects.filter(project_id=OuterRef("pk"), state__group__in=["completed", "cancelled"])
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(project_id=OuterRef("pk"), state__group__in=["completed", "cancelled"])
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -429,7 +439,8 @@ class ProjectStatsEndpoint(BaseAPIView):
 
         if "total_cycles" in requested_fields:
             annotations["total_cycles"] = (
-                Cycle.objects.filter(project_id=OuterRef("id"))
+                scoped_queryset(Cycle.objects.all())
+                .filter(project_id=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -437,7 +448,8 @@ class ProjectStatsEndpoint(BaseAPIView):
 
         if "total_modules" in requested_fields:
             annotations["total_modules"] = (
-                Module.objects.filter(project_id=OuterRef("id"))
+                scoped_queryset(Module.objects.all())
+                .filter(project_id=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")

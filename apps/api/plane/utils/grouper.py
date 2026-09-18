@@ -25,6 +25,9 @@ from plane.db.models import (
 from typing import Optional, Dict, Tuple, Any, Union, List
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 def issue_queryset_grouper(
     queryset: QuerySet[Issue],
     group_by: Optional[str],
@@ -47,7 +50,8 @@ def issue_queryset_grouper(
             queryset = queryset.filter(GROUP_FILTER_MAPPER[group_key])
 
     issue_assignee_subquery = Subquery(
-        IssueAssignee.objects.filter(
+        scoped_queryset(IssueAssignee.objects.all())
+        .filter(
             issue_id=OuterRef("pk"),
             deleted_at__isnull=True,
         )
@@ -57,7 +61,8 @@ def issue_queryset_grouper(
     )
 
     issue_module_subquery = Subquery(
-        ModuleIssue.objects.filter(
+        scoped_queryset(ModuleIssue.objects.all())
+        .filter(
             issue_id=OuterRef("pk"),
             deleted_at__isnull=True,
             module__archived_at__isnull=True,
@@ -68,7 +73,8 @@ def issue_queryset_grouper(
     )
 
     issue_label_subquery = Subquery(
-        IssueLabel.objects.filter(issue_id=OuterRef("pk"), deleted_at__isnull=True)
+        scoped_queryset(IssueLabel.objects.all())
+        .filter(issue_id=OuterRef("pk"), deleted_at__isnull=True)
         .values("issue_id")
         .annotate(arr=ArrayAgg("label_id", distinct=True))
         .values("arr")
@@ -172,13 +178,13 @@ def issue_group_values(
         )
 
     if field == "issue_module__module_id":
-        queryset = Module.objects.filter(workspace__slug=slug).values_list("id", flat=True)
+        queryset = scoped_queryset(Module.objects.all()).filter(workspace__slug=slug).values_list("id", flat=True)
         if project_id:
             return list(queryset.filter(project_id=project_id)) + ["None"]
         return list(queryset) + ["None"]
 
     if field == "cycle_id":
-        queryset = Cycle.objects.filter(workspace__slug=slug).values_list("id", flat=True)
+        queryset = scoped_queryset(Cycle.objects.all()).filter(workspace__slug=slug).values_list("id", flat=True)
         if project_id:
             return list(queryset.filter(project_id=project_id)) + ["None"]
         return list(queryset) + ["None"]

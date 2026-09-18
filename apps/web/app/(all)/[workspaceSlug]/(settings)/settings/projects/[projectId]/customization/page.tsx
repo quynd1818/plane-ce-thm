@@ -1,3 +1,4 @@
+import { useCustomProjectRole } from "@/components/project-roles/access";
 import { EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
 import { useUserPermissions } from "@/hooks/store/user";
 import { ProjectRoleManager } from "@/components/project-roles/manager";
@@ -20,12 +21,9 @@ function CustomizationPage({ params }: Route.ComponentProps) {
   const { workspaceSlug, projectId } = params;
   const { currentProjectDetails } = useProject();
   const { allowPermissions } = useUserPermissions();
-  const canManageRoles = allowPermissions(
-    [EUserPermissions.ADMIN],
-    EUserPermissionsLevel.PROJECT,
-    workspaceSlug,
-    projectId
-  );
+  const customRole = useCustomProjectRole(projectId);
+  const canManageRoles =
+    !customRole && allowPermissions([EUserPermissions.ADMIN], EUserPermissionsLevel.PROJECT, workspaceSlug, projectId);
   const [properties, setProperties] = useState<TCustomProperty[]>([]);
   const [templates, setTemplates] = useState<TWorkItemTemplate[]>([]);
   const [types, setTypes] = useState<TWorkItemType[]>([]);

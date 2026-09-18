@@ -4,9 +4,12 @@
 
 # Third party imports
 from rest_framework import serializers
+from plane.utils.project_rbac_scope import model_is_visible, ScopedPrimaryKeyRelatedField
 
 
 class BaseSerializer(serializers.ModelSerializer):
+    serializer_related_field = ScopedPrimaryKeyRelatedField
+
     """
     Base serializer providing common functionality for all model serializers.
 
@@ -70,6 +73,8 @@ class BaseSerializer(serializers.ModelSerializer):
         return self.fields
 
     def to_representation(self, instance):
+        if not model_is_visible(instance):
+            return None
         response = super().to_representation(instance)
 
         # Ensure 'expand' is iterable before processing

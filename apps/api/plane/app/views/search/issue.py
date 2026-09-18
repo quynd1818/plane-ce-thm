@@ -15,6 +15,9 @@ from plane.db.models import Issue, ProjectMember, IssueRelation
 from plane.utils.issue_search import search_issues
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueSearchEndpoint(BaseAPIView):
     def filter_issues_by_project(self, project_id: int, issues: QuerySet) -> QuerySet:
         """
@@ -39,7 +42,7 @@ class IssueSearchEndpoint(BaseAPIView):
         Search issues and epics by query excluding the parent
         """
 
-        issue = Issue.issue_objects.filter(pk=issue_id).first()
+        issue = scoped_queryset(Issue.issue_objects.all()).filter(pk=issue_id).first()
         if issue:
             issues = issues.filter(~Q(pk=issue_id), ~Q(pk=issue.parent_id), ~Q(parent_id=issue_id))
         return issues
@@ -49,9 +52,10 @@ class IssueSearchEndpoint(BaseAPIView):
         Filter issues excluding related issues
         """
 
-        issue = Issue.issue_objects.filter(pk=issue_id).first()
+        issue = scoped_queryset(Issue.issue_objects.all()).filter(pk=issue_id).first()
         related_issue_ids = (
-            IssueRelation.objects.filter(Q(related_issue=issue) | Q(issue=issue))
+            scoped_queryset(IssueRelation.objects.all())
+            .filter(Q(related_issue=issue) | Q(issue=issue))
             .values_list("issue_id", "related_issue_id")
             .distinct()
         )
@@ -68,7 +72,7 @@ class IssueSearchEndpoint(BaseAPIView):
         """
         Filter root issues only
         """
-        issue = Issue.issue_objects.filter(pk=issue_id).first()
+        issue = scoped_queryset(Issue.issue_objects.all()).filter(pk=issue_id).first()
         if issue:
             issues = issues.filter(~Q(pk=issue_id), parent__isnull=True)
         if issue.parent:
@@ -107,7 +111,7 @@ class IssueSearchEndpoint(BaseAPIView):
         target_date = request.query_params.get("target_date", True)
         issue_id = request.query_params.get("issue_id", False)
 
-        issues = Issue.issue_objects.filter(
+        issues = scoped_queryset(Issue.issue_objects.all()).filter(
             workspace__slug=slug,
             project__project_projectmember__member=self.request.user,
             project__project_projectmember__is_active=True,

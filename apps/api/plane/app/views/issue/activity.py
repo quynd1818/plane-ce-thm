@@ -21,6 +21,9 @@ from plane.app.permissions import ProjectEntityPermission, allow_permission, ROL
 from plane.db.models import IssueActivity, IssueComment, CommentReaction, IntakeIssue
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueActivityEndpoint(BaseAPIView):
     permission_classes = [ProjectEntityPermission]
     use_read_replica = True
@@ -33,7 +36,8 @@ class IssueActivityEndpoint(BaseAPIView):
             filters = {"created_at__gt": request.GET.get("created_at__gt")}
 
         issue_activities = (
-            IssueActivity.objects.filter(issue_id=issue_id)
+            scoped_queryset(IssueActivity.objects.all())
+            .filter(issue_id=issue_id)
             .filter(
                 ~Q(field__in=["comment", "vote", "reaction", "draft"]),
                 project__project_projectmember__member=self.request.user,
@@ -45,7 +49,8 @@ class IssueActivityEndpoint(BaseAPIView):
             .select_related("actor", "workspace", "issue", "project")
         ).order_by("created_at")
         issue_comments = (
-            IssueComment.objects.filter(issue_id=issue_id)
+            scoped_queryset(IssueComment.objects.all())
+            .filter(issue_id=issue_id)
             .filter(
                 project__project_projectmember__member=self.request.user,
                 project__project_projectmember__is_active=True,
@@ -58,7 +63,7 @@ class IssueActivityEndpoint(BaseAPIView):
             .prefetch_related(
                 Prefetch(
                     "comment_reactions",
-                    queryset=CommentReaction.objects.select_related("actor"),
+                    queryset=scoped_queryset(CommentReaction.objects.all()).select_related("actor"),
                 )
             )
         )
@@ -67,7 +72,7 @@ class IssueActivityEndpoint(BaseAPIView):
             issue_activities = issue_activities.prefetch_related(
                 Prefetch(
                     "issue__issue_intake",
-                    queryset=IntakeIssue.objects.only("source_email", "source", "extra"),
+                    queryset=scoped_queryset(IntakeIssue.objects.all()).only("source_email", "source", "extra"),
                     to_attr="source_data",
                 )
             )

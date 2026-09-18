@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from plane.utils.project_rbac_scope import ScopedPrimaryKeyRelatedField
+
 # Third party imports
 from rest_framework import serializers
 
@@ -17,7 +19,7 @@ class ProjectMemberSerializer(BaseSerializer):
     Serializer for project members.
     """
 
-    member = serializers.PrimaryKeyRelatedField(
+    member = ScopedPrimaryKeyRelatedField(
         queryset=User.objects.all(),
         required=True,
     )

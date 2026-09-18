@@ -59,6 +59,9 @@ from plane.bgtasks.copy_s3_object import copy_s3_objects_of_description_and_asse
 from plane.app.permissions import ProjectPagePermission
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 def unarchive_archive_page_and_descendants(page_id, archived_at):
     # Your SQL query
     sql = """
@@ -82,7 +85,7 @@ class PageViewSet(BaseViewSet):
     search_fields = ["name"]
 
     def get_queryset(self):
-        subquery = UserFavorite.objects.filter(
+        subquery = scoped_queryset(UserFavorite.objects.all()).filter(
             user=self.request.user,
             entity_type="page",
             entity_identifier=OuterRef("pk"),
@@ -122,7 +125,9 @@ class PageViewSet(BaseViewSet):
             )
             .annotate(
                 project=Exists(
-                    ProjectPage.objects.filter(page_id=OuterRef("id"), project_id=self.kwargs.get("project_id"))
+                    scoped_queryset(ProjectPage.objects.all()).filter(
+                        page_id=OuterRef("id"), project_id=self.kwargs.get("project_id")
+                    )
                 )
             )
             .annotate(
@@ -188,7 +193,7 @@ class PageViewSet(BaseViewSet):
         if "parent" in request.data:
             Workspace.objects.select_for_update().get(slug=slug)
         try:
-            page = Page.objects.get(
+            page = scoped_queryset(Page.objects.all()).get(
                 pk=page_id,
                 workspace__slug=slug,
                 projects__id=project_id,
@@ -280,7 +285,7 @@ class PageViewSet(BaseViewSet):
             return Response(data, status=status.HTTP_200_OK)
 
     def lock(self, request, slug, project_id, page_id):
-        page = Page.objects.get(
+        page = scoped_queryset(Page.objects.all()).get(
             pk=page_id,
             workspace__slug=slug,
             projects__id=project_id,
@@ -292,7 +297,7 @@ class PageViewSet(BaseViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def unlock(self, request, slug, project_id, page_id):
-        page = Page.objects.get(
+        page = scoped_queryset(Page.objects.all()).get(
             pk=page_id,
             workspace__slug=slug,
             projects__id=project_id,
@@ -306,7 +311,7 @@ class PageViewSet(BaseViewSet):
 
     def access(self, request, slug, project_id, page_id):
         access = request.data.get("access", 0)
-        page = Page.objects.get(
+        page = scoped_queryset(Page.objects.all()).get(
             pk=page_id,
             workspace__slug=slug,
             projects__id=project_id,
@@ -342,7 +347,7 @@ class PageViewSet(BaseViewSet):
         return Response(pages, status=status.HTTP_200_OK)
 
     def archive(self, request, slug, project_id, page_id):
-        page = Page.objects.get(
+        page = scoped_queryset(Page.objects.all()).get(
             pk=page_id,
             workspace__slug=slug,
             projects__id=project_id,
@@ -361,7 +366,7 @@ class PageViewSet(BaseViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        UserFavorite.objects.filter(
+        scoped_queryset(UserFavorite.objects.all()).filter(
             entity_type="page",
             entity_identifier=page_id,
             project_id=project_id,
@@ -373,7 +378,7 @@ class PageViewSet(BaseViewSet):
         return Response({"archived_at": str(datetime.now())}, status=status.HTTP_200_OK)
 
     def unarchive(self, request, slug, project_id, page_id):
-        page = Page.objects.get(
+        page = scoped_queryset(Page.objects.all()).get(
             pk=page_id,
             workspace__slug=slug,
             projects__id=project_id,
@@ -402,7 +407,7 @@ class PageViewSet(BaseViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def destroy(self, request, slug, project_id, page_id):
-        page = Page.objects.get(
+        page = scoped_queryset(Page.objects.all()).get(
             pk=page_id,
             workspace__slug=slug,
             projects__id=project_id,
@@ -430,23 +435,27 @@ class PageViewSet(BaseViewSet):
             )
 
         # remove parent from all the children
-        _ = Page.objects.filter(
-            parent_id=page_id,
-            projects__id=project_id,
-            workspace__slug=slug,
-            project_pages__deleted_at__isnull=True,
-        ).update(parent=None)
+        _ = (
+            scoped_queryset(Page.objects.all())
+            .filter(
+                parent_id=page_id,
+                projects__id=project_id,
+                workspace__slug=slug,
+                project_pages__deleted_at__isnull=True,
+            )
+            .update(parent=None)
+        )
 
         page.delete()
         # Delete the user favorite page
-        UserFavorite.objects.filter(
+        scoped_queryset(UserFavorite.objects.all()).filter(
             project=project_id,
             workspace__slug=slug,
             entity_identifier=page_id,
             entity_type="page",
         ).delete()
         # Delete the page from recent visit
-        UserRecentVisit.objects.filter(
+        scoped_queryset(UserRecentVisit.objects.all()).filter(
             project_id=project_id,
             workspace__slug=slug,
             entity_identifier=page_id,
@@ -456,7 +465,8 @@ class PageViewSet(BaseViewSet):
 
     def summary(self, request, slug, project_id):
         queryset = (
-            Page.objects.filter(workspace__slug=slug)
+            scoped_queryset(Page.objects.all())
+            .filter(workspace__slug=slug)
             .filter(
                 projects__project_projectmember__member=self.request.user,
                 projects__project_projectmember__is_active=True,
@@ -465,7 +475,9 @@ class PageViewSet(BaseViewSet):
             .filter(Q(owned_by=request.user) | Q(access=0))
             .annotate(
                 project=Exists(
-                    ProjectPage.objects.filter(page_id=OuterRef("id"), project_id=self.kwargs.get("project_id"))
+                    scoped_queryset(ProjectPage.objects.all()).filter(
+                        page_id=OuterRef("id"), project_id=self.kwargs.get("project_id")
+                    )
                 )
             )
             .filter(project=True)
@@ -509,7 +521,7 @@ class PageFavoriteViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def create(self, request, slug, project_id, page_id):
-        _ = UserFavorite.objects.create(
+        _ = scoped_queryset(UserFavorite.objects.all()).create(
             project_id=project_id,
             entity_identifier=page_id,
             entity_type="page",
@@ -519,7 +531,7 @@ class PageFavoriteViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def destroy(self, request, slug, project_id, page_id):
-        page_favorite = UserFavorite.objects.get(
+        page_favorite = scoped_queryset(UserFavorite.objects.all()).get(
             project=project_id,
             user=request.user,
             workspace__slug=slug,
@@ -534,7 +546,7 @@ class PagesDescriptionViewSet(BaseViewSet):
     permission_classes = [ProjectPagePermission]
 
     def retrieve(self, request, slug, project_id, page_id):
-        page = Page.objects.get(
+        page = scoped_queryset(Page.objects.all()).get(
             Q(owned_by=self.request.user) | Q(access=0),
             pk=page_id,
             workspace__slug=slug,
@@ -554,7 +566,7 @@ class PagesDescriptionViewSet(BaseViewSet):
         return response
 
     def partial_update(self, request, slug, project_id, page_id):
-        page = Page.objects.get(
+        page = scoped_queryset(Page.objects.all()).get(
             Q(owned_by=self.request.user) | Q(access=0),
             pk=page_id,
             workspace__slug=slug,
@@ -614,7 +626,7 @@ class PageDuplicateEndpoint(BaseAPIView):
     permission_classes = [ProjectPagePermission]
 
     def post(self, request, slug, project_id, page_id):
-        page = Page.objects.get(
+        page = scoped_queryset(Page.objects.all()).get(
             pk=page_id,
             workspace__slug=slug,
             projects__id=project_id,
@@ -626,7 +638,9 @@ class PageDuplicateEndpoint(BaseAPIView):
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         # get all the project ids where page is present
-        project_ids = ProjectPage.objects.filter(page_id=page_id).values_list("project_id", flat=True)
+        project_ids = (
+            scoped_queryset(ProjectPage.objects.all()).filter(page_id=page_id).values_list("project_id", flat=True)
+        )
 
         page.pk = None
         page.name = f"{page.name} (Copy)"
@@ -637,7 +651,7 @@ class PageDuplicateEndpoint(BaseAPIView):
         page.save()
 
         for project_id in project_ids:
-            ProjectPage.objects.create(
+            scoped_queryset(ProjectPage.objects.all()).create(
                 workspace_id=page.workspace_id,
                 project_id=project_id,
                 page_id=page.id,
@@ -661,7 +675,8 @@ class PageDuplicateEndpoint(BaseAPIView):
         )
 
         page = (
-            Page.objects.filter(pk=page.id)
+            scoped_queryset(Page.objects.all())
+            .filter(pk=page.id)
             .annotate(
                 project_ids=Coalesce(
                     ArrayAgg("projects__id", distinct=True, filter=~Q(projects__id=True)),

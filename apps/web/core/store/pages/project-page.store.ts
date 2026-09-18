@@ -125,6 +125,7 @@ export class ProjectPageStore implements IProjectPageStore {
    * @description returns true if the current logged in user can create a page
    */
   get canCurrentUserCreatePage() {
+    if (!this.store.user.permission.hasProjectCapability("pages.create")) return false;
     const { workspaceSlug, projectId } = this.store.router;
     const currentUserProjectRole = this.store.user.permission.getProjectRoleByWorkspaceSlugAndProjectId(
       workspaceSlug?.toString() || "",

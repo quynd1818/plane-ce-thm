@@ -139,14 +139,24 @@ def issue_export_task(
     token_id (str): The export object token id.
     multiple (bool): Whether to export the issues to multiple files per project.
     """
+    from plane.utils.project_rbac_scope import current_role_request, scoped_queryset
+    from types import SimpleNamespace
+
+    token = current_role_request.set(None)
     try:
         exporter_instance = ExporterHistory.objects.get(token=token_id)
+        current_role_request.set(SimpleNamespace(user=exporter_instance.initiated_by))
+        from plane.utils.project_rbac import require_project_capability
+
+        for project_id in project_ids:
+            require_project_capability(exporter_instance.initiated_by, project_id, "issues.export")
         exporter_instance.status = "processing"
         exporter_instance.save(update_fields=["status"])
 
         # Build base queryset for issues
         workspace_issues = (
-            Issue.objects.filter(
+            scoped_queryset(Issue.objects.all())
+            .filter(
                 workspace__id=workspace_id,
                 project_id__in=project_ids,
                 project__project_projectmember__member=exporter_instance.initiated_by_id,
@@ -168,23 +178,25 @@ def issue_export_task(
                 "issue_link",
                 Prefetch(
                     "issue_subscribers",
-                    queryset=IssueSubscriber.objects.select_related("subscriber"),
+                    queryset=scoped_queryset(IssueSubscriber.objects.all()).select_related("subscriber"),
                 ),
                 Prefetch(
                     "issue_comments",
-                    queryset=IssueComment.objects.select_related("actor").order_by("created_at"),
+                    queryset=scoped_queryset(IssueComment.objects.all()).select_related("actor").order_by("created_at"),
                 ),
                 Prefetch(
                     "issue_relation",
-                    queryset=IssueRelation.objects.select_related("related_issue", "related_issue__project"),
+                    queryset=scoped_queryset(IssueRelation.objects.all()).select_related(
+                        "related_issue", "related_issue__project"
+                    ),
                 ),
                 Prefetch(
                     "issue_related",
-                    queryset=IssueRelation.objects.select_related("issue", "issue__project"),
+                    queryset=scoped_queryset(IssueRelation.objects.all()).select_related("issue", "issue__project"),
                 ),
                 Prefetch(
                     "parent",
-                    queryset=Issue.objects.select_related("type", "project"),
+                    queryset=scoped_queryset(Issue.objects.all()).select_related("type", "project"),
                 ),
             )
         )
@@ -224,3 +236,6 @@ def issue_export_task(
         exporter_instance.save(update_fields=["status", "reason"])
         log_exception(e)
         return
+
+    finally:
+        current_role_request.reset(token)

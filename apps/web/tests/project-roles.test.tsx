@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   workspace: vi.fn(),
   save: vi.fn(),
   remove: vi.fn(),
+  setRoles: vi.fn(),
+  pathname: "/w/",
   projectId: undefined as string | undefined,
 }));
 vi.mock("@/services/issue/worklog.service", () => ({
@@ -44,8 +46,14 @@ vi.mock("@/services/project/customization.service", () => ({
   projectCustomizationService: { listProperties: async () => properties },
 }));
 vi.mock("@/hooks/store/use-workspace", () => ({ useWorkspace: () => ({ workspaces: {} }) }));
-vi.mock("@/hooks/store/user", () => ({ useUser: () => ({ data: { id: "user" }, signOut: vi.fn() }) }));
-vi.mock("next/navigation", () => ({ useParams: () => ({ projectId: mocks.projectId }) }));
+vi.mock("@/hooks/store/user", () => ({
+  useUser: () => ({ data: { id: "user" }, signOut: vi.fn() }),
+  useUserPermissions: () => ({ setCustomProjectRoles: mocks.setRoles }),
+}));
+vi.mock("next/navigation", () => ({
+  useParams: () => ({ projectId: mocks.projectId }),
+  usePathname: () => mocks.pathname,
+}));
 const accounting = {
   id: "role",
   name: "Accounting",
@@ -56,7 +64,7 @@ const accounting = {
 const legal = {
   ...accounting,
   name: "Legal",
-  permissions: ["issues.read", "properties.edit"],
+  permissions: ["properties.read", "properties.edit"],
   property_keys: ["legal"],
 };
 let container: HTMLDivElement;
@@ -150,26 +158,25 @@ it("administrators can assign an existing role", async () => {
   });
   expect(mocks.assign).toHaveBeenCalledWith("w", "p", "member", "role");
 });
-it("restricted workspace users do not mount normal workspace content", async () => {
+it("workspace remains accessible when a project has a custom role", async () => {
   await render(
     <WorkspaceRoleBoundary workspaceSlug="w">
       <div>Secret aggregate</div>
     </WorkspaceRoleBoundary>
   );
-  expect(container.textContent).toContain("Project access");
-  expect(container.textContent).not.toContain("Secret aggregate");
+  expect(container.textContent).toContain("Secret aggregate");
+  expect(mocks.setRoles).toHaveBeenCalledWith("w", { project: accounting });
 });
-it("network failures show retry instead of mounting workspace content", async () => {
+it("network failures never block the workspace (the API enforces roles itself)", async () => {
   mocks.workspace.mockRejectedValue(new Error("network"));
   await render(
     <WorkspaceRoleBoundary workspaceSlug="w">
-      <div>Secret aggregate</div>
+      <div>Workspace content</div>
     </WorkspaceRoleBoundary>
   );
-  expect(container.textContent).toContain("Retry");
-  expect(container.textContent).not.toContain("Secret aggregate");
+  expect(container.textContent).toContain("Workspace content");
 });
-it("projects without explicit roles do not fall back to built-in access", async () => {
+it("projects without custom roles retain built-in access", async () => {
   mocks.projectId = "other";
   mocks.workspace.mockResolvedValue({ restricted: true, projects: [{ id: "other", name: "Other", role: null }] });
   await render(
@@ -177,8 +184,7 @@ it("projects without explicit roles do not fall back to built-in access", async 
       <div>Built-in access</div>
     </WorkspaceRoleBoundary>
   );
-  expect(container.textContent).toContain("assign a custom role");
-  expect(container.textContent).not.toContain("Built-in access");
+  expect(container.textContent).toContain("Built-in access");
 });
 
 it("permission dependencies stay consistent when a read grant is removed", async () => {
@@ -213,4 +219,47 @@ it("users without custom roles keep their workspace content", async () => {
   );
   expect(container.textContent).toContain("Regular workspace");
   expect(container.textContent).not.toContain("Project access");
+});
+
+it("assigned accounting projects use their focused panel", async () => {
+  mocks.projectId = "project";
+  await render(
+    <WorkspaceRoleBoundary workspaceSlug="w">
+      <div>Normal project</div>
+    </WorkspaceRoleBoundary>
+  );
+  expect(container.textContent).toContain("Project access");
+  expect(container.textContent).not.toContain("Normal project");
+});
+
+it("expanded roles can mount permitted CE features", async () => {
+  mocks.projectId = "project";
+  mocks.pathname = "/w/projects/project/issues/";
+  mocks.workspace.mockResolvedValue({
+    restricted: true,
+    projects: [{ id: "project", name: "Project", role: { ...accounting, permissions: ["issues.read"] } }],
+  });
+  await render(
+    <WorkspaceRoleBoundary workspaceSlug="w">
+      <div>Work items</div>
+    </WorkspaceRoleBoundary>
+  );
+  expect(container.textContent).toContain("Work items");
+  expect(container.textContent).not.toContain("Access not granted");
+});
+
+it("expanded roles cannot mount a feature without its read permission", async () => {
+  mocks.projectId = "project";
+  mocks.pathname = "/w/projects/project/pages/";
+  mocks.workspace.mockResolvedValue({
+    restricted: true,
+    projects: [{ id: "project", name: "Project", role: { ...accounting, permissions: ["issues.read"] } }],
+  });
+  await render(
+    <WorkspaceRoleBoundary workspaceSlug="w">
+      <div>Page fetcher</div>
+    </WorkspaceRoleBoundary>
+  );
+  expect(container.textContent).toContain("Access not granted");
+  expect(container.textContent).not.toContain("Page fetcher");
 });

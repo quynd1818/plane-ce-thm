@@ -96,6 +96,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the current logged in user can access the page
    */
   get canCurrentUserAccessPage() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.read",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const isPagePublic = this.access === EPageAccess.PUBLIC;
     return isPagePublic || this.isCurrentUserOwner;
   }
@@ -104,6 +111,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the current logged in user can edit the page
    */
   get canCurrentUserEditPage() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.update",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const highestRole = this.getHighestRoleAcrossProjects();
     const isPagePublic = this.access === EPageAccess.PUBLIC;
     return (
@@ -116,6 +130,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the current logged in user can create a duplicate the page
    */
   get canCurrentUserDuplicatePage() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.create",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const highestRole = this.getHighestRoleAcrossProjects();
     return !!highestRole && highestRole >= EUserPermissions.MEMBER;
   }
@@ -124,6 +145,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the current logged in user can lock the page
    */
   get canCurrentUserLockPage() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.lock",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const highestRole = this.getHighestRoleAcrossProjects();
     return this.isCurrentUserOwner || highestRole === EUserPermissions.ADMIN;
   }
@@ -132,6 +160,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the current logged in user can change the access of the page
    */
   get canCurrentUserChangeAccess() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.share",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const highestRole = this.getHighestRoleAcrossProjects();
     return this.isCurrentUserOwner || highestRole === EUserPermissions.ADMIN;
   }
@@ -140,6 +175,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the current logged in user can archive the page
    */
   get canCurrentUserArchivePage() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.archive",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const highestRole = this.getHighestRoleAcrossProjects();
     return this.isCurrentUserOwner || highestRole === EUserPermissions.ADMIN;
   }
@@ -148,6 +190,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the current logged in user can delete the page
    */
   get canCurrentUserDeletePage() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.delete",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const highestRole = this.getHighestRoleAcrossProjects();
     return this.isCurrentUserOwner || highestRole === EUserPermissions.ADMIN;
   }
@@ -156,6 +205,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the current logged in user can favorite the page
    */
   get canCurrentUserFavoritePage() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.read",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const highestRole = this.getHighestRoleAcrossProjects();
     return !!highestRole && highestRole >= EUserPermissions.MEMBER;
   }
@@ -164,6 +220,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the current logged in user can move the page
    */
   get canCurrentUserMovePage() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.update",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const highestRole = this.getHighestRoleAcrossProjects();
     return this.isCurrentUserOwner || highestRole === EUserPermissions.ADMIN;
   }
@@ -172,6 +235,13 @@ export class ProjectPage extends BasePage implements TProjectPage {
    * @description returns true if the page can be edited
    */
   get isContentEditable() {
+    if (
+      !this.rootStore.user.permission.hasProjectCapability(
+        "pages.update",
+        this.rootStore.router.projectId ?? this.project_ids?.[0]
+      )
+    )
+      return false;
     const highestRole = this.getHighestRoleAcrossProjects();
     const isOwner = this.isCurrentUserOwner;
     const isPublic = this.access === EPageAccess.PUBLIC;

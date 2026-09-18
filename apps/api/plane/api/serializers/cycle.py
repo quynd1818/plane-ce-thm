@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from plane.utils.project_rbac_scope import ScopedPrimaryKeyRelatedField
+
 # Third party imports
 import pytz
 from rest_framework import serializers
@@ -20,7 +22,7 @@ class CycleCreateSerializer(BaseSerializer):
     and UTC normalization for time-bound iteration planning and sprint management.
     """
 
-    owned_by = serializers.PrimaryKeyRelatedField(
+    owned_by = ScopedPrimaryKeyRelatedField(
         queryset=User.objects.all(),
         required=False,
         allow_null=True,

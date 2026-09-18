@@ -68,6 +68,9 @@ from plane.bgtasks.recent_visited_task import recent_visited_task
 from plane.utils.host import base_host
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class ModuleViewSet(BaseViewSet):
     model = Module
     webhook_event = "module"
@@ -76,7 +79,7 @@ class ModuleViewSet(BaseViewSet):
         return ModuleWriteSerializer if self.action in ["create", "update", "partial_update"] else ModuleSerializer
 
     def get_queryset(self):
-        favorite_subquery = UserFavorite.objects.filter(
+        favorite_subquery = scoped_queryset(UserFavorite.objects.all()).filter(
             user=self.request.user,
             entity_type="module",
             entity_identifier=OuterRef("pk"),
@@ -84,7 +87,8 @@ class ModuleViewSet(BaseViewSet):
             workspace__slug=self.kwargs.get("slug"),
         )
         cancelled_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="cancelled",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -94,7 +98,8 @@ class ModuleViewSet(BaseViewSet):
             .values("cnt")
         )
         completed_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="completed",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -104,7 +109,8 @@ class ModuleViewSet(BaseViewSet):
             .values("cnt")
         )
         started_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="started",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -114,7 +120,8 @@ class ModuleViewSet(BaseViewSet):
             .values("cnt")
         )
         unstarted_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="unstarted",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -124,7 +131,8 @@ class ModuleViewSet(BaseViewSet):
             .values("cnt")
         )
         backlog_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="backlog",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -134,7 +142,8 @@ class ModuleViewSet(BaseViewSet):
             .values("cnt")
         )
         total_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
             )
@@ -143,7 +152,8 @@ class ModuleViewSet(BaseViewSet):
             .values("cnt")
         )
         completed_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="completed",
                 issue_module__module_id=OuterRef("pk"),
@@ -155,7 +165,8 @@ class ModuleViewSet(BaseViewSet):
         )
 
         total_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -165,7 +176,8 @@ class ModuleViewSet(BaseViewSet):
             .values("total_estimate_points")[:1]
         )
         backlog_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="backlog",
                 issue_module__module_id=OuterRef("pk"),
@@ -176,7 +188,8 @@ class ModuleViewSet(BaseViewSet):
             .values("backlog_estimate_point")[:1]
         )
         unstarted_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="unstarted",
                 issue_module__module_id=OuterRef("pk"),
@@ -187,7 +200,8 @@ class ModuleViewSet(BaseViewSet):
             .values("unstarted_estimate_point")[:1]
         )
         started_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="started",
                 issue_module__module_id=OuterRef("pk"),
@@ -198,7 +212,8 @@ class ModuleViewSet(BaseViewSet):
             .values("started_estimate_point")[:1]
         )
         cancelled_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="cancelled",
                 issue_module__module_id=OuterRef("pk"),
@@ -218,7 +233,7 @@ class ModuleViewSet(BaseViewSet):
             .prefetch_related(
                 Prefetch(
                     "link_module",
-                    queryset=ModuleLink.objects.select_related("module", "created_by"),
+                    queryset=scoped_queryset(ModuleLink.objects.all()).select_related("module", "created_by"),
                 )
             )
             .annotate(
@@ -399,7 +414,8 @@ class ModuleViewSet(BaseViewSet):
             .filter(archived_at__isnull=True)
             .filter(pk=pk)
             .annotate(
-                sub_issues=Issue.issue_objects.filter(
+                sub_issues=scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     project_id=self.kwargs.get("project_id"),
                     parent__isnull=False,
                     issue_module__module_id=pk,
@@ -428,7 +444,8 @@ class ModuleViewSet(BaseViewSet):
 
         if estimate_type:
             assignee_distribution = (
-                Issue.issue_objects.filter(
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     issue_module__module_id=pk,
                     issue_module__deleted_at__isnull=True,
                     workspace__slug=slug,
@@ -490,7 +507,8 @@ class ModuleViewSet(BaseViewSet):
             )
 
             label_distribution = (
-                Issue.issue_objects.filter(
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     issue_module__module_id=pk,
                     issue_module__deleted_at__isnull=True,
                     workspace__slug=slug,
@@ -536,7 +554,8 @@ class ModuleViewSet(BaseViewSet):
                 )
 
         assignee_distribution = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 issue_module__module_id=pk,
                 issue_module__deleted_at__isnull=True,
                 workspace__slug=slug,
@@ -589,7 +608,8 @@ class ModuleViewSet(BaseViewSet):
         )
 
         label_distribution = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 issue_module__module_id=pk,
                 issue_module__deleted_at__isnull=True,
                 workspace__slug=slug,
@@ -722,9 +742,11 @@ class ModuleViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN], creator=True, model=Module)
     def destroy(self, request, slug, project_id, pk):
-        module = Module.objects.get(workspace__slug=slug, project_id=project_id, pk=pk)
+        module = scoped_queryset(Module.objects.all()).get(workspace__slug=slug, project_id=project_id, pk=pk)
 
-        module_issues = list(ModuleIssue.objects.filter(module_id=pk).values_list("issue", flat=True))
+        module_issues = list(
+            scoped_queryset(ModuleIssue.objects.all()).filter(module_id=pk).values_list("issue", flat=True)
+        )
         _ = [
             issue_activity.delay(
                 type="module.activity.deleted",
@@ -741,16 +763,16 @@ class ModuleViewSet(BaseViewSet):
         ]
         module.delete()
         # Delete the module issues
-        ModuleIssue.objects.filter(module=pk, project_id=project_id).delete()
+        scoped_queryset(ModuleIssue.objects.all()).filter(module=pk, project_id=project_id).delete()
         # Delete the user favorite module
-        UserFavorite.objects.filter(
+        scoped_queryset(UserFavorite.objects.all()).filter(
             user=request.user,
             entity_type="module",
             entity_identifier=pk,
             project_id=project_id,
         ).delete()
         # delete the module from recent visits
-        UserRecentVisit.objects.filter(
+        scoped_queryset(UserRecentVisit.objects.all()).filter(
             project_id=project_id,
             workspace__slug=slug,
             entity_identifier=pk,
@@ -802,7 +824,7 @@ class ModuleFavoriteViewSet(BaseViewSet):
         )
 
     def create(self, request, slug, project_id):
-        _ = UserFavorite.objects.create(
+        _ = scoped_queryset(UserFavorite.objects.all()).create(
             project_id=project_id,
             user=request.user,
             entity_type="module",
@@ -811,7 +833,7 @@ class ModuleFavoriteViewSet(BaseViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def destroy(self, request, slug, project_id, module_id):
-        module_favorite = UserFavorite.objects.get(
+        module_favorite = scoped_queryset(UserFavorite.objects.all()).get(
             project_id=project_id,
             user=request.user,
             workspace__slug=slug,

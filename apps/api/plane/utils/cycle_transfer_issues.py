@@ -32,6 +32,9 @@ from plane.bgtasks.issue_activities_task import issue_activity
 from plane.utils.host import base_host
 
 
+from plane.utils.project_rbac_scope import scoped_queryset, scoped_aggregate
+
+
 def transfer_cycle_issues(
     slug,
     project_id,
@@ -55,7 +58,11 @@ def transfer_cycle_issues(
         dict: Response data with success or error message
     """
     # Get the new cycle
-    new_cycle = Cycle.objects.filter(workspace__slug=slug, project_id=project_id, pk=new_cycle_id).first()
+    new_cycle = (
+        scoped_queryset(Cycle.objects.all())
+        .filter(workspace__slug=slug, project_id=project_id, pk=new_cycle_id)
+        .first()
+    )
 
     # Check if new cycle is already completed
     if new_cycle.end_date is not None and new_cycle.end_date < timezone.now():
@@ -66,76 +73,89 @@ def transfer_cycle_issues(
 
     # Get the old cycle with issue counts
     old_cycle = (
-        Cycle.objects.filter(workspace__slug=slug, project_id=project_id, pk=cycle_id)
+        scoped_queryset(Cycle.objects.all())
+        .filter(workspace__slug=slug, project_id=project_id, pk=cycle_id)
         .annotate(
-            total_issues=Count(
-                "issue_cycle",
-                filter=Q(
-                    issue_cycle__issue__archived_at__isnull=True,
-                    issue_cycle__issue__is_draft=False,
-                    issue_cycle__deleted_at__isnull=True,
-                    issue_cycle__issue__deleted_at__isnull=True,
-                ),
+            total_issues=scoped_aggregate(
+                Count(
+                    "issue_cycle",
+                    filter=Q(
+                        issue_cycle__issue__archived_at__isnull=True,
+                        issue_cycle__issue__is_draft=False,
+                        issue_cycle__deleted_at__isnull=True,
+                        issue_cycle__issue__deleted_at__isnull=True,
+                    ),
+                )
             )
         )
         .annotate(
-            completed_issues=Count(
-                "issue_cycle__issue__state__group",
-                filter=Q(
-                    issue_cycle__issue__state__group="completed",
-                    issue_cycle__issue__archived_at__isnull=True,
-                    issue_cycle__issue__is_draft=False,
-                    issue_cycle__issue__deleted_at__isnull=True,
-                    issue_cycle__deleted_at__isnull=True,
-                ),
+            completed_issues=scoped_aggregate(
+                Count(
+                    "issue_cycle__issue__state__group",
+                    filter=Q(
+                        issue_cycle__issue__state__group="completed",
+                        issue_cycle__issue__archived_at__isnull=True,
+                        issue_cycle__issue__is_draft=False,
+                        issue_cycle__issue__deleted_at__isnull=True,
+                        issue_cycle__deleted_at__isnull=True,
+                    ),
+                )
             )
         )
         .annotate(
-            cancelled_issues=Count(
-                "issue_cycle__issue__state__group",
-                filter=Q(
-                    issue_cycle__issue__state__group="cancelled",
-                    issue_cycle__issue__archived_at__isnull=True,
-                    issue_cycle__issue__is_draft=False,
-                    issue_cycle__issue__deleted_at__isnull=True,
-                    issue_cycle__deleted_at__isnull=True,
-                ),
+            cancelled_issues=scoped_aggregate(
+                Count(
+                    "issue_cycle__issue__state__group",
+                    filter=Q(
+                        issue_cycle__issue__state__group="cancelled",
+                        issue_cycle__issue__archived_at__isnull=True,
+                        issue_cycle__issue__is_draft=False,
+                        issue_cycle__issue__deleted_at__isnull=True,
+                        issue_cycle__deleted_at__isnull=True,
+                    ),
+                )
             )
         )
         .annotate(
-            started_issues=Count(
-                "issue_cycle__issue__state__group",
-                filter=Q(
-                    issue_cycle__issue__state__group="started",
-                    issue_cycle__issue__archived_at__isnull=True,
-                    issue_cycle__issue__is_draft=False,
-                    issue_cycle__issue__deleted_at__isnull=True,
-                    issue_cycle__deleted_at__isnull=True,
-                ),
+            started_issues=scoped_aggregate(
+                Count(
+                    "issue_cycle__issue__state__group",
+                    filter=Q(
+                        issue_cycle__issue__state__group="started",
+                        issue_cycle__issue__archived_at__isnull=True,
+                        issue_cycle__issue__is_draft=False,
+                        issue_cycle__issue__deleted_at__isnull=True,
+                        issue_cycle__deleted_at__isnull=True,
+                    ),
+                )
             )
         )
         .annotate(
-            unstarted_issues=Count(
-                "issue_cycle__issue__state__group",
-                filter=Q(
-                    issue_cycle__issue__state__group="unstarted",
-                    issue_cycle__issue__archived_at__isnull=True,
-                    issue_cycle__issue__is_draft=False,
-                    issue_cycle__issue__deleted_at__isnull=True,
-                    issue_cycle__deleted_at__isnull=True,
-                ),
+            unstarted_issues=scoped_aggregate(
+                Count(
+                    "issue_cycle__issue__state__group",
+                    filter=Q(
+                        issue_cycle__issue__state__group="unstarted",
+                        issue_cycle__issue__archived_at__isnull=True,
+                        issue_cycle__issue__is_draft=False,
+                        issue_cycle__issue__deleted_at__isnull=True,
+                        issue_cycle__deleted_at__isnull=True,
+                    ),
+                )
             )
         )
         .annotate(
-            backlog_issues=Count(
-                "issue_cycle__issue__state__group",
-                filter=Q(
-                    issue_cycle__issue__state__group="backlog",
-                    issue_cycle__issue__archived_at__isnull=True,
-                    issue_cycle__issue__is_draft=False,
-                    issue_cycle__issue__deleted_at__isnull=True,
-                    issue_cycle__deleted_at__isnull=True,
-                ),
+            backlog_issues=scoped_aggregate(
+                Count(
+                    "issue_cycle__issue__state__group",
+                    filter=Q(
+                        issue_cycle__issue__state__group="backlog",
+                        issue_cycle__issue__archived_at__isnull=True,
+                        issue_cycle__issue__is_draft=False,
+                        issue_cycle__issue__deleted_at__isnull=True,
+                        issue_cycle__deleted_at__isnull=True,
+                    ),
+                )
             )
         )
     )
@@ -162,7 +182,8 @@ def transfer_cycle_issues(
 
     if estimate_type:
         assignee_estimate_data = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 issue_cycle__cycle_id=cycle_id,
                 issue_cycle__deleted_at__isnull=True,
                 workspace__slug=slug,
@@ -228,7 +249,8 @@ def transfer_cycle_issues(
         ]
 
         label_distribution_data = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 issue_cycle__cycle_id=cycle_id,
                 issue_cycle__deleted_at__isnull=True,
                 workspace__slug=slug,
@@ -284,7 +306,8 @@ def transfer_cycle_issues(
 
     # Get the assignee distribution
     assignee_distribution = (
-        Issue.issue_objects.filter(
+        scoped_queryset(Issue.issue_objects.all())
+        .filter(
             issue_cycle__cycle_id=cycle_id,
             issue_cycle__deleted_at__isnull=True,
             workspace__slug=slug,
@@ -348,7 +371,8 @@ def transfer_cycle_issues(
 
     # Get the label distribution
     label_distribution = (
-        Issue.issue_objects.filter(
+        scoped_queryset(Issue.issue_objects.all())
+        .filter(
             issue_cycle__cycle_id=cycle_id,
             issue_cycle__deleted_at__isnull=True,
             workspace__slug=slug,
@@ -405,7 +429,9 @@ def transfer_cycle_issues(
     )
 
     # Get the current cycle and save progress snapshot
-    current_cycle = Cycle.objects.filter(workspace__slug=slug, project_id=project_id, pk=cycle_id).first()
+    current_cycle = (
+        scoped_queryset(Cycle.objects.all()).filter(workspace__slug=slug, project_id=project_id, pk=cycle_id).first()
+    )
 
     current_cycle.progress_snapshot = {
         "total_issues": old_cycle.total_issues,
@@ -432,7 +458,7 @@ def transfer_cycle_issues(
     current_cycle.save(update_fields=["progress_snapshot"])
 
     # Get issues to transfer (only incomplete issues)
-    cycle_issues = CycleIssue.objects.filter(
+    cycle_issues = scoped_queryset(CycleIssue.objects.all()).filter(
         cycle_id=cycle_id,
         project_id=project_id,
         workspace__slug=slug,
@@ -455,7 +481,7 @@ def transfer_cycle_issues(
         )
 
     # Bulk update cycle issues
-    cycle_issues = CycleIssue.objects.bulk_update(updated_cycles, ["cycle_id"], batch_size=100)
+    cycle_issues = scoped_queryset(CycleIssue.objects.all()).bulk_update(updated_cycles, ["cycle_id"], batch_size=100)
 
     # Capture Issue Activity
     issue_activity.delay(

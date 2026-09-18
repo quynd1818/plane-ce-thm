@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { useProjectCapability } from "@/components/project-roles/access";
+
 import { useState } from "react";
 import { pageExportFilename, pageExportHTML } from "@/helpers/page-export";
 import type { PageProps } from "@react-pdf/renderer";
@@ -120,6 +122,7 @@ export function ExportPageModal(props: Props) {
   const [isExporting, setIsExporting] = useState(false);
   // params
   const { workspaceSlug, projectId } = useParams();
+  const canExport = useProjectCapability(projectId?.toString(), "pages.export");
   // form info
   const { control, reset, watch } = useForm<TFormValues>({
     defaultValues,
@@ -175,7 +178,7 @@ export function ExportPageModal(props: Props) {
   };
   // handle export
   const handleExport = async () => {
-    if (!editorRef || isExporting) return;
+    if (!editorRef || isExporting || !canExport) return;
     setIsExporting(true);
     try {
       let skippedImages = 0;
@@ -215,6 +218,7 @@ export function ExportPageModal(props: Props) {
     }
   };
 
+  if (!canExport) return null;
   return (
     <ModalCore isOpen={isOpen} handleClose={handleClose} position={EModalPosition.CENTER} width={EModalWidth.SM}>
       <div>

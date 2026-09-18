@@ -323,6 +323,10 @@ export const exportToPdf = (
     });
 
     // Fetch content
+    yield* Effect.tryPromise({
+      try: () => pageService.checkAccess(pageId, "export"),
+      catch: (error) => new PdfContentFetchError({ message: "Page export access denied", cause: error }),
+    });
     const content = yield* service.fetchPageContent(pageService, pageId, requestId);
 
     // Extract image asset IDs

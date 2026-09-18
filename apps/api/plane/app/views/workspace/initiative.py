@@ -28,6 +28,9 @@ from plane.db.models import Initiative, InitiativeEpic, InitiativeProject, Issue
 from plane.utils.dashboard import visible_project_ids
 from plane.utils.epic import epic_queryset, rollup_for_queryset, visible_issues
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 NOT_FOUND = {"error": "Initiative not found."}
 FORBIDDEN = {"error": "Only the initiative lead, its creator or a workspace admin can change it."}
 
@@ -39,12 +42,16 @@ def _queryset(slug):
         .prefetch_related(
             Prefetch(
                 "initiative_projects",
-                queryset=InitiativeProject.objects.filter(deleted_at__isnull=True).order_by("sort_order"),
+                queryset=scoped_queryset(InitiativeProject.objects.all())
+                .filter(deleted_at__isnull=True)
+                .order_by("sort_order"),
                 to_attr="_project_links",
             ),
             Prefetch(
                 "initiative_epics",
-                queryset=InitiativeEpic.objects.filter(deleted_at__isnull=True).order_by("sort_order"),
+                queryset=scoped_queryset(InitiativeEpic.objects.all())
+                .filter(deleted_at__isnull=True)
+                .order_by("sort_order"),
                 to_attr="_epic_links",
             ),
         )
@@ -65,8 +72,10 @@ def _rollup(initiative, user):
     visible = set(visible_project_ids(initiative.workspace_id, user))
     project_ids = [link.project_id for link in initiative._project_links if link.project_id in visible]
     epic_ids = [link.epic_id for link in initiative._epic_links]
-    qs = Issue.issue_objects.filter(workspace_id=initiative.workspace_id).filter(
-        Q(project_id__in=project_ids) | Q(parent_id__in=epic_ids, project_id__in=list(visible))
+    qs = (
+        scoped_queryset(Issue.issue_objects.all())
+        .filter(workspace_id=initiative.workspace_id)
+        .filter(Q(project_id__in=project_ids) | Q(parent_id__in=epic_ids, project_id__in=list(visible)))
     )
     # epics themselves are containers, not work
     qs = qs.exclude(type__is_epic=True)
@@ -183,7 +192,7 @@ class InitiativeProjectsEndpoint(_LinkEndpoint):
         existing = set(str(link.project_id) for link in initiative._project_links)
         for i, pid in enumerate(ids):
             if pid not in existing:
-                InitiativeProject.objects.create(
+                scoped_queryset(InitiativeProject.objects.all()).create(
                     initiative=initiative, project_id=pid, sort_order=(len(existing) + i + 1) * 10000
                 )
         return self._done(slug, initiative)
@@ -193,7 +202,9 @@ class InitiativeProjectsEndpoint(_LinkEndpoint):
         initiative, err = self._initiative(slug, initiative_id, request.user)
         if err:
             return err
-        InitiativeProject.objects.filter(initiative=initiative, project_id__in=self._ids(request)).delete()
+        scoped_queryset(InitiativeProject.objects.all()).filter(
+            initiative=initiative, project_id__in=self._ids(request)
+        ).delete()
         return self._done(slug, initiative)
 
 
@@ -217,7 +228,7 @@ class InitiativeEpicsEndpoint(_LinkEndpoint):
         existing = set(str(link.epic_id) for link in initiative._epic_links)
         for i, eid in enumerate(ids):
             if eid not in existing:
-                InitiativeEpic.objects.create(
+                scoped_queryset(InitiativeEpic.objects.all()).create(
                     initiative=initiative, epic_id=eid, sort_order=(len(existing) + i + 1) * 10000
                 )
         return self._done(slug, initiative)
@@ -227,7 +238,9 @@ class InitiativeEpicsEndpoint(_LinkEndpoint):
         initiative, err = self._initiative(slug, initiative_id, request.user)
         if err:
             return err
-        InitiativeEpic.objects.filter(initiative=initiative, epic_id__in=self._ids(request)).delete()
+        scoped_queryset(InitiativeEpic.objects.all()).filter(
+            initiative=initiative, epic_id__in=self._ids(request)
+        ).delete()
         return self._done(slug, initiative)
 
 

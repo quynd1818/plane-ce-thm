@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from plane.utils.project_rbac_scope import ScopedPrimaryKeyRelatedField
+
 # Third party imports
 from rest_framework import serializers
 
@@ -18,6 +20,9 @@ from plane.db.models import (
 )
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class ModuleCreateSerializer(BaseSerializer):
     """
     Serializer for creating modules with member validation and date checking.
@@ -28,7 +33,7 @@ class ModuleCreateSerializer(BaseSerializer):
     """
 
     members = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
+        child=ScopedPrimaryKeyRelatedField(queryset=User.objects.all()),
         write_only=True,
         required=False,
     )
@@ -89,7 +94,7 @@ class ModuleCreateSerializer(BaseSerializer):
         module_name = validated_data.get("name")
         if module_name:
             # Lookup for the module name in the module table for that project
-            module = Module.objects.filter(name=module_name, project_id=project_id).first()
+            module = scoped_queryset(Module.objects.all()).filter(name=module_name, project_id=project_id).first()
             if module:
                 raise serializers.ValidationError(
                     {
@@ -100,7 +105,7 @@ class ModuleCreateSerializer(BaseSerializer):
                     }
                 )
 
-        module = Module.objects.create(**validated_data, project_id=project_id)
+        module = scoped_queryset(Module.objects.all()).create(**validated_data, project_id=project_id)
         if members is not None:
             ModuleMember.objects.bulk_create(
                 [
@@ -142,7 +147,12 @@ class ModuleUpdateSerializer(ModuleCreateSerializer):
         module_name = validated_data.get("name")
         if module_name:
             # Lookup for the module name in the module table for that project
-            if Module.objects.filter(name=module_name, project=instance.project).exclude(id=instance.id).exists():
+            if (
+                scoped_queryset(Module.objects.all())
+                .filter(name=module_name, project=instance.project)
+                .exclude(id=instance.id)
+                .exists()
+            ):
                 raise serializers.ValidationError({"error": "Module with this name already exists"})
 
         if members is not None:
@@ -175,7 +185,7 @@ class ModuleSerializer(BaseSerializer):
     """
 
     members = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
+        child=ScopedPrimaryKeyRelatedField(queryset=User.objects.all()),
         write_only=True,
         required=False,
     )
@@ -253,9 +263,13 @@ class ModuleLinkSerializer(BaseSerializer):
 
     # Validation if url already exists
     def create(self, validated_data):
-        if ModuleLink.objects.filter(url=validated_data.get("url"), module_id=validated_data.get("module_id")).exists():
+        if (
+            scoped_queryset(ModuleLink.objects.all())
+            .filter(url=validated_data.get("url"), module_id=validated_data.get("module_id"))
+            .exists()
+        ):
             raise serializers.ValidationError({"error": "URL already exists for this Issue"})
-        return ModuleLink.objects.create(**validated_data)
+        return scoped_queryset(ModuleLink.objects.all()).create(**validated_data)
 
 
 class ModuleLiteSerializer(BaseSerializer):

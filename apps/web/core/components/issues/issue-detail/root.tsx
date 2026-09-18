@@ -84,7 +84,7 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
   const {
     issues: { removeIssue: removeArchivedIssue },
   } = useIssues(EIssuesStoreType.ARCHIVED);
-  const { allowPermissions } = useUserPermissions();
+  const { allowPermissions, hasProjectCapability } = useUserPermissions();
   const { issueDetailSidebarCollapsed } = useAppTheme();
 
   const issueOperations: TIssueOperations = useMemo(
@@ -230,12 +230,14 @@ export const IssueDetailRoot = observer(function IssueDetailRoot(props: TIssueDe
   // issue details
   const issue = getIssueById(currentIssueId);
   // checking if issue is editable, based on user role
-  const isEditable = allowPermissions(
-    [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
-    EUserPermissionsLevel.PROJECT,
-    currentWorkspaceSlug,
-    currentProjectId
-  );
+  const isEditable =
+    hasProjectCapability("issues.update", currentProjectId, currentWorkspaceSlug) &&
+    allowPermissions(
+      [EUserPermissions.ADMIN, EUserPermissions.MEMBER],
+      EUserPermissionsLevel.PROJECT,
+      currentWorkspaceSlug,
+      currentProjectId
+    );
 
   return (
     <>

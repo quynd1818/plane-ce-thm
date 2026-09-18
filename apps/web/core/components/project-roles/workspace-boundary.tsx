@@ -1,13 +1,14 @@
 import { observer } from "mobx-react";
-import type { ReactNode } from "react";
-import { useParams } from "next/navigation";
+import { useLayoutEffect, type ReactNode } from "react";
+import { usePathname, useParams } from "next/navigation";
 import useSWR from "swr";
 import { useWorkspace } from "@/hooks/store/use-workspace";
-import { useUser } from "@/hooks/store/user";
+import { useUser, useUserPermissions } from "@/hooks/store/user";
 import { projectRolesService } from "@/services/project/roles.service";
+import { ProjectRoleContext } from "./access";
 import { RestrictedProjectPanel } from "./restricted-panel";
 
-/** Avoid mounting aggregate workspace queries for users with restricted roles. */
+/** Apply custom roles only to the selected project; workspace queries are row-scoped by the API. */
 export const WorkspaceRoleBoundary = observer(function WorkspaceRoleBoundary({
   workspaceSlug,
   children,
@@ -16,33 +17,78 @@ export const WorkspaceRoleBoundary = observer(function WorkspaceRoleBoundary({
   children: ReactNode;
 }) {
   const { projectId } = useParams();
+  const pathname = usePathname();
+  const { setCustomProjectRoles } = useUserPermissions();
   const { workspaces } = useWorkspace();
   const { data: user, signOut } = useUser();
-  const { data, error, mutate } = useSWR(
+  const { data, error } = useSWR(
     user?.id ? ["workspace-role-access", user.id, workspaceSlug] : null,
     () => projectRolesService.workspace(workspaceSlug),
     { refreshInterval: 30000, shouldRetryOnError: false }
   );
-  // Let the standard workspace wrapper handle nonmembership / missing workspaces.
-  if (error?.response?.status === 403 || error?.response?.status === 404) return <>{children}</>;
-  if (error)
-    return (
-      <div role="alert" className="p-6">
-        Unable to verify workspace access.{" "}
-        <button type="button" onClick={() => void mutate()}>
-          Retry
-        </button>
-      </div>
-    );
-  if (!data)
-    return (
-      <div role="status" className="p-6">
-        Loading workspace access…
-      </div>
-    );
-  if (!data.restricted) return <>{children}</>;
+  useLayoutEffect(() => {
+    if (data) setCustomProjectRoles(workspaceSlug, Object.fromEntries(data.projects.map((p) => [p.id, p.role])));
+  }, [data, workspaceSlug, setCustomProjectRoles]);
+  // Never block the workspace on this lookup: the API enforces custom roles on
+  // every request anyway, so while it loads (or if it fails, or the API has no
+  // such route yet) the normal workspace renders. The panel below only replaces
+  // the UI once we positively know the viewer is restricted here.
+  if (!data || error || !data.restricted) return <>{children}</>;
   const selected = data.projects.find((p) => p.id === projectId);
-  const current = selected ?? data.projects.find((p) => p.role);
+  const roles = Object.fromEntries(data.projects.map((p) => [p.id, p.role]));
+  if (!selected?.role) return <ProjectRoleContext.Provider value={roles}>{children}</ProjectRoleContext.Provider>;
+  const current = selected;
+  const focused = selected.role.permissions.every(
+    (p) => p.startsWith("worklogs.") || p === "properties.read" || p === "properties.edit"
+  );
+  if (!focused && selected.role.is_active) {
+    const suffix = pathname.split(`${projectId}/`)[1] ?? "";
+    const section = suffix.split("/")[0];
+    const resource = (
+      {
+        issues: "issues",
+        cycles: "cycles",
+        modules: "modules",
+        pages: "pages",
+        views: "views",
+        intake: "intake",
+        epics: "issues",
+        worklogs: "worklogs",
+        members: "members",
+        states: "states",
+        labels: "labels",
+        estimates: "estimates",
+        workflow: "workflow",
+        automations: "automation",
+        customization: "properties",
+      } as Record<string, string>
+    )[section];
+    const hasFeature =
+      resource === "properties"
+        ? ["properties", "templates", "types"].some((r) => selected.role?.permissions.includes(`${r}.read`))
+        : !resource || selected.role.permissions.includes(`${resource}.read`);
+    if (hasFeature) {
+      return <ProjectRoleContext.Provider value={roles}>{children}</ProjectRoleContext.Provider>;
+    }
+    return (
+      <div role="status" className="space-y-3 p-6">
+        <h1 className="text-xl">Access not granted</h1>
+        <p>Your role does not include this project feature.</p>
+        <nav className="flex gap-3">
+          {["issues", "cycles", "modules", "pages", "views", "intake"]
+            .filter((r) => selected.role?.permissions.includes(`${r}.read`))
+            .map((r) => (
+              <a key={r} className="underline" href={`/${workspaceSlug}/projects/${projectId}/${r}/`}>
+                {r}
+              </a>
+            ))}
+          <a href={`/${workspaceSlug}/`} className="underline">
+            Workspace
+          </a>
+        </nav>
+      </div>
+    );
+  }
   return (
     <div className="flex h-full min-h-0 flex-col">
       <header className="flex flex-wrap items-center gap-4 border-b border-subtle-1 p-4">
@@ -73,19 +119,8 @@ export const WorkspaceRoleBoundary = observer(function WorkspaceRoleBoundary({
         </button>
       </header>
       <p className="text-sm px-6 pt-4 text-tertiary">
-        Your custom role limits access to project tools. Only projects with an assigned custom role are available.
-        Workspace-wide reports and search are unavailable.
+        These permissions apply only to this project. Other projects keep their own permissions.
       </p>
-      {!current && (
-        <p role="status" className="p-6">
-          No active project membership. Ask an administrator to review your assignments.
-        </p>
-      )}
-      {current && !current.role && (
-        <p role="status" className="p-6">
-          Ask an administrator to assign a custom role for this project.
-        </p>
-      )}
       {current?.role && (
         <RestrictedProjectPanel
           key={current.id}

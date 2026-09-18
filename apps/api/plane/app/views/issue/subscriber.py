@@ -13,6 +13,9 @@ from plane.app.permissions import ProjectEntityPermission, ProjectLitePermission
 from plane.db.models import IssueSubscriber, ProjectMember
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueSubscriberViewSet(BaseViewSet):
     serializer_class = IssueSubscriberSerializer
     model = IssueSubscriber
@@ -57,7 +60,7 @@ class IssueSubscriberViewSet(BaseViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, slug, project_id, issue_id, subscriber_id):
-        issue_subscriber = IssueSubscriber.objects.get(
+        issue_subscriber = scoped_queryset(IssueSubscriber.objects.all()).get(
             project=project_id,
             subscriber=subscriber_id,
             workspace__slug=slug,
@@ -67,25 +70,29 @@ class IssueSubscriberViewSet(BaseViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def subscribe(self, request, slug, project_id, issue_id):
-        if IssueSubscriber.objects.filter(
-            issue_id=issue_id,
-            subscriber=request.user,
-            workspace__slug=slug,
-            project=project_id,
-        ).exists():
+        if (
+            scoped_queryset(IssueSubscriber.objects.all())
+            .filter(
+                issue_id=issue_id,
+                subscriber=request.user,
+                workspace__slug=slug,
+                project=project_id,
+            )
+            .exists()
+        ):
             return Response(
                 {"message": "User already subscribed to the issue."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        subscriber = IssueSubscriber.objects.create(
+        subscriber = scoped_queryset(IssueSubscriber.objects.all()).create(
             issue_id=issue_id, subscriber_id=request.user.id, project_id=project_id
         )
         serializer = IssueSubscriberSerializer(subscriber)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def unsubscribe(self, request, slug, project_id, issue_id):
-        issue_subscriber = IssueSubscriber.objects.get(
+        issue_subscriber = scoped_queryset(IssueSubscriber.objects.all()).get(
             project=project_id,
             subscriber=request.user,
             workspace__slug=slug,
@@ -95,10 +102,14 @@ class IssueSubscriberViewSet(BaseViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def subscription_status(self, request, slug, project_id, issue_id):
-        issue_subscriber = IssueSubscriber.objects.filter(
-            issue=issue_id,
-            subscriber=request.user,
-            workspace__slug=slug,
-            project=project_id,
-        ).exists()
+        issue_subscriber = (
+            scoped_queryset(IssueSubscriber.objects.all())
+            .filter(
+                issue=issue_id,
+                subscriber=request.user,
+                workspace__slug=slug,
+                project=project_id,
+            )
+            .exists()
+        )
         return Response({"subscribed": issue_subscriber}, status=status.HTTP_200_OK)

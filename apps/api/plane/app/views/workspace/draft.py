@@ -43,12 +43,16 @@ from plane.utils.issue_filters import issue_filters
 from plane.utils.host import base_host
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class WorkspaceDraftIssueViewSet(BaseViewSet):
     model = DraftIssue
 
     def get_queryset(self):
         return (
-            DraftIssue.objects.filter(workspace__slug=self.kwargs.get("slug"))
+            scoped_queryset(DraftIssue.objects.all())
+            .filter(workspace__slug=self.kwargs.get("slug"))
             .select_related("workspace", "project", "state", "parent")
             .prefetch_related("assignees", "labels", "draft_issue_module__module")
             .annotate(
@@ -198,7 +202,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN], creator=True, model=DraftIssue, level="WORKSPACE")
     def destroy(self, request, slug, pk=None):
-        draft_issue = DraftIssue.objects.get(workspace__slug=slug, pk=pk)
+        draft_issue = scoped_queryset(DraftIssue.objects.all()).get(workspace__slug=slug, pk=pk)
         draft_issue.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -246,7 +250,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
             )
 
             if request.data.get("cycle_id", None):
-                created_records = CycleIssue.objects.create(
+                created_records = scoped_queryset(CycleIssue.objects.all()).create(
                     cycle_id=request.data.get("cycle_id", None),
                     issue_id=serializer.data.get("id", None),
                     project_id=draft_issue.project_id,
@@ -274,7 +278,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
 
             if request.data.get("module_ids", []):
                 # bulk create the module
-                ModuleIssue.objects.bulk_create(
+                scoped_queryset(ModuleIssue.objects.all()).bulk_create(
                     [
                         ModuleIssue(
                             module_id=module,
@@ -305,7 +309,7 @@ class WorkspaceDraftIssueViewSet(BaseViewSet):
                 ]
 
             # Update file assets
-            file_assets = FileAsset.objects.filter(draft_issue_id=draft_id)
+            file_assets = scoped_queryset(FileAsset.objects.all()).filter(draft_issue_id=draft_id)
             file_assets.update(
                 issue_id=serializer.data.get("id", None),
                 entity_type=FileAsset.EntityTypeContext.ISSUE_DESCRIPTION,

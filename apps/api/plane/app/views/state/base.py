@@ -21,6 +21,9 @@ from plane.db.models import State, Issue
 from plane.utils.cache import invalidate_cache
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class StateViewSet(BaseViewSet):
     serializer_class = StateSerializer
     model = State
@@ -121,7 +124,7 @@ class StateViewSet(BaseViewSet):
             )
 
         # Check for any issues in the state
-        issue_exist = Issue.objects.filter(state=pk).exists()
+        issue_exist = scoped_queryset(Issue.objects.all()).filter(state=pk).exists()
 
         if issue_exist:
             return Response(

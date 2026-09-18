@@ -53,6 +53,9 @@ from plane.bgtasks.user_email_update_task import send_email_update_magic_code, s
 from plane.authentication.rate_limit import EmailVerificationThrottle
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 logger = logging.getLogger("plane")
 
 
@@ -386,8 +389,10 @@ class UpdateUserTourCompletedEndpoint(BaseAPIView):
 
 class UserActivityEndpoint(BaseAPIView, BasePaginator):
     def get(self, request):
-        queryset = IssueActivity.objects.filter(actor=request.user).select_related(
-            "actor", "workspace", "issue", "project"
+        queryset = (
+            scoped_queryset(IssueActivity.objects.all())
+            .filter(actor=request.user)
+            .select_related("actor", "workspace", "issue", "project")
         )
 
         return self.paginate(

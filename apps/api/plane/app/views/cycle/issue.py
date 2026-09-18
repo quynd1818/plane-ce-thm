@@ -37,6 +37,9 @@ from plane.utils.filters import ComplexFilterBackend
 from plane.utils.filters import IssueFilterSet
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class CycleIssueViewSet(BaseViewSet):
     serializer_class = CycleIssueSerializer
     model = CycleIssue
@@ -53,7 +56,8 @@ class CycleIssueViewSet(BaseViewSet):
             super()
             .get_queryset()
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("issue_id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("issue_id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -78,17 +82,21 @@ class CycleIssueViewSet(BaseViewSet):
         return (
             issues.annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -97,7 +105,8 @@ class CycleIssueViewSet(BaseViewSet):
                 .values("count")
             )
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -110,7 +119,8 @@ class CycleIssueViewSet(BaseViewSet):
     def list(self, request, slug, project_id, cycle_id):
         filters = issue_filters(request.query_params, "GET")
         issue_queryset = (
-            Issue.issue_objects.filter(issue_cycle__cycle_id=cycle_id, issue_cycle__deleted_at__isnull=True)
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(issue_cycle__cycle_id=cycle_id, issue_cycle__deleted_at__isnull=True)
             .filter(project_id=project_id)
             .filter(workspace__slug=slug)
         )
@@ -227,7 +237,7 @@ class CycleIssueViewSet(BaseViewSet):
         if not issues:
             return Response({"error": "Issues are required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        cycle = Cycle.objects.get(workspace__slug=slug, project_id=project_id, pk=cycle_id)
+        cycle = scoped_queryset(Cycle.objects.all()).get(workspace__slug=slug, project_id=project_id, pk=cycle_id)
 
         if cycle.end_date is not None and cycle.end_date < timezone.now():
             return Response(
@@ -240,7 +250,7 @@ class CycleIssueViewSet(BaseViewSet):
         # scope, foreign-tenant CycleIssue rows matched by issue_id would be
         # reassigned to the caller's cycle (GHSA-4w5x-wc9w-f47x).
         cycle_issues = list(
-            CycleIssue.objects.filter(
+            scoped_queryset(CycleIssue.objects.all()).filter(
                 ~Q(cycle_id=cycle_id),
                 issue_id__in=issues,
                 workspace__slug=slug,
@@ -253,15 +263,17 @@ class CycleIssueViewSet(BaseViewSet):
         # Scope to workspace+project to prevent cross-tenant IDOR
         new_issues = list(
             str(i)
-            for i in Issue.issue_objects.filter(
+            for i in scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 workspace__slug=slug,
                 project_id=project_id,
                 pk__in=new_issues,
-            ).values_list("id", flat=True)
+            )
+            .values_list("id", flat=True)
         )
 
         # New issues to create
-        created_records = CycleIssue.objects.bulk_create(
+        created_records = scoped_queryset(CycleIssue.objects.all()).bulk_create(
             [
                 CycleIssue(
                     project_id=project_id,
@@ -296,7 +308,7 @@ class CycleIssueViewSet(BaseViewSet):
             )
 
         # Update the cycle issues
-        CycleIssue.objects.bulk_update(updated_records, ["cycle_id"], batch_size=100)
+        scoped_queryset(CycleIssue.objects.all()).bulk_update(updated_records, ["cycle_id"], batch_size=100)
         # Capture Issue Activity
         issue_activity.delay(
             type="cycle.activity.created",
@@ -318,7 +330,7 @@ class CycleIssueViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def destroy(self, request, slug, project_id, cycle_id, issue_id):
-        cycle_issue = CycleIssue.objects.filter(
+        cycle_issue = scoped_queryset(CycleIssue.objects.all()).filter(
             issue_id=issue_id,
             workspace__slug=slug,
             project_id=project_id,

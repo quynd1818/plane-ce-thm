@@ -37,9 +37,12 @@ from plane.utils.analytics_plot import burndown_plot
 from .. import BaseAPIView
 
 
+from plane.utils.project_rbac_scope import scoped_queryset, scoped_aggregate
+
+
 class CycleArchiveUnarchiveEndpoint(BaseAPIView):
     def get_queryset(self):
-        favorite_subquery = UserFavorite.objects.filter(
+        favorite_subquery = scoped_queryset(UserFavorite.objects.all()).filter(
             user=self.request.user,
             entity_type="cycle",
             entity_identifier=OuterRef("pk"),
@@ -47,7 +50,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
             workspace__slug=self.kwargs.get("slug"),
         )
         backlog_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="backlog",
                 issue_cycle__cycle_id=OuterRef("pk"),
@@ -58,7 +62,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("backlog_estimate_point")[:1]
         )
         unstarted_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="unstarted",
                 issue_cycle__cycle_id=OuterRef("pk"),
@@ -69,7 +74,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("unstarted_estimate_point")[:1]
         )
         started_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="started",
                 issue_cycle__cycle_id=OuterRef("pk"),
@@ -80,7 +86,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("started_estimate_point")[:1]
         )
         cancelled_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="cancelled",
                 issue_cycle__cycle_id=OuterRef("pk"),
@@ -91,7 +98,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("cancelled_estimate_point")[:1]
         )
         completed_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="completed",
                 issue_cycle__cycle_id=OuterRef("pk"),
@@ -102,7 +110,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("completed_estimate_points")[:1]
         )
         total_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 issue_cycle__cycle_id=OuterRef("pk"),
                 issue_cycle__deleted_at__isnull=True,
@@ -112,7 +121,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("total_estimate_points")[:1]
         )
         return (
-            Cycle.objects.filter(workspace__slug=self.kwargs.get("slug"))
+            scoped_queryset(Cycle.objects.all())
+            .filter(workspace__slug=self.kwargs.get("slug"))
             .filter(project_id=self.kwargs.get("project_id"))
             .filter(archived_at__isnull=False)
             .filter(
@@ -135,74 +145,86 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
             )
             .annotate(is_favorite=Exists(favorite_subquery))
             .annotate(
-                total_issues=Count(
-                    "issue_cycle__issue__id",
-                    distinct=True,
-                    filter=Q(
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                    ),
+                total_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__id",
+                        distinct=True,
+                        filter=Q(
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                completed_issues=Count(
-                    "issue_cycle__issue__id",
-                    distinct=True,
-                    filter=Q(
-                        issue_cycle__issue__state__group="completed",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                    ),
+                completed_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__id",
+                        distinct=True,
+                        filter=Q(
+                            issue_cycle__issue__state__group="completed",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                cancelled_issues=Count(
-                    "issue_cycle__issue__id",
-                    distinct=True,
-                    filter=Q(
-                        issue_cycle__issue__state__group="cancelled",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                    ),
+                cancelled_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__id",
+                        distinct=True,
+                        filter=Q(
+                            issue_cycle__issue__state__group="cancelled",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                started_issues=Count(
-                    "issue_cycle__issue__id",
-                    distinct=True,
-                    filter=Q(
-                        issue_cycle__issue__state__group="started",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                    ),
+                started_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__id",
+                        distinct=True,
+                        filter=Q(
+                            issue_cycle__issue__state__group="started",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                unstarted_issues=Count(
-                    "issue_cycle__issue__id",
-                    distinct=True,
-                    filter=Q(
-                        issue_cycle__issue__state__group="unstarted",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                    ),
+                unstarted_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__id",
+                        distinct=True,
+                        filter=Q(
+                            issue_cycle__issue__state__group="unstarted",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                backlog_issues=Count(
-                    "issue_cycle__issue__id",
-                    distinct=True,
-                    filter=Q(
-                        issue_cycle__issue__state__group="backlog",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                    ),
+                backlog_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__id",
+                        distinct=True,
+                        filter=Q(
+                            issue_cycle__issue__state__group="backlog",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
@@ -308,7 +330,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
                 self.get_queryset()
                 .filter(pk=pk)
                 .annotate(
-                    sub_issues=Issue.issue_objects.filter(
+                    sub_issues=scoped_queryset(Issue.issue_objects.all())
+                    .filter(
                         project_id=self.kwargs.get("project_id"),
                         parent__isnull=False,
                         issue_cycle__cycle_id=pk,
@@ -365,7 +388,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
             data["estimate_distribution"] = {}
             if estimate_type:
                 assignee_distribution = (
-                    Issue.issue_objects.filter(
+                    scoped_queryset(Issue.issue_objects.all())
+                    .filter(
                         issue_cycle__cycle_id=pk,
                         issue_cycle__deleted_at__isnull=True,
                         workspace__slug=slug,
@@ -419,7 +443,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
                 )
 
                 label_distribution = (
-                    Issue.issue_objects.filter(
+                    scoped_queryset(Issue.issue_objects.all())
+                    .filter(
                         issue_cycle__cycle_id=pk,
                         issue_cycle__deleted_at__isnull=True,
                         workspace__slug=slug,
@@ -469,7 +494,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
 
             # Assignee Distribution
             assignee_distribution = (
-                Issue.issue_objects.filter(
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     issue_cycle__cycle_id=pk,
                     issue_cycle__deleted_at__isnull=True,
                     workspace__slug=slug,
@@ -532,7 +558,8 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
 
             # Label Distribution
             label_distribution = (
-                Issue.issue_objects.filter(
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     issue_cycle__cycle_id=pk,
                     issue_cycle__deleted_at__isnull=True,
                     workspace__slug=slug,
@@ -585,7 +612,7 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def post(self, request, slug, project_id, cycle_id):
-        cycle = Cycle.objects.get(pk=cycle_id, project_id=project_id, workspace__slug=slug)
+        cycle = scoped_queryset(Cycle.objects.all()).get(pk=cycle_id, project_id=project_id, workspace__slug=slug)
 
         if cycle.end_date is None or cycle.end_date >= timezone.now():
             return Response(
@@ -595,7 +622,7 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
 
         cycle.archived_at = timezone.now()
         cycle.save()
-        UserFavorite.objects.filter(
+        scoped_queryset(UserFavorite.objects.all()).filter(
             entity_type="cycle",
             entity_identifier=cycle_id,
             project_id=project_id,
@@ -605,7 +632,7 @@ class CycleArchiveUnarchiveEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def delete(self, request, slug, project_id, cycle_id):
-        cycle = Cycle.objects.get(pk=cycle_id, project_id=project_id, workspace__slug=slug)
+        cycle = scoped_queryset(Cycle.objects.all()).get(pk=cycle_id, project_id=project_id, workspace__slug=slug)
         cycle.archived_at = None
         cycle.save()
         return Response(status=status.HTTP_204_NO_CONTENT)

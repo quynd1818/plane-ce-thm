@@ -19,12 +19,16 @@ from plane.app.permissions import WorkspaceViewerPermission
 from plane.app.serializers.module import ModuleSerializer
 
 
+from plane.utils.project_rbac_scope import scoped_queryset, scoped_aggregate
+
+
 class WorkspaceModulesEndpoint(BaseAPIView):
     permission_classes = [WorkspaceViewerPermission]
 
     def get(self, request, slug):
         modules = (
-            Module.objects.filter(
+            scoped_queryset(Module.objects.all())
+            .filter(
                 workspace__slug=slug,
                 project__project_projectmember__member=request.user,
                 project__project_projectmember__is_active=True,
@@ -38,78 +42,90 @@ class WorkspaceModulesEndpoint(BaseAPIView):
             .prefetch_related(
                 Prefetch(
                     "link_module",
-                    queryset=ModuleLink.objects.select_related("module", "created_by"),
+                    queryset=scoped_queryset(ModuleLink.objects.all()).select_related("module", "created_by"),
                 )
             )
             .annotate(
-                total_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                total_issues=scoped_aggregate(
+                    Count(
+                        "issue_module",
+                        filter=Q(
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                completed_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__state__group="completed",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                completed_issues=scoped_aggregate(
+                    Count(
+                        "issue_module",
+                        filter=Q(
+                            issue_module__issue__state__group="completed",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                cancelled_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__state__group="cancelled",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                cancelled_issues=scoped_aggregate(
+                    Count(
+                        "issue_module",
+                        filter=Q(
+                            issue_module__issue__state__group="cancelled",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                started_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__state__group="started",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                started_issues=scoped_aggregate(
+                    Count(
+                        "issue_module",
+                        filter=Q(
+                            issue_module__issue__state__group="started",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                unstarted_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__state__group="unstarted",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                unstarted_issues=scoped_aggregate(
+                    Count(
+                        "issue_module",
+                        filter=Q(
+                            issue_module__issue__state__group="unstarted",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                backlog_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__state__group="backlog",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                backlog_issues=scoped_aggregate(
+                    Count(
+                        "issue_module",
+                        filter=Q(
+                            issue_module__issue__state__group="backlog",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(

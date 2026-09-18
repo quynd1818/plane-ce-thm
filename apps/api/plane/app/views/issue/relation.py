@@ -34,6 +34,9 @@ from plane.utils.issue_relation_mapper import get_actual_relation
 from plane.utils.host import base_host
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueRelationViewSet(BaseViewSet):
     serializer_class = IssueRelationSerializer
     model = IssueRelation
@@ -41,7 +44,8 @@ class IssueRelationViewSet(BaseViewSet):
 
     def list(self, request, slug, project_id, issue_id):
         issue_relations = (
-            IssueRelation.objects.filter(Q(issue_id=issue_id) | Q(related_issue=issue_id))
+            scoped_queryset(IssueRelation.objects.all())
+            .filter(Q(issue_id=issue_id) | Q(related_issue=issue_id))
             .filter(workspace__slug=self.kwargs.get("slug"))
             .select_related("project")
             .select_related("workspace")
@@ -100,22 +104,27 @@ class IssueRelationViewSet(BaseViewSet):
         )
 
         queryset = (
-            Issue.issue_objects.filter(workspace__slug=slug)
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(workspace__slug=slug)
             .select_related("workspace", "project", "state", "parent")
             .prefetch_related("assignees", "labels", "issue_module__module")
             .annotate(
                 cycle_id=Subquery(
-                    CycleIssue.objects.filter(issue=OuterRef("id"), deleted_at__isnull=True).values("cycle_id")[:1]
+                    scoped_queryset(CycleIssue.objects.all())
+                    .filter(issue=OuterRef("id"), deleted_at__isnull=True)
+                    .values("cycle_id")[:1]
                 )
             )
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -124,7 +133,8 @@ class IssueRelationViewSet(BaseViewSet):
                 .values("count")
             )
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -220,13 +230,15 @@ class IssueRelationViewSet(BaseViewSet):
         # Scope to workspace to prevent cross-tenant IDOR
         # Relations can cross projects so only workspace scope is enforced
         issues = list(
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 workspace__slug=slug,
                 pk__in=issues,
-            ).values_list("id", flat=True)
+            )
+            .values_list("id", flat=True)
         )
 
-        issue_relation = IssueRelation.objects.bulk_create(
+        issue_relation = scoped_queryset(IssueRelation.objects.all()).bulk_create(
             [
                 IssueRelation(
                     issue_id=(issue if relation_type in ["blocking", "start_after", "finish_after"] else issue_id),
@@ -271,10 +283,15 @@ class IssueRelationViewSet(BaseViewSet):
     def remove_relation(self, request, slug, project_id, issue_id):
         related_issue = request.data.get("related_issue", None)
 
-        issue_relations = IssueRelation.objects.filter(
-            workspace__slug=slug,
-        ).filter(
-            Q(issue_id=related_issue, related_issue_id=issue_id) | Q(issue_id=issue_id, related_issue_id=related_issue)
+        issue_relations = (
+            scoped_queryset(IssueRelation.objects.all())
+            .filter(
+                workspace__slug=slug,
+            )
+            .filter(
+                Q(issue_id=related_issue, related_issue_id=issue_id)
+                | Q(issue_id=issue_id, related_issue_id=related_issue)
+            )
         )
         issue_relations = issue_relations.first()
         current_instance = json.dumps(IssueRelationSerializer(issue_relations).data, cls=DjangoJSONEncoder)

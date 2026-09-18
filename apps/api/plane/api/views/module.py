@@ -75,6 +75,9 @@ from plane.utils.openapi import (
 )
 
 
+from plane.utils.project_rbac_scope import scoped_queryset, scoped_aggregate
+
+
 class ModuleListCreateAPIEndpoint(BaseAPIView):
     """Module List and Create Endpoint"""
 
@@ -86,7 +89,8 @@ class ModuleListCreateAPIEndpoint(BaseAPIView):
 
     def get_queryset(self):
         return (
-            Module.objects.filter(project_id=self.kwargs.get("project_id"))
+            scoped_queryset(Module.objects.all())
+            .filter(project_id=self.kwargs.get("project_id"))
             .filter(workspace__slug=self.kwargs.get("slug"))
             .select_related("project")
             .select_related("workspace")
@@ -95,78 +99,90 @@ class ModuleListCreateAPIEndpoint(BaseAPIView):
             .prefetch_related(
                 Prefetch(
                     "link_module",
-                    queryset=ModuleLink.objects.select_related("module", "created_by"),
+                    queryset=scoped_queryset(ModuleLink.objects.all()).select_related("module", "created_by"),
                 )
             )
             .annotate(
-                total_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                total_issues=scoped_aggregate(
+                    Count(
+                        "issue_module",
+                        filter=Q(
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                completed_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="completed",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                completed_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="completed",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                cancelled_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="cancelled",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                cancelled_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="cancelled",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                started_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="started",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                started_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="started",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                unstarted_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="unstarted",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                unstarted_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="unstarted",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                backlog_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="backlog",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                backlog_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="backlog",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .order_by(self.kwargs.get("order_by", "-created_at"))
@@ -206,19 +222,25 @@ class ModuleListCreateAPIEndpoint(BaseAPIView):
             if (
                 request.data.get("external_id")
                 and request.data.get("external_source")
-                and Module.objects.filter(
+                and scoped_queryset(Module.objects.all())
+                .filter(
                     project_id=project_id,
                     workspace__slug=slug,
                     external_source=request.data.get("external_source"),
                     external_id=request.data.get("external_id"),
-                ).exists()
+                )
+                .exists()
             ):
-                module = Module.objects.filter(
-                    project_id=project_id,
-                    workspace__slug=slug,
-                    external_source=request.data.get("external_source"),
-                    external_id=request.data.get("external_id"),
-                ).first()
+                module = (
+                    scoped_queryset(Module.objects.all())
+                    .filter(
+                        project_id=project_id,
+                        workspace__slug=slug,
+                        external_source=request.data.get("external_source"),
+                        external_id=request.data.get("external_id"),
+                    )
+                    .first()
+                )
                 return Response(
                     {
                         "error": "Module with the same external id and external source already exists",
@@ -237,7 +259,7 @@ class ModuleListCreateAPIEndpoint(BaseAPIView):
                 slug=slug,
                 origin=base_host(request=request, is_app=True),
             )
-            module = Module.objects.get(pk=serializer.instance.id)
+            module = scoped_queryset(Module.objects.all()).get(pk=serializer.instance.id)
             serializer = ModuleSerializer(module)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -272,9 +294,9 @@ class ModuleListCreateAPIEndpoint(BaseAPIView):
         return self.paginate(
             request=request,
             queryset=(self.get_queryset().filter(archived_at__isnull=True)),
-            on_results=lambda modules: ModuleSerializer(
-                modules, many=True, fields=self.fields, expand=self.expand
-            ).data,
+            on_results=lambda modules: (
+                ModuleSerializer(modules, many=True, fields=self.fields, expand=self.expand).data
+            ),
         )
 
 
@@ -307,7 +329,8 @@ class ModuleListLiteAPIEndpoint(BaseAPIView):
         optimized for pickers and references.
         """
         modules = (
-            Module.objects.filter(project_id=project_id, workspace__slug=slug)
+            scoped_queryset(Module.objects.all())
+            .filter(project_id=project_id, workspace__slug=slug)
             .filter(archived_at__isnull=True)
             .select_related("project", "workspace", "lead")
             .prefetch_related("members")
@@ -337,7 +360,8 @@ class ModuleDetailAPIEndpoint(BaseAPIView):
 
     def get_queryset(self):
         return (
-            Module.objects.filter(project_id=self.kwargs.get("project_id"))
+            scoped_queryset(Module.objects.all())
+            .filter(project_id=self.kwargs.get("project_id"))
             .filter(workspace__slug=self.kwargs.get("slug"))
             .select_related("project")
             .select_related("workspace")
@@ -346,78 +370,90 @@ class ModuleDetailAPIEndpoint(BaseAPIView):
             .prefetch_related(
                 Prefetch(
                     "link_module",
-                    queryset=ModuleLink.objects.select_related("module", "created_by"),
+                    queryset=scoped_queryset(ModuleLink.objects.all()).select_related("module", "created_by"),
                 )
             )
             .annotate(
-                total_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                total_issues=scoped_aggregate(
+                    Count(
+                        "issue_module",
+                        filter=Q(
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                completed_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="completed",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                completed_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="completed",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                cancelled_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="cancelled",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                cancelled_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="cancelled",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                started_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="started",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                started_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="started",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                unstarted_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="unstarted",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                unstarted_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="unstarted",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                backlog_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="backlog",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                backlog_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="backlog",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .order_by(self.kwargs.get("order_by", "-created_at"))
@@ -455,7 +491,7 @@ class ModuleDetailAPIEndpoint(BaseAPIView):
         Modify an existing module's properties like name, description, status, or timeline.
         Tracks all changes in model activity logs for audit purposes.
         """
-        module = Module.objects.get(pk=pk, project_id=project_id, workspace__slug=slug)
+        module = scoped_queryset(Module.objects.all()).get(pk=pk, project_id=project_id, workspace__slug=slug)
 
         current_instance = json.dumps(ModuleSerializer(module).data, cls=DjangoJSONEncoder)
 
@@ -469,12 +505,14 @@ class ModuleDetailAPIEndpoint(BaseAPIView):
             if (
                 request.data.get("external_id")
                 and (module.external_id != request.data.get("external_id"))
-                and Module.objects.filter(
+                and scoped_queryset(Module.objects.all())
+                .filter(
                     project_id=project_id,
                     workspace__slug=slug,
                     external_source=request.data.get("external_source", module.external_source),
                     external_id=request.data.get("external_id"),
-                ).exists()
+                )
+                .exists()
             ):
                 return Response(
                     {
@@ -543,7 +581,7 @@ class ModuleDetailAPIEndpoint(BaseAPIView):
         Permanently remove a module and all its associated issue relationships.
         Only admins or the module creator can perform this action.
         """
-        module = Module.objects.get(workspace__slug=slug, project_id=project_id, pk=pk)
+        module = scoped_queryset(Module.objects.all()).get(workspace__slug=slug, project_id=project_id, pk=pk)
         if module.created_by_id != request.user.id and (
             not ProjectMember.objects.filter(
                 workspace__slug=slug,
@@ -558,7 +596,9 @@ class ModuleDetailAPIEndpoint(BaseAPIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
-        module_issues = list(ModuleIssue.objects.filter(module_id=pk).values_list("issue", flat=True))
+        module_issues = list(
+            scoped_queryset(ModuleIssue.objects.all()).filter(module_id=pk).values_list("issue", flat=True)
+        )
         issue_activity.delay(
             type="module.activity.deleted",
             requested_data=json.dumps(
@@ -577,9 +617,11 @@ class ModuleDetailAPIEndpoint(BaseAPIView):
         )
         module.delete()
         # Delete the module issues
-        ModuleIssue.objects.filter(module=pk, project_id=project_id).delete()
+        scoped_queryset(ModuleIssue.objects.all()).filter(module=pk, project_id=project_id).delete()
         # Delete the user favorite module
-        UserFavorite.objects.filter(entity_type="module", entity_identifier=pk, project_id=project_id).delete()
+        scoped_queryset(UserFavorite.objects.all()).filter(
+            entity_type="module", entity_identifier=pk, project_id=project_id
+        ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -594,8 +636,10 @@ class ModuleIssueListCreateAPIEndpoint(BaseAPIView):
 
     def get_queryset(self):
         return (
-            ModuleIssue.objects.annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("issue"))
+            scoped_queryset(ModuleIssue.objects.all())
+            .annotate(
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("issue"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -649,9 +693,11 @@ class ModuleIssueListCreateAPIEndpoint(BaseAPIView):
         """
         order_by = sanitize_order_by(request.GET.get("order_by", "created_at"), ISSUE_ORDER_BY_ALLOWLIST, "created_at")
         issues = (
-            Issue.issue_objects.filter(issue_module__module_id=module_id, issue_module__deleted_at__isnull=True)
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(issue_module__module_id=module_id, issue_module__deleted_at__isnull=True)
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -667,13 +713,15 @@ class ModuleIssueListCreateAPIEndpoint(BaseAPIView):
             .prefetch_related("labels")
             .order_by(order_by)
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -718,13 +766,15 @@ class ModuleIssueListCreateAPIEndpoint(BaseAPIView):
         issues = request.data.get("issues", [])
         if not len(issues):
             return Response({"error": "Issues are required"}, status=status.HTTP_400_BAD_REQUEST)
-        module = Module.objects.get(workspace__slug=slug, project_id=project_id, pk=module_id)
+        module = scoped_queryset(Module.objects.all()).get(workspace__slug=slug, project_id=project_id, pk=module_id)
 
-        issues = Issue.objects.filter(workspace__slug=slug, project_id=project_id, pk__in=issues).values_list(
-            "id", flat=True
+        issues = (
+            scoped_queryset(Issue.objects.all())
+            .filter(workspace__slug=slug, project_id=project_id, pk__in=issues)
+            .values_list("id", flat=True)
         )
 
-        module_issues = list(ModuleIssue.objects.filter(issue_id__in=issues))
+        module_issues = list(scoped_queryset(ModuleIssue.objects.all()).filter(issue_id__in=issues))
 
         update_module_issue_activity = []
         records_to_update = []
@@ -756,9 +806,9 @@ class ModuleIssueListCreateAPIEndpoint(BaseAPIView):
                     )
                 )
 
-        ModuleIssue.objects.bulk_create(record_to_create, batch_size=10, ignore_conflicts=True)
+        scoped_queryset(ModuleIssue.objects.all()).bulk_create(record_to_create, batch_size=10, ignore_conflicts=True)
 
-        ModuleIssue.objects.bulk_update(records_to_update, ["module"], batch_size=10)
+        scoped_queryset(ModuleIssue.objects.all()).bulk_update(records_to_update, ["module"], batch_size=10)
 
         # Capture Issue Activity
         issue_activity.delay(
@@ -800,8 +850,10 @@ class ModuleIssueDetailAPIEndpoint(BaseAPIView):
 
     def get_queryset(self):
         return (
-            ModuleIssue.objects.annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("issue"))
+            scoped_queryset(ModuleIssue.objects.all())
+            .annotate(
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("issue"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -855,13 +907,15 @@ class ModuleIssueDetailAPIEndpoint(BaseAPIView):
         """
         order_by = sanitize_order_by(request.GET.get("order_by", "created_at"), ISSUE_ORDER_BY_ALLOWLIST, "created_at")
         issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 issue_module__module_id=module_id,
                 issue_module__deleted_at__isnull=True,
                 pk=issue_id,
             )
             .annotate(
-                sub_issues_count=Issue.issue_objects.filter(parent=OuterRef("id"))
+                sub_issues_count=scoped_queryset(Issue.issue_objects.all())
+                .filter(parent=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
@@ -877,13 +931,15 @@ class ModuleIssueDetailAPIEndpoint(BaseAPIView):
             .prefetch_related("labels")
             .order_by(order_by)
             .annotate(
-                link_count=IssueLink.objects.filter(issue=OuterRef("id"))
+                link_count=scoped_queryset(IssueLink.objects.all())
+                .filter(issue=OuterRef("id"))
                 .order_by()
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
             .annotate(
-                attachment_count=FileAsset.objects.filter(
+                attachment_count=scoped_queryset(FileAsset.objects.all())
+                .filter(
                     issue_id=OuterRef("id"),
                     entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
                 )
@@ -917,7 +973,7 @@ class ModuleIssueDetailAPIEndpoint(BaseAPIView):
         Remove a work item from a module while keeping the work item in the project.
         Records the removal activity for tracking purposes.
         """
-        module_issue = ModuleIssue.objects.get(
+        module_issue = scoped_queryset(ModuleIssue.objects.all()).get(
             workspace__slug=slug,
             project_id=project_id,
             module_id=module_id,
@@ -944,7 +1000,8 @@ class ModuleArchiveUnarchiveAPIEndpoint(BaseAPIView):
 
     def get_queryset(self):
         return (
-            Module.objects.filter(project_id=self.kwargs.get("project_id"))
+            scoped_queryset(Module.objects.all())
+            .filter(project_id=self.kwargs.get("project_id"))
             .filter(workspace__slug=self.kwargs.get("slug"))
             .filter(archived_at__isnull=False)
             .select_related("project")
@@ -954,78 +1011,90 @@ class ModuleArchiveUnarchiveAPIEndpoint(BaseAPIView):
             .prefetch_related(
                 Prefetch(
                     "link_module",
-                    queryset=ModuleLink.objects.select_related("module", "created_by"),
+                    queryset=scoped_queryset(ModuleLink.objects.all()).select_related("module", "created_by"),
                 )
             )
             .annotate(
-                total_issues=Count(
-                    "issue_module",
-                    filter=Q(
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                total_issues=scoped_aggregate(
+                    Count(
+                        "issue_module",
+                        filter=Q(
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                completed_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="completed",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                completed_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="completed",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                cancelled_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="cancelled",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                cancelled_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="cancelled",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                started_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="started",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                started_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="started",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                unstarted_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="unstarted",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                unstarted_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="unstarted",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .annotate(
-                backlog_issues=Count(
-                    "issue_module__issue__state__group",
-                    filter=Q(
-                        issue_module__issue__state__group="backlog",
-                        issue_module__issue__archived_at__isnull=True,
-                        issue_module__issue__is_draft=False,
-                        issue_module__deleted_at__isnull=True,
-                    ),
-                    distinct=True,
+                backlog_issues=scoped_aggregate(
+                    Count(
+                        "issue_module__issue__state__group",
+                        filter=Q(
+                            issue_module__issue__state__group="backlog",
+                            issue_module__issue__archived_at__isnull=True,
+                            issue_module__issue__is_draft=False,
+                            issue_module__deleted_at__isnull=True,
+                        ),
+                        distinct=True,
+                    )
                 )
             )
             .order_by(self.kwargs.get("order_by", "-created_at"))
@@ -1062,9 +1131,9 @@ class ModuleArchiveUnarchiveAPIEndpoint(BaseAPIView):
         return self.paginate(
             request=request,
             queryset=(self.get_queryset()),
-            on_results=lambda modules: ModuleSerializer(
-                modules, many=True, fields=self.fields, expand=self.expand
-            ).data,
+            on_results=lambda modules: (
+                ModuleSerializer(modules, many=True, fields=self.fields, expand=self.expand).data
+            ),
         )
 
     @module_docs(
@@ -1087,7 +1156,7 @@ class ModuleArchiveUnarchiveAPIEndpoint(BaseAPIView):
         Move a completed module to archived status for historical tracking.
         Only modules with completed status can be archived.
         """
-        module = Module.objects.get(pk=pk, project_id=project_id, workspace__slug=slug)
+        module = scoped_queryset(Module.objects.all()).get(pk=pk, project_id=project_id, workspace__slug=slug)
         if module.status not in ["completed", "cancelled"]:
             return Response(
                 {"error": "Only completed or cancelled modules can be archived"},
@@ -1095,7 +1164,7 @@ class ModuleArchiveUnarchiveAPIEndpoint(BaseAPIView):
             )
         module.archived_at = timezone.now()
         module.save()
-        UserFavorite.objects.filter(
+        scoped_queryset(UserFavorite.objects.all()).filter(
             entity_type="module",
             entity_identifier=pk,
             project_id=project_id,
@@ -1121,7 +1190,7 @@ class ModuleArchiveUnarchiveAPIEndpoint(BaseAPIView):
         Restore an archived module to active status, making it available for regular use.
         The module will reappear in active module lists and become fully functional.
         """
-        module = Module.objects.get(pk=pk, project_id=project_id, workspace__slug=slug)
+        module = scoped_queryset(Module.objects.all()).get(pk=pk, project_id=project_id, workspace__slug=slug)
         module.archived_at = None
         module.save()
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -27,6 +27,9 @@ from plane.db.models import Issue, IssueAssignee, IssueLabel, Project
 from plane.utils.epic import ensure_project_epic_type, epic_queryset, rollup_for_epics, visible_issues
 from plane.utils.host import base_host
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 EPIC_FIELDS = (
     "id",
     "name",
@@ -47,9 +50,9 @@ def _serialize_epics(epics, user):
     rows = list(visible_issues(epics, user).values(*EPIC_FIELDS))
     ids = [r["id"] for r in rows]
     assignees, labels = defaultdict(list), defaultdict(list)
-    for ia in IssueAssignee.objects.filter(issue_id__in=ids).values("issue_id", "assignee_id"):
+    for ia in scoped_queryset(IssueAssignee.objects.all()).filter(issue_id__in=ids).values("issue_id", "assignee_id"):
         assignees[ia["issue_id"]].append(str(ia["assignee_id"]))
-    for il in IssueLabel.objects.filter(issue_id__in=ids).values("issue_id", "label_id"):
+    for il in scoped_queryset(IssueLabel.objects.all()).filter(issue_id__in=ids).values("issue_id", "label_id"):
         labels[il["issue_id"]].append(str(il["label_id"]))
     rollup = rollup_for_epics(ids, user)
     for r in rows:
@@ -105,7 +108,8 @@ class ProjectEpicEndpoint(BaseAPIView):
             origin=base_host(request=request, is_app=True),
         )
         return Response(
-            _serialize_epics(Issue.issue_objects.filter(pk=issue.pk), request.user)[0], status=status.HTTP_201_CREATED
+            _serialize_epics(scoped_queryset(Issue.issue_objects.all()).filter(pk=issue.pk), request.user)[0],
+            status=status.HTTP_201_CREATED,
         )
 
 
@@ -118,13 +122,17 @@ class ProjectEpicDetailEndpoint(BaseAPIView):
             return Response({"error": "Epic not found."}, status=status.HTTP_404_NOT_FOUND)
         data = rows[0]
         children = list(
-            visible_issues(Issue.issue_objects.filter(parent_id=epic_id), request.user)
+            visible_issues(scoped_queryset(Issue.issue_objects.all()).filter(parent_id=epic_id), request.user)
             .order_by("sequence_id")
             .values("id", "name", "sequence_id", "state_id", "priority", "target_date", "project_id", "completed_at")
         )
         child_ids = [c["id"] for c in children]
         assignees = defaultdict(list)
-        for ia in IssueAssignee.objects.filter(issue_id__in=child_ids).values("issue_id", "assignee_id"):
+        for ia in (
+            scoped_queryset(IssueAssignee.objects.all())
+            .filter(issue_id__in=child_ids)
+            .values("issue_id", "assignee_id")
+        ):
             assignees[ia["issue_id"]].append(str(ia["assignee_id"]))
         for c in children:
             c["assignee_ids"] = assignees[c["id"]]
@@ -137,7 +145,7 @@ class ProjectEpicDetailEndpoint(BaseAPIView):
         epic = _project_epics(slug, project_id, request.user).filter(pk=epic_id).first()
         if epic is None:
             return Response({"error": "Epic not found."}, status=status.HTTP_404_NOT_FOUND)
-        Issue.issue_objects.filter(parent_id=epic_id).update(parent=None)
+        scoped_queryset(Issue.issue_objects.all()).filter(parent_id=epic_id).update(parent=None)
         epic.type = None
         epic.save(update_fields=["type", "updated_at"])
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -157,7 +165,9 @@ class ProjectEpicWorkItemsEndpoint(BaseAPIView):
         ids = [str(i) for i in request.data.get("issue_ids") or []]
         if not ids:
             return Response({"issue_ids": ["Required."]}, status=status.HTTP_400_BAD_REQUEST)
-        candidates = Issue.issue_objects.filter(pk__in=ids, project_id=project_id).exclude(pk=epic_id)
+        candidates = (
+            scoped_queryset(Issue.issue_objects.all()).filter(pk__in=ids, project_id=project_id).exclude(pk=epic_id)
+        )
         # an epic cannot be nested under another epic; a work item with children keeps them
         candidates = candidates.exclude(type__is_epic=True)
         found = set(str(i) for i in candidates.values_list("id", flat=True))
@@ -168,7 +178,9 @@ class ProjectEpicWorkItemsEndpoint(BaseAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         candidates.update(parent=epic, updated_at=timezone.now())
-        return Response(_serialize_epics(Issue.issue_objects.filter(pk=epic.pk), request.user)[0])
+        return Response(
+            _serialize_epics(scoped_queryset(Issue.issue_objects.all()).filter(pk=epic.pk), request.user)[0]
+        )
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def delete(self, request, slug, project_id, epic_id):
@@ -176,8 +188,12 @@ class ProjectEpicWorkItemsEndpoint(BaseAPIView):
         if epic is None:
             return Response({"error": "Epic not found."}, status=status.HTTP_404_NOT_FOUND)
         ids = [str(i) for i in request.data.get("issue_ids") or []]
-        Issue.issue_objects.filter(pk__in=ids, parent_id=epic_id).update(parent=None, updated_at=timezone.now())
-        return Response(_serialize_epics(Issue.issue_objects.filter(pk=epic.pk), request.user)[0])
+        scoped_queryset(Issue.issue_objects.all()).filter(pk__in=ids, parent_id=epic_id).update(
+            parent=None, updated_at=timezone.now()
+        )
+        return Response(
+            _serialize_epics(scoped_queryset(Issue.issue_objects.all()).filter(pk=epic.pk), request.user)[0]
+        )
 
 
 class ProjectEpicConvertEndpoint(BaseAPIView):
@@ -188,7 +204,11 @@ class ProjectEpicConvertEndpoint(BaseAPIView):
         project = Project.objects.get(pk=project_id, workspace__slug=slug)
         if not project.is_epic_enabled:
             return Response({"error": "Epics are not enabled for this project."}, status=status.HTTP_400_BAD_REQUEST)
-        issue = Issue.issue_objects.filter(pk=request.data.get("issue_id"), project_id=project_id).first()
+        issue = (
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(pk=request.data.get("issue_id"), project_id=project_id)
+            .first()
+        )
         if issue is None:
             return Response({"error": "Work item not found."}, status=status.HTTP_404_NOT_FOUND)
         if issue.parent_id:
@@ -198,4 +218,6 @@ class ProjectEpicConvertEndpoint(BaseAPIView):
             )
         issue.type = ensure_project_epic_type(project, request.user)
         issue.save(update_fields=["type", "updated_at"])
-        return Response(_serialize_epics(Issue.issue_objects.filter(pk=issue.pk), request.user)[0])
+        return Response(
+            _serialize_epics(scoped_queryset(Issue.issue_objects.all()).filter(pk=issue.pk), request.user)[0]
+        )

@@ -29,6 +29,9 @@ from plane.bgtasks.storage_metadata_task import get_asset_object_metadata
 from plane.utils.host import base_host
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueAttachmentEndpoint(BaseAPIView):
     serializer_class = IssueAttachmentSerializer
     model = FileAsset
@@ -61,9 +64,11 @@ class IssueAttachmentEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN], creator=True, model=FileAsset)
     def delete(self, request, slug, project_id, issue_id, pk):
-        issue_attachment = FileAsset.objects.filter(
-            pk=pk, workspace__slug=slug, project_id=project_id, issue_id=issue_id
-        ).first()
+        issue_attachment = (
+            scoped_queryset(FileAsset.objects.all())
+            .filter(pk=pk, workspace__slug=slug, project_id=project_id, issue_id=issue_id)
+            .first()
+        )
         if not issue_attachment:
             return Response(
                 {"error": "Issue attachment not found."},
@@ -87,7 +92,9 @@ class IssueAttachmentEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id, issue_id):
-        issue_attachments = FileAsset.objects.filter(issue_id=issue_id, workspace__slug=slug, project_id=project_id)
+        issue_attachments = scoped_queryset(FileAsset.objects.all()).filter(
+            issue_id=issue_id, workspace__slug=slug, project_id=project_id
+        )
         serializer = IssueAttachmentSerializer(issue_attachments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -118,7 +125,7 @@ class IssueAttachmentV2Endpoint(BaseAPIView):
         size_limit = min(size, settings.FILE_SIZE_LIMIT)
 
         # Create a File Asset
-        asset = FileAsset.objects.create(
+        asset = scoped_queryset(FileAsset.objects.all()).create(
             attributes={"name": name, "type": type, "size": size_limit},
             asset=asset_key,
             size=size_limit,
@@ -148,7 +155,7 @@ class IssueAttachmentV2Endpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN], creator=True, model=FileAsset)
     def delete(self, request, slug, project_id, issue_id, pk):
-        issue_attachment = FileAsset.objects.get(
+        issue_attachment = scoped_queryset(FileAsset.objects.all()).get(
             pk=pk, workspace__slug=slug, project_id=project_id, issue_id=issue_id
         )
         issue_attachment.is_deleted = True
@@ -173,7 +180,9 @@ class IssueAttachmentV2Endpoint(BaseAPIView):
     def get(self, request, slug, project_id, issue_id, pk=None):
         if pk:
             # Get the asset
-            asset = FileAsset.objects.get(id=pk, workspace__slug=slug, project_id=project_id, issue_id=issue_id)
+            asset = scoped_queryset(FileAsset.objects.all()).get(
+                id=pk, workspace__slug=slug, project_id=project_id, issue_id=issue_id
+            )
 
             # Check if the asset is uploaded
             if not asset.is_uploaded:
@@ -191,7 +200,7 @@ class IssueAttachmentV2Endpoint(BaseAPIView):
             return HttpResponseRedirect(presigned_url)
 
         # Get all the attachments
-        issue_attachments = FileAsset.objects.filter(
+        issue_attachments = scoped_queryset(FileAsset.objects.all()).filter(
             issue_id=issue_id,
             entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
             workspace__slug=slug,
@@ -204,7 +213,7 @@ class IssueAttachmentV2Endpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def patch(self, request, slug, project_id, issue_id, pk):
-        issue_attachment = FileAsset.objects.get(
+        issue_attachment = scoped_queryset(FileAsset.objects.all()).get(
             pk=pk, workspace__slug=slug, project_id=project_id, issue_id=issue_id
         )
         serializer = IssueAttachmentSerializer(issue_attachment)

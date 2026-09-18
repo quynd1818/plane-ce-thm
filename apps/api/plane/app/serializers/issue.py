@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from plane.utils.project_rbac_scope import ScopedPrimaryKeyRelatedField
+
 # Django imports
 from django.utils import timezone
 from django.core.validators import URLValidator
@@ -51,6 +53,9 @@ from plane.utils.content_validator import (
 )
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueFlatSerializer(BaseSerializer):
     ## Contain only flat fields
 
@@ -83,19 +88,19 @@ class IssueProjectLiteSerializer(BaseSerializer):
 ## Find a better approach to save manytomany?
 class IssueCreateSerializer(BaseSerializer):
     # ids
-    state_id = serializers.PrimaryKeyRelatedField(
+    state_id = ScopedPrimaryKeyRelatedField(
         source="state", queryset=State.all_state_objects.all(), required=False, allow_null=True
     )
-    parent_id = serializers.PrimaryKeyRelatedField(
+    parent_id = ScopedPrimaryKeyRelatedField(
         source="parent", queryset=Issue.objects.all(), required=False, allow_null=True
     )
     label_ids = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=Label.objects.all()),
+        child=ScopedPrimaryKeyRelatedField(queryset=Label.objects.all()),
         write_only=True,
         required=False,
     )
     assignee_ids = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
+        child=ScopedPrimaryKeyRelatedField(queryset=User.objects.all()),
         write_only=True,
         required=False,
     )
@@ -124,6 +129,21 @@ class IssueCreateSerializer(BaseSerializer):
         return data
 
     def validate(self, attrs):
+        from plane.utils.project_rbac import validate_property_permission
+        from plane.utils.project_rbac_scope import current_role_request
+
+        request = self.context.get("request") or current_role_request.get()
+        if request is not None:
+            validate_property_permission(request, self.context.get("project_id"), attrs.get("custom_properties"))
+
+        if "custom_properties" in attrs:
+            if not isinstance(attrs["custom_properties"], dict):
+                raise serializers.ValidationError({"custom_properties": "Custom properties must be an object."})
+            attrs["custom_properties"] = {
+                **(self.instance.custom_properties or {} if self.instance else {}),
+                **attrs["custom_properties"],
+            }
+
         allow_triage = self.context.get("allow_triage_state", False)
         state_manager = State.triage_objects if allow_triage else State.objects
 
@@ -189,15 +209,19 @@ class IssueCreateSerializer(BaseSerializer):
                     to_state_id=attrs["state"].id,
                 )
                 if not decision.allowed:
-                    raise serializers.ValidationError({"state_id": decision.reason, "code": "WORKFLOW_TRANSITION_DENIED"})
+                    raise serializers.ValidationError(
+                        {"state_id": decision.reason, "code": "WORKFLOW_TRANSITION_DENIED"}
+                    )
 
         # Check parent issue is from workspace as it can be cross workspace
         if (
             attrs.get("parent")
-            and not Issue.objects.filter(
+            and not scoped_queryset(Issue.objects.all())
+            .filter(
                 project_id=self.context.get("project_id"),
                 pk=attrs.get("parent").id,
-            ).exists()
+            )
+            .exists()
         ):
             raise serializers.ValidationError("Parent is not valid issue_id please pass a valid issue_id")
 
@@ -221,7 +245,7 @@ class IssueCreateSerializer(BaseSerializer):
         default_assignee_id = self.context["default_assignee_id"]
 
         # Create Issue
-        issue = Issue.objects.create(**validated_data, project_id=project_id)
+        issue = scoped_queryset(Issue.objects.all()).create(**validated_data, project_id=project_id)
 
         # Issue Audit Users
         created_by_id = issue.created_by_id
@@ -229,7 +253,7 @@ class IssueCreateSerializer(BaseSerializer):
 
         if assignees is not None and len(assignees):
             try:
-                IssueAssignee.objects.bulk_create(
+                scoped_queryset(IssueAssignee.objects.all()).bulk_create(
                     [
                         IssueAssignee(
                             assignee_id=assignee_id,
@@ -258,7 +282,7 @@ class IssueCreateSerializer(BaseSerializer):
                 ).exists()
             ):
                 try:
-                    IssueAssignee.objects.create(
+                    scoped_queryset(IssueAssignee.objects.all()).create(
                         assignee_id=default_assignee_id,
                         issue=issue,
                         project_id=project_id,
@@ -271,7 +295,7 @@ class IssueCreateSerializer(BaseSerializer):
 
         if labels is not None and len(labels):
             try:
-                IssueLabel.objects.bulk_create(
+                scoped_queryset(IssueLabel.objects.all()).bulk_create(
                     [
                         IssueLabel(
                             label_id=label_id,
@@ -302,11 +326,13 @@ class IssueCreateSerializer(BaseSerializer):
 
         if assignees is not None:
             previous_assignee_ids = set(
-                IssueAssignee.objects.filter(issue=instance).values_list("assignee_id", flat=True)
+                scoped_queryset(IssueAssignee.objects.all())
+                .filter(issue=instance)
+                .values_list("assignee_id", flat=True)
             )
-            IssueAssignee.objects.filter(issue=instance).delete()
+            scoped_queryset(IssueAssignee.objects.all()).filter(issue=instance).delete()
             try:
-                IssueAssignee.objects.bulk_create(
+                scoped_queryset(IssueAssignee.objects.all()).bulk_create(
                     [
                         IssueAssignee(
                             assignee_id=assignee_id,
@@ -329,9 +355,9 @@ class IssueCreateSerializer(BaseSerializer):
             )
 
         if labels is not None:
-            IssueLabel.objects.filter(issue=instance).delete()
+            scoped_queryset(IssueLabel.objects.all()).filter(issue=instance).delete()
             try:
-                IssueLabel.objects.bulk_create(
+                scoped_queryset(IssueLabel.objects.all()).bulk_create(
                     [
                         IssueLabel(
                             label_id=label_id,
@@ -425,14 +451,14 @@ class IssueLabelSerializer(BaseSerializer):
 
 class IssueRelationSerializer(BaseSerializer):
     id = serializers.UUIDField(source="related_issue.id", read_only=True)
-    project_id = serializers.PrimaryKeyRelatedField(source="related_issue.project_id", read_only=True)
+    project_id = ScopedPrimaryKeyRelatedField(source="related_issue.project_id", read_only=True)
     sequence_id = serializers.IntegerField(source="related_issue.sequence_id", read_only=True)
     name = serializers.CharField(source="related_issue.name", read_only=True)
     relation_type = serializers.CharField(read_only=True)
     state_id = serializers.UUIDField(source="related_issue.state.id", read_only=True)
     priority = serializers.CharField(source="related_issue.priority", read_only=True)
     assignee_ids = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
+        child=ScopedPrimaryKeyRelatedField(queryset=User.objects.all()),
         write_only=True,
         required=False,
     )
@@ -465,14 +491,14 @@ class IssueRelationSerializer(BaseSerializer):
 
 class RelatedIssueSerializer(BaseSerializer):
     id = serializers.UUIDField(source="issue.id", read_only=True)
-    project_id = serializers.PrimaryKeyRelatedField(source="issue.project_id", read_only=True)
+    project_id = ScopedPrimaryKeyRelatedField(source="issue.project_id", read_only=True)
     sequence_id = serializers.IntegerField(source="issue.sequence_id", read_only=True)
     name = serializers.CharField(source="issue.name", read_only=True)
     relation_type = serializers.CharField(read_only=True)
     state_id = serializers.UUIDField(source="issue.state.id", read_only=True)
     priority = serializers.CharField(source="issue.priority", read_only=True)
     assignee_ids = serializers.ListField(
-        child=serializers.PrimaryKeyRelatedField(queryset=User.objects.all()),
+        child=ScopedPrimaryKeyRelatedField(queryset=User.objects.all()),
         write_only=True,
         required=False,
     )
@@ -607,13 +633,18 @@ class IssueLinkSerializer(BaseSerializer):
 
     # Validation if url already exists
     def create(self, validated_data):
-        if IssueLink.objects.filter(url=validated_data.get("url"), issue_id=validated_data.get("issue_id")).exists():
+        if (
+            scoped_queryset(IssueLink.objects.all())
+            .filter(url=validated_data.get("url"), issue_id=validated_data.get("issue_id"))
+            .exists()
+        ):
             raise serializers.ValidationError({"error": "URL already exists for this Issue"})
-        return IssueLink.objects.create(**validated_data)
+        return scoped_queryset(IssueLink.objects.all()).create(**validated_data)
 
     def update(self, instance, validated_data):
         if (
-            IssueLink.objects.filter(url=validated_data.get("url"), issue_id=instance.issue_id)
+            scoped_queryset(IssueLink.objects.all())
+            .filter(url=validated_data.get("url"), issue_id=instance.issue_id)
             .exclude(pk=instance.id)
             .exists()
         ):
@@ -793,7 +824,7 @@ class IssueIntakeSerializer(DynamicBaseSerializer):
 
 class IssueSerializer(DynamicBaseSerializer):
     # ids
-    cycle_id = serializers.PrimaryKeyRelatedField(read_only=True)
+    cycle_id = ScopedPrimaryKeyRelatedField(read_only=True)
     module_ids = serializers.ListField(child=serializers.UUIDField(), required=False)
 
     # Many to many

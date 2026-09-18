@@ -39,11 +39,14 @@ from plane.utils.timezone_converter import user_timezone_converter
 from .. import BaseAPIView
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
     permission_classes = [ProjectEntityPermission]
 
     def get_queryset(self):
-        favorite_subquery = UserFavorite.objects.filter(
+        favorite_subquery = scoped_queryset(UserFavorite.objects.all()).filter(
             user=self.request.user,
             entity_type="module",
             entity_identifier=OuterRef("pk"),
@@ -51,7 +54,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             workspace__slug=self.kwargs.get("slug"),
         )
         cancelled_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="cancelled",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -61,7 +65,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("cnt")
         )
         completed_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="completed",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -71,7 +76,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("cnt")
         )
         started_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="started",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -81,7 +87,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("cnt")
         )
         unstarted_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="unstarted",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -91,7 +98,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("cnt")
         )
         backlog_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 state__group="backlog",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -101,7 +109,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("cnt")
         )
         total_issues = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
             )
@@ -110,7 +119,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("cnt")
         )
         completed_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="completed",
                 issue_module__module_id=OuterRef("pk"),
@@ -122,7 +132,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
         )
 
         total_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 issue_module__module_id=OuterRef("pk"),
                 issue_module__deleted_at__isnull=True,
@@ -132,7 +143,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("total_estimate_points")[:1]
         )
         backlog_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="backlog",
                 issue_module__module_id=OuterRef("pk"),
@@ -143,7 +155,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("backlog_estimate_point")[:1]
         )
         unstarted_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="unstarted",
                 issue_module__module_id=OuterRef("pk"),
@@ -154,7 +167,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("unstarted_estimate_point")[:1]
         )
         started_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="started",
                 issue_module__module_id=OuterRef("pk"),
@@ -165,7 +179,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("started_estimate_point")[:1]
         )
         cancelled_estimate_point = (
-            Issue.issue_objects.filter(
+            scoped_queryset(Issue.issue_objects.all())
+            .filter(
                 estimate_point__estimate__type="points",
                 state__group="cancelled",
                 issue_module__module_id=OuterRef("pk"),
@@ -176,7 +191,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .values("cancelled_estimate_point")[:1]
         )
         return (
-            Module.objects.filter(workspace__slug=self.kwargs.get("slug"))
+            scoped_queryset(Module.objects.all())
+            .filter(workspace__slug=self.kwargs.get("slug"))
             .filter(project_id=self.kwargs.get("project_id"))
             .filter(archived_at__isnull=False)
             .annotate(is_favorite=Exists(favorite_subquery))
@@ -185,7 +201,7 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             .prefetch_related(
                 Prefetch(
                     "link_module",
-                    queryset=ModuleLink.objects.select_related("module", "created_by"),
+                    queryset=scoped_queryset(ModuleLink.objects.all()).select_related("module", "created_by"),
                 )
             )
             .annotate(
@@ -296,7 +312,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
                 self.get_queryset()
                 .filter(pk=pk)
                 .annotate(
-                    sub_issues=Issue.issue_objects.filter(
+                    sub_issues=scoped_queryset(Issue.issue_objects.all())
+                    .filter(
                         project_id=self.kwargs.get("project_id"),
                         parent__isnull=False,
                         issue_module__module_id=pk,
@@ -322,7 +339,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
 
             if estimate_type:
                 assignee_distribution = (
-                    Issue.issue_objects.filter(
+                    scoped_queryset(Issue.issue_objects.all())
+                    .filter(
                         issue_module__module_id=pk,
                         issue_module__deleted_at__isnull=True,
                         workspace__slug=slug,
@@ -384,7 +402,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
                 )
 
                 label_distribution = (
-                    Issue.issue_objects.filter(
+                    scoped_queryset(Issue.issue_objects.all())
+                    .filter(
                         issue_module__module_id=pk,
                         workspace__slug=slug,
                         project_id=project_id,
@@ -429,7 +448,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
                     )
 
             assignee_distribution = (
-                Issue.issue_objects.filter(
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     issue_module__module_id=pk,
                     issue_module__deleted_at__isnull=True,
                     workspace__slug=slug,
@@ -491,7 +511,8 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             )
 
             label_distribution = (
-                Issue.issue_objects.filter(
+                scoped_queryset(Issue.issue_objects.all())
+                .filter(
                     issue_module__module_id=pk,
                     issue_module__deleted_at__isnull=True,
                     workspace__slug=slug,
@@ -542,7 +563,7 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             return Response(data, status=status.HTTP_200_OK)
 
     def post(self, request, slug, project_id, module_id):
-        module = Module.objects.get(pk=module_id, project_id=project_id, workspace__slug=slug)
+        module = scoped_queryset(Module.objects.all()).get(pk=module_id, project_id=project_id, workspace__slug=slug)
         if module.status not in ["completed", "cancelled"]:
             return Response(
                 {"error": "Only completed or cancelled modules can be archived"},
@@ -550,7 +571,7 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
             )
         module.archived_at = timezone.now()
         module.save()
-        UserFavorite.objects.filter(
+        scoped_queryset(UserFavorite.objects.all()).filter(
             entity_type="module",
             entity_identifier=module_id,
             project_id=project_id,
@@ -559,7 +580,7 @@ class ModuleArchiveUnarchiveEndpoint(BaseAPIView):
         return Response({"archived_at": str(module.archived_at)}, status=status.HTTP_200_OK)
 
     def delete(self, request, slug, project_id, module_id):
-        module = Module.objects.get(pk=module_id, project_id=project_id, workspace__slug=slug)
+        module = scoped_queryset(Module.objects.all()).get(pk=module_id, project_id=project_id, workspace__slug=slug)
         module.archived_at = None
         module.save()
         return Response(status=status.HTTP_204_NO_CONTENT)

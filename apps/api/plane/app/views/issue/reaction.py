@@ -22,6 +22,9 @@ from plane.bgtasks.issue_activities_task import issue_activity
 from plane.utils.host import base_host
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueReactionViewSet(BaseViewSet):
     serializer_class = IssueReactionSerializer
     model = IssueReaction
@@ -63,7 +66,7 @@ class IssueReactionViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def destroy(self, request, slug, project_id, issue_id, reaction_code):
-        issue_reaction = IssueReaction.objects.get(
+        issue_reaction = scoped_queryset(IssueReaction.objects.all()).get(
             workspace__slug=slug,
             project_id=project_id,
             issue_id=issue_id,

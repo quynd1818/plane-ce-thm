@@ -17,18 +17,25 @@ from plane.app.serializers import UserFavoriteSerializer
 from plane.app.permissions import allow_permission, ROLE
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class WorkspaceFavoriteEndpoint(BaseAPIView):
     use_read_replica = True
 
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def get(self, request, slug):
         # the second filter is to check if the user is a member of the project
-        favorites = UserFavorite.objects.filter(user=request.user, workspace__slug=slug, parent__isnull=True).filter(
-            Q(project__isnull=True) & ~Q(entity_type="page")
-            | (
-                Q(project__isnull=False)
-                & Q(project__project_projectmember__member=request.user)
-                & Q(project__project_projectmember__is_active=True)
+        favorites = (
+            scoped_queryset(UserFavorite.objects.all())
+            .filter(user=request.user, workspace__slug=slug, parent__isnull=True)
+            .filter(
+                Q(project__isnull=True) & ~Q(entity_type="page")
+                | (
+                    Q(project__isnull=False)
+                    & Q(project__project_projectmember__member=request.user)
+                    & Q(project__project_projectmember__is_active=True)
+                )
             )
         )
         serializer = UserFavoriteSerializer(favorites, many=True)
@@ -41,12 +48,16 @@ class WorkspaceFavoriteEndpoint(BaseAPIView):
 
             # If the favorite exists return
             if request.data.get("entity_identifier"):
-                user_favorites = UserFavorite.objects.filter(
-                    workspace=workspace,
-                    user_id=request.user.id,
-                    entity_type=request.data.get("entity_type"),
-                    entity_identifier=request.data.get("entity_identifier"),
-                ).first()
+                user_favorites = (
+                    scoped_queryset(UserFavorite.objects.all())
+                    .filter(
+                        workspace=workspace,
+                        user_id=request.user.id,
+                        entity_type=request.data.get("entity_type"),
+                        entity_identifier=request.data.get("entity_identifier"),
+                    )
+                    .first()
+                )
 
                 # If the favorite exists return
                 if user_favorites:
@@ -68,7 +79,9 @@ class WorkspaceFavoriteEndpoint(BaseAPIView):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def patch(self, request, slug, favorite_id):
-        favorite = UserFavorite.objects.get(user=request.user, workspace__slug=slug, pk=favorite_id)
+        favorite = scoped_queryset(UserFavorite.objects.all()).get(
+            user=request.user, workspace__slug=slug, pk=favorite_id
+        )
         serializer = UserFavoriteSerializer(favorite, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -77,7 +90,9 @@ class WorkspaceFavoriteEndpoint(BaseAPIView):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def delete(self, request, slug, favorite_id):
-        favorite = UserFavorite.objects.get(user=request.user, workspace__slug=slug, pk=favorite_id)
+        favorite = scoped_queryset(UserFavorite.objects.all()).get(
+            user=request.user, workspace__slug=slug, pk=favorite_id
+        )
         favorite.delete(soft=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -85,12 +100,16 @@ class WorkspaceFavoriteEndpoint(BaseAPIView):
 class WorkspaceFavoriteGroupEndpoint(BaseAPIView):
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER], level="WORKSPACE")
     def get(self, request, slug, favorite_id):
-        favorites = UserFavorite.objects.filter(user=request.user, workspace__slug=slug, parent_id=favorite_id).filter(
-            Q(project__isnull=True)
-            | (
-                Q(project__isnull=False)
-                & Q(project__project_projectmember__member=request.user)
-                & Q(project__project_projectmember__is_active=True)
+        favorites = (
+            scoped_queryset(UserFavorite.objects.all())
+            .filter(user=request.user, workspace__slug=slug, parent_id=favorite_id)
+            .filter(
+                Q(project__isnull=True)
+                | (
+                    Q(project__isnull=False)
+                    & Q(project__project_projectmember__member=request.user)
+                    & Q(project__project_projectmember__is_active=True)
+                )
             )
         )
         serializer = UserFavoriteSerializer(favorites, many=True)

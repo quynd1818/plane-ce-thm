@@ -11,6 +11,9 @@ from plane.db.models import IssueView
 from plane.utils.issue_filters import issue_filters
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class ViewIssueListSerializer(serializers.Serializer):
     def get_assignee_ids(self, instance):
         return [assignee.assignee_id for assignee in instance.issue_assignee.all()]
@@ -74,7 +77,7 @@ class IssueViewSerializer(DynamicBaseSerializer):
             validated_data["query"] = issue_filters(query_params, "POST")
         else:
             validated_data["query"] = {}
-        return IssueView.objects.create(**validated_data)
+        return scoped_queryset(IssueView.objects.all()).create(**validated_data)
 
     def update(self, instance, validated_data):
         query_params = validated_data.get("filters", {})

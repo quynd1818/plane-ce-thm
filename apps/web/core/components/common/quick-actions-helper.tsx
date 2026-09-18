@@ -4,6 +4,8 @@
  * See the LICENSE file for details.
  */
 
+import { useUserPermissions } from "@/hooks/store/user";
+
 // @types/react 19 removed the global JSX namespace; it is imported from react now.
 import type { JSX } from "react";
 // types
@@ -67,6 +69,8 @@ type MenuResult = {
 };
 
 export const useCycleMenuItems = (props: UseCycleMenuItemsProps): MenuResult => {
+  const { hasProjectCapability } = useUserPermissions();
+  const can = (action: string) => hasProjectCapability(`cycles.${action}`, props.projectId, props.workspaceSlug);
   const factory = useQuickActionsFactory();
   const { cycleDetails, isEditingAllowed, ...handlers } = props;
 
@@ -75,22 +79,27 @@ export const useCycleMenuItems = (props: UseCycleMenuItemsProps): MenuResult => 
 
   // Assemble final menu items - order defined here
   const items = [
-    factory.createEditMenuItem(handlers.handleEdit, isEditingAllowed && !isCompleted && !isArchived),
+    factory.createEditMenuItem(handlers.handleEdit, can("update") && isEditingAllowed && !isCompleted && !isArchived),
     factory.createOpenInNewTabMenuItem(handlers.handleOpenInNewTab),
     factory.createCopyLinkMenuItem(handlers.handleCopyLink),
     factory.createArchiveMenuItem(handlers.handleArchive, {
-      shouldRender: isEditingAllowed && !isArchived,
+      shouldRender: can("archive") && isEditingAllowed && !isArchived,
       disabled: !isCompleted,
       description: isCompleted ? undefined : "Only completed cycles can be archived",
     }),
-    factory.createRestoreMenuItem(handlers.handleRestore, isEditingAllowed && isArchived),
-    factory.createDeleteMenuItem(handlers.handleDelete, isEditingAllowed && !isCompleted && !isArchived),
+    factory.createRestoreMenuItem(handlers.handleRestore, can("archive") && isEditingAllowed && isArchived),
+    factory.createDeleteMenuItem(
+      handlers.handleDelete,
+      can("delete") && isEditingAllowed && !isCompleted && !isArchived
+    ),
   ].filter((item) => item.shouldRender !== false);
 
   return { items, modals: null };
 };
 
 export const useModuleMenuItems = (props: UseModuleMenuItemsProps): MenuResult => {
+  const { hasProjectCapability } = useUserPermissions();
+  const can = (action: string) => hasProjectCapability(`modules.${action}`, props.projectId, props.workspaceSlug);
   const factory = useQuickActionsFactory();
   const { moduleDetails, isEditingAllowed, ...handlers } = props;
 
@@ -100,22 +109,24 @@ export const useModuleMenuItems = (props: UseModuleMenuItemsProps): MenuResult =
 
   // Assemble final menu items - order defined here
   const items = [
-    factory.createEditMenuItem(handlers.handleEdit, isEditingAllowed && !isArchived),
+    factory.createEditMenuItem(handlers.handleEdit, can("update") && isEditingAllowed && !isArchived),
     factory.createOpenInNewTabMenuItem(handlers.handleOpenInNewTab),
     factory.createCopyLinkMenuItem(handlers.handleCopyLink),
     factory.createArchiveMenuItem(handlers.handleArchive, {
-      shouldRender: isEditingAllowed && !isArchived,
+      shouldRender: can("archive") && isEditingAllowed && !isArchived,
       disabled: !isInArchivableGroup,
       description: isInArchivableGroup ? undefined : "Only completed or cancelled modules can be archived",
     }),
-    factory.createRestoreMenuItem(handlers.handleRestore, isEditingAllowed && isArchived),
-    factory.createDeleteMenuItem(handlers.handleDelete, isEditingAllowed && !isArchived),
+    factory.createRestoreMenuItem(handlers.handleRestore, can("archive") && isEditingAllowed && isArchived),
+    factory.createDeleteMenuItem(handlers.handleDelete, can("delete") && isEditingAllowed && !isArchived),
   ].filter((item) => item.shouldRender !== false);
 
   return { items, modals: null };
 };
 
 export const useViewMenuItems = (props: UseViewMenuItemsProps): MenuResult => {
+  const { hasProjectCapability } = useUserPermissions();
+  const can = (action: string) => hasProjectCapability(`views.${action}`, props.projectId, props.workspaceSlug);
   const factory = useQuickActionsFactory();
   const { workspaceSlug, isOwner, isAdmin, projectId, view, ...handlers } = props;
 
@@ -123,10 +134,10 @@ export const useViewMenuItems = (props: UseViewMenuItemsProps): MenuResult => {
 
   // Assemble final menu items - order defined here
   const items = [
-    factory.createEditMenuItem(handlers.handleEdit, isOwner),
+    factory.createEditMenuItem(handlers.handleEdit, can("update") && isOwner),
     factory.createOpenInNewTabMenuItem(handlers.handleOpenInNewTab),
     factory.createCopyLinkMenuItem(handlers.handleCopyLink),
-    factory.createDeleteMenuItem(handlers.handleDelete, isOwner || isAdmin),
+    factory.createDeleteMenuItem(handlers.handleDelete, can("delete") && (isOwner || isAdmin)),
   ].filter((item) => item.shouldRender !== false);
 
   return { items, modals: null };

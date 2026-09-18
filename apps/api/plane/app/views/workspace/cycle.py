@@ -16,12 +16,16 @@ from plane.app.permissions import WorkspaceViewerPermission
 from plane.app.serializers.cycle import CycleSerializer
 
 
+from plane.utils.project_rbac_scope import scoped_queryset, scoped_aggregate
+
+
 class WorkspaceCyclesEndpoint(BaseAPIView):
     permission_classes = [WorkspaceViewerPermission]
 
     def get(self, request, slug):
         cycles = (
-            Cycle.objects.filter(
+            scoped_queryset(Cycle.objects.all())
+            .filter(
                 workspace__slug=slug,
                 project__project_projectmember__member=request.user,
                 project__project_projectmember__is_active=True,
@@ -32,74 +36,86 @@ class WorkspaceCyclesEndpoint(BaseAPIView):
             .select_related("owned_by")
             .filter(archived_at__isnull=True)
             .annotate(
-                total_issues=Count(
-                    "issue_cycle",
-                    filter=Q(
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__deleted_at__isnull=True,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                    ),
+                total_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle",
+                        filter=Q(
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__deleted_at__isnull=True,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                completed_issues=Count(
-                    "issue_cycle__issue__state__group",
-                    filter=Q(
-                        issue_cycle__issue__state__group="completed",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                        issue_cycle__deleted_at__isnull=True,
-                    ),
+                completed_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__state__group",
+                        filter=Q(
+                            issue_cycle__issue__state__group="completed",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                            issue_cycle__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                cancelled_issues=Count(
-                    "issue_cycle__issue__state__group",
-                    filter=Q(
-                        issue_cycle__issue__state__group="cancelled",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                        issue_cycle__deleted_at__isnull=True,
-                    ),
+                cancelled_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__state__group",
+                        filter=Q(
+                            issue_cycle__issue__state__group="cancelled",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                            issue_cycle__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                started_issues=Count(
-                    "issue_cycle__issue__state__group",
-                    filter=Q(
-                        issue_cycle__issue__state__group="started",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                        issue_cycle__deleted_at__isnull=True,
-                    ),
+                started_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__state__group",
+                        filter=Q(
+                            issue_cycle__issue__state__group="started",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                            issue_cycle__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                unstarted_issues=Count(
-                    "issue_cycle__issue__state__group",
-                    filter=Q(
-                        issue_cycle__issue__state__group="unstarted",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                        issue_cycle__deleted_at__isnull=True,
-                    ),
+                unstarted_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__state__group",
+                        filter=Q(
+                            issue_cycle__issue__state__group="unstarted",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                            issue_cycle__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .annotate(
-                backlog_issues=Count(
-                    "issue_cycle__issue__state__group",
-                    filter=Q(
-                        issue_cycle__issue__state__group="backlog",
-                        issue_cycle__issue__archived_at__isnull=True,
-                        issue_cycle__issue__is_draft=False,
-                        issue_cycle__issue__deleted_at__isnull=True,
-                        issue_cycle__deleted_at__isnull=True,
-                    ),
+                backlog_issues=scoped_aggregate(
+                    Count(
+                        "issue_cycle__issue__state__group",
+                        filter=Q(
+                            issue_cycle__issue__state__group="backlog",
+                            issue_cycle__issue__archived_at__isnull=True,
+                            issue_cycle__issue__is_draft=False,
+                            issue_cycle__issue__deleted_at__isnull=True,
+                            issue_cycle__deleted_at__isnull=True,
+                        ),
+                    )
                 )
             )
             .order_by(self.kwargs.get("order_by", "-created_at"))

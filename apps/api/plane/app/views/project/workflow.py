@@ -13,6 +13,9 @@ from plane.notifications.service import publish_event
 from plane.utils.workflow import check_transition
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 def _rule_payload(project, title):
     return {"title": title, "project_name": project.name}
 
@@ -71,7 +74,7 @@ class WorkflowAllowedStatesEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id, issue_id):
-        issue = Issue.objects.get(pk=issue_id, project_id=project_id, workspace__slug=slug)
+        issue = scoped_queryset(Issue.objects.all()).get(pk=issue_id, project_id=project_id, workspace__slug=slug)
         result = []
         for state in State.objects.filter(project_id=project_id).order_by("sequence"):
             decision = check_transition(project_id, request.user, issue.state_id, state.id)

@@ -19,17 +19,24 @@ from plane.notifications.service import publish_event
 from plane.utils.worklog_approval import can_modify_worklog, initial_status, is_worklog_approver
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueWorkLogEndpoint(BaseAPIView):
     rbac_policy = {"GET": "worklogs.read"}
 
     def get_queryset(self, slug, project_id, issue_id):
-        return WorkLog.objects.filter(
-            workspace__slug=slug,
-            project_id=project_id,
-            issue_id=issue_id,
-            project__project_projectmember__member=self.request.user,
-            project__project_projectmember__is_active=True,
-        ).select_related("user")
+        return (
+            scoped_queryset(WorkLog.objects.all())
+            .filter(
+                workspace__slug=slug,
+                project_id=project_id,
+                issue_id=issue_id,
+                project__project_projectmember__member=self.request.user,
+                project__project_projectmember__is_active=True,
+            )
+            .select_related("user")
+        )
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id, issue_id):
@@ -38,7 +45,7 @@ class IssueWorkLogEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def post(self, request, slug, project_id, issue_id):
-        issue = Issue.objects.get(pk=issue_id, project_id=project_id, workspace__slug=slug)
+        issue = scoped_queryset(Issue.objects.all()).get(pk=issue_id, project_id=project_id, workspace__slug=slug)
         serializer = WorkLogCreateSerializer(
             data={**request.data, "issue": str(issue.id)},
             context={"issue": issue, "project_id": project_id},
@@ -55,7 +62,7 @@ class IssueWorkLogEndpoint(BaseAPIView):
 
 class IssueWorkLogDetailEndpoint(BaseAPIView):
     def get_worklog(self, slug, project_id, issue_id, worklog_id):
-        return WorkLog.objects.get(
+        return scoped_queryset(WorkLog.objects.all()).get(
             pk=worklog_id,
             workspace__slug=slug,
             project_id=project_id,
@@ -101,16 +108,18 @@ class IssueWorkLogDetailEndpoint(BaseAPIView):
 class IssueTimerEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def post(self, request, slug, project_id, issue_id):
-        issue = Issue.objects.get(pk=issue_id, project_id=project_id, workspace__slug=slug)
+        issue = scoped_queryset(Issue.objects.all()).get(pk=issue_id, project_id=project_id, workspace__slug=slug)
         if issue.project.is_time_tracking_enabled is not True:
             return Response({"error": "Time tracking is disabled for this project."}, status=400)
-        active_timer = WorkLog.objects.filter(
-            project_id=project_id, user=request.user, is_timer=True, ended_at__isnull=True
-        ).first()
+        active_timer = (
+            scoped_queryset(WorkLog.objects.all())
+            .filter(project_id=project_id, user=request.user, is_timer=True, ended_at__isnull=True)
+            .first()
+        )
         if active_timer:
             return Response({"error": "You already have an active timer."}, status=400)
         try:
-            worklog = WorkLog.objects.create(
+            worklog = scoped_queryset(WorkLog.objects.all()).create(
                 issue=issue,
                 project=issue.project,
                 workspace=issue.workspace,
@@ -126,14 +135,18 @@ class IssueTimerEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def delete(self, request, slug, project_id, issue_id):
-        worklog = WorkLog.objects.filter(
-            workspace__slug=slug,
-            project_id=project_id,
-            issue_id=issue_id,
-            user=request.user,
-            is_timer=True,
-            ended_at__isnull=True,
-        ).first()
+        worklog = (
+            scoped_queryset(WorkLog.objects.all())
+            .filter(
+                workspace__slug=slug,
+                project_id=project_id,
+                issue_id=issue_id,
+                user=request.user,
+                is_timer=True,
+                ended_at__isnull=True,
+            )
+            .first()
+        )
         if not worklog:
             return Response({"error": "No active timer found."}, status=404)
         worklog.ended_at = timezone.now()
@@ -183,7 +196,7 @@ class ProjectWorkLogSummaryEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id):
-        queryset = WorkLog.objects.filter(
+        queryset = scoped_queryset(WorkLog.objects.all()).filter(
             workspace__slug=slug,
             project_id=project_id,
             project__project_projectmember__member=request.user,
@@ -237,13 +250,17 @@ class ProjectWorkLogReportEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id):
-        queryset = WorkLog.objects.filter(
-            workspace__slug=slug,
-            project_id=project_id,
-            project__is_time_tracking_enabled=True,
-            project__project_projectmember__member=request.user,
-            project__project_projectmember__is_active=True,
-        ).select_related("issue", "user")
+        queryset = (
+            scoped_queryset(WorkLog.objects.all())
+            .filter(
+                workspace__slug=slug,
+                project_id=project_id,
+                project__is_time_tracking_enabled=True,
+                project__project_projectmember__member=request.user,
+                project__project_projectmember__is_active=True,
+            )
+            .select_related("issue", "user")
+        )
         queryset = _apply_worklog_filters(queryset, request.GET, project_id=project_id)
 
         if request.GET.get("format") == "csv":
@@ -288,7 +305,8 @@ class ProjectWorkLogPendingEndpoint(BaseAPIView):
         if not is_worklog_approver(project, request.user):
             return Response({"error": "Only worklog approvers can view the review queue."}, status=403)
         queryset = (
-            WorkLog.objects.filter(project=project, status=WorkLog.STATUS_SUBMITTED)
+            scoped_queryset(WorkLog.objects.all())
+            .filter(project=project, status=WorkLog.STATUS_SUBMITTED)
             .exclude(is_timer=True, ended_at__isnull=True)
             .select_related("issue", "user")
             .order_by("started_at")
@@ -316,8 +334,10 @@ class WorkLogReviewEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def post(self, request, slug, project_id, issue_id, worklog_id):
-        worklog = WorkLog.objects.select_related("project", "issue", "user").get(
-            pk=worklog_id, workspace__slug=slug, project_id=project_id, issue_id=issue_id
+        worklog = (
+            scoped_queryset(WorkLog.objects.all())
+            .select_related("project", "issue", "user")
+            .get(pk=worklog_id, workspace__slug=slug, project_id=project_id, issue_id=issue_id)
         )
         if not is_worklog_approver(worklog.project, request.user):
             return Response({"error": "Only worklog approvers can review worklogs."}, status=403)

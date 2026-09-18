@@ -28,9 +28,13 @@ from plane.db.models import Dashboard, DashboardWidget, Workspace, WorkspaceMemb
 from plane.utils.dashboard import compute_widget
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 def _visible(slug, user):
     return (
-        Dashboard.objects.filter(workspace__slug=slug)
+        scoped_queryset(Dashboard.objects.all())
+        .filter(workspace__slug=slug)
         .filter(Q(is_shared=True) | Q(owner=user))
         .select_related("owner")
         .annotate(widget_count=Count("widgets", filter=Q(widgets__deleted_at__isnull=True)))

@@ -25,6 +25,9 @@ from plane.utils.host import base_host
 from plane.bgtasks.webhook_task import model_activity
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueCommentViewSet(BaseViewSet):
     serializer_class = IssueCommentSerializer
     model = IssueComment
@@ -63,7 +66,7 @@ class IssueCommentViewSet(BaseViewSet):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def create(self, request, slug, project_id, issue_id):
         project = Project.objects.get(pk=project_id)
-        issue = Issue.objects.get(pk=issue_id)
+        issue = scoped_queryset(Issue.objects.all()).get(pk=issue_id)
         if (
             ProjectMember.objects.filter(
                 workspace__slug=slug,
@@ -108,7 +111,9 @@ class IssueCommentViewSet(BaseViewSet):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN], creator=True, model=IssueComment)
     def partial_update(self, request, slug, project_id, issue_id, pk):
-        issue_comment = IssueComment.objects.get(workspace__slug=slug, project_id=project_id, issue_id=issue_id, pk=pk)
+        issue_comment = scoped_queryset(IssueComment.objects.all()).get(
+            workspace__slug=slug, project_id=project_id, issue_id=issue_id, pk=pk
+        )
         requested_data = json.dumps(self.request.data, cls=DjangoJSONEncoder)
         current_instance = json.dumps(IssueCommentSerializer(issue_comment).data, cls=DjangoJSONEncoder)
         serializer = IssueCommentSerializer(issue_comment, data=request.data, partial=True)
@@ -143,7 +148,9 @@ class IssueCommentViewSet(BaseViewSet):
 
     @allow_permission(allowed_roles=[ROLE.ADMIN], creator=True, model=IssueComment)
     def destroy(self, request, slug, project_id, issue_id, pk):
-        issue_comment = IssueComment.objects.get(workspace__slug=slug, project_id=project_id, issue_id=issue_id, pk=pk)
+        issue_comment = scoped_queryset(IssueComment.objects.all()).get(
+            workspace__slug=slug, project_id=project_id, issue_id=issue_id, pk=pk
+        )
         current_instance = json.dumps(IssueCommentSerializer(issue_comment).data, cls=DjangoJSONEncoder)
         issue_comment.delete()
         issue_activity.delay(
@@ -211,7 +218,7 @@ class CommentReactionViewSet(BaseViewSet):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def destroy(self, request, slug, project_id, comment_id, reaction_code):
-        comment_reaction = CommentReaction.objects.get(
+        comment_reaction = scoped_queryset(CommentReaction.objects.all()).get(
             workspace__slug=slug,
             project_id=project_id,
             comment_id=comment_id,

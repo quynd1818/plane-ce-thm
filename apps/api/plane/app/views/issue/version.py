@@ -24,6 +24,9 @@ from plane.utils.global_paginator import paginate
 from plane.utils.timezone_converter import user_timezone_converter
 
 
+from plane.utils.project_rbac_scope import scoped_queryset
+
+
 class IssueVersionEndpoint(BaseAPIView):
     def process_paginated_result(self, fields, results, timezone):
         paginated_data = results.values(*fields)
@@ -36,7 +39,7 @@ class IssueVersionEndpoint(BaseAPIView):
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id, issue_id, pk=None):
         if pk:
-            issue_version = IssueVersion.objects.get(
+            issue_version = scoped_queryset(IssueVersion.objects.all()).get(
                 workspace__slug=slug, project_id=project_id, issue_id=issue_id, pk=pk
             )
 
@@ -58,7 +61,7 @@ class IssueVersionEndpoint(BaseAPIView):
             "updated_by",
         ]
 
-        issue_versions_queryset = IssueVersion.objects.filter(
+        issue_versions_queryset = scoped_queryset(IssueVersion.objects.all()).filter(
             workspace__slug=slug, project_id=project_id, issue_id=issue_id
         )
 
@@ -86,7 +89,7 @@ class WorkItemDescriptionVersionEndpoint(BaseAPIView):
     @allow_permission(allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id, work_item_id, pk=None):
         project = Project.objects.get(pk=project_id)
-        issue = Issue.objects.get(workspace__slug=slug, project_id=project_id, pk=work_item_id)
+        issue = scoped_queryset(Issue.objects.all()).get(workspace__slug=slug, project_id=project_id, pk=work_item_id)
 
         if (
             ProjectMember.objects.filter(
@@ -105,7 +108,7 @@ class WorkItemDescriptionVersionEndpoint(BaseAPIView):
             )
 
         if pk:
-            issue_description_version = IssueDescriptionVersion.objects.get(
+            issue_description_version = scoped_queryset(IssueDescriptionVersion.objects.all()).get(
                 workspace__slug=slug,
                 project_id=project_id,
                 issue_id=work_item_id,
@@ -130,9 +133,11 @@ class WorkItemDescriptionVersionEndpoint(BaseAPIView):
             "updated_by",
         ]
 
-        issue_description_versions_queryset = IssueDescriptionVersion.objects.filter(
-            workspace__slug=slug, project_id=project_id, issue_id=work_item_id
-        ).order_by("-created_at")
+        issue_description_versions_queryset = (
+            scoped_queryset(IssueDescriptionVersion.objects.all())
+            .filter(workspace__slug=slug, project_id=project_id, issue_id=work_item_id)
+            .order_by("-created_at")
+        )
         paginated_data = paginate(
             base_queryset=issue_description_versions_queryset,
             queryset=issue_description_versions_queryset,
