@@ -894,5 +894,48 @@
     "review_failed": "No se pudo revisar este worklog.",
     "load_failed": "No se pudieron cargar los worklogs.",
     "save_failed": "No se pudieron guardar los aprobadores."
+  },
+  "project_templates": {
+    "page_description": "Captura los estados, etiquetas, módulos, reglas de flujo de trabajo y elementos de trabajo iniciales de un proyecto para reutilizarlos al crear nuevos proyectos.",
+    "empty": "Aún no hay plantillas de proyecto. Guarda un proyecto existente como plantilla para empezar.",
+    "used_count": "Usada {count} veces",
+    "actions": {
+      "new_from_project": "Nueva desde proyecto",
+      "save_as_template": "Guardar como plantilla",
+      "save_as_template_description": "Guarda la configuración de este proyecto (estados, etiquetas, módulos, reglas de flujo de trabajo y, opcionalmente, elementos de trabajo) como plantilla del espacio de trabajo."
+    },
+    "picker": {
+      "placeholder": "Empezar desde plantilla",
+      "blank": "Proyecto en blanco"
+    },
+    "summary": {
+      "states": "{count} estados",
+      "labels": "{count} etiquetas",
+      "modules": "{count} módulos",
+      "workflow_rules": "{count} reglas de flujo de trabajo",
+      "custom_properties": "{count} propiedades personalizadas",
+      "work_items": "{count} elementos de trabajo"
+    },
+    "save_modal": {
+      "title": "Guardar proyecto como plantilla",
+      "project": "Proyecto",
+      "project_placeholder": "Elige un proyecto que administres",
+      "name": "Nombre de la plantilla",
+      "name_placeholder": "p. ej. Proyecto inmobiliario",
+      "description": "Descripción",
+      "description_placeholder": "¿Cuándo debe usarse esta plantilla?",
+      "include_work_items": "Incluir elementos de trabajo",
+      "include_work_items_hint": "Copia los elementos de trabajo actuales (nombre, descripción, prioridad, estado, etiquetas, módulos) como elementos iniciales. No se copian personas ni fechas.",
+      "submit": "Guardar plantilla"
+    },
+    "delete_modal": {
+      "title": "Eliminar plantilla",
+      "content": "¿Eliminar la plantilla \"{name}\"? Los proyectos ya creados a partir de ella no se ven afectados."
+    },
+    "toast": {
+      "saved": "Plantilla guardada.",
+      "save_failed": "No se pudo guardar la plantilla.",
+      "delete_failed": "No se pudo eliminar la plantilla."
+    }
   }
 }

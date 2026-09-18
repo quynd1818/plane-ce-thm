@@ -894,5 +894,48 @@
     "review_failed": "无法审批此工时记录。",
     "load_failed": "无法加载工时记录。",
     "save_failed": "无法保存审批人。"
+  },
+  "project_templates": {
+    "page_description": "保存项目的状态、标签、模块、工作流规则和初始工作项，创建新项目时重复使用。",
+    "empty": "还没有项目模板。将现有项目保存为模板即可开始。",
+    "used_count": "已使用 {count} 次",
+    "actions": {
+      "new_from_project": "从项目新建",
+      "save_as_template": "保存为模板",
+      "save_as_template_description": "将此项目的设置（状态、标签、模块、工作流规则，可选工作项）保存为工作区模板。"
+    },
+    "picker": {
+      "placeholder": "从模板开始",
+      "blank": "空白项目"
+    },
+    "summary": {
+      "states": "{count} 个状态",
+      "labels": "{count} 个标签",
+      "modules": "{count} 个模块",
+      "workflow_rules": "{count} 条工作流规则",
+      "custom_properties": "{count} 个自定义属性",
+      "work_items": "{count} 个工作项"
+    },
+    "save_modal": {
+      "title": "将项目保存为模板",
+      "project": "项目",
+      "project_placeholder": "选择你管理的项目",
+      "name": "模板名称",
+      "name_placeholder": "例如：房地产项目",
+      "description": "描述",
+      "description_placeholder": "何时应使用此模板？",
+      "include_work_items": "包含工作项",
+      "include_work_items_hint": "将当前工作项（名称、描述、优先级、状态、标签、模块）复制为初始工作项。不复制人员和日期。",
+      "submit": "保存模板"
+    },
+    "delete_modal": {
+      "title": "删除模板",
+      "content": "删除模板“{name}”？已由其创建的项目不受影响。"
+    },
+    "toast": {
+      "saved": "模板已保存。",
+      "save_failed": "无法保存模板。",
+      "delete_failed": "无法删除模板。"
+    }
   }
 }

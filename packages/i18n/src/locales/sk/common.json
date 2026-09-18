@@ -894,5 +894,48 @@
     "review_failed": "Tento worklog nie je možné posúdiť.",
     "load_failed": "Worklogy sa nepodarilo načítať.",
     "save_failed": "Schvaľovateľov sa nepodarilo uložiť."
+  },
+  "project_templates": {
+    "page_description": "Uložte stavy, štítky, moduly, pravidlá workflow a úvodné pracovné položky projektu a použite ich pri zakladaní nových projektov.",
+    "empty": "Zatiaľ žiadne šablóny projektov. Uložte existujúci projekt ako šablónu.",
+    "used_count": "Použité {count}×",
+    "actions": {
+      "new_from_project": "Nová z projektu",
+      "save_as_template": "Uložiť ako šablónu",
+      "save_as_template_description": "Uložiť nastavenie tohto projektu (stavy, štítky, moduly, pravidlá workflow, voliteľne pracovné položky) ako šablónu pracovného priestoru."
+    },
+    "picker": {
+      "placeholder": "Začať zo šablóny",
+      "blank": "Prázdny projekt"
+    },
+    "summary": {
+      "states": "{count} stavov",
+      "labels": "{count} štítkov",
+      "modules": "{count} modulov",
+      "workflow_rules": "{count} pravidiel workflow",
+      "custom_properties": "{count} vlastných vlastností",
+      "work_items": "{count} pracovných položiek"
+    },
+    "save_modal": {
+      "title": "Uložiť projekt ako šablónu",
+      "project": "Projekt",
+      "project_placeholder": "Vyberte projekt, ktorý spravujete",
+      "name": "Názov šablóny",
+      "name_placeholder": "napr. Realitný projekt",
+      "description": "Popis",
+      "description_placeholder": "Kedy sa má táto šablóna použiť?",
+      "include_work_items": "Zahrnúť pracovné položky",
+      "include_work_items_hint": "Skopíruje aktuálne pracovné položky (názov, popis, priorita, stav, štítky, moduly) ako úvodné. Ľudia a dátumy sa nekopírujú.",
+      "submit": "Uložiť šablónu"
+    },
+    "delete_modal": {
+      "title": "Odstrániť šablónu",
+      "content": "Odstrániť šablónu „{name}“? Projekty z nej už vytvorené nie sú ovplyvnené."
+    },
+    "toast": {
+      "saved": "Šablóna uložená.",
+      "save_failed": "Šablónu sa nepodarilo uložiť.",
+      "delete_failed": "Šablónu sa nepodarilo odstrániť."
+    }
   }
 }

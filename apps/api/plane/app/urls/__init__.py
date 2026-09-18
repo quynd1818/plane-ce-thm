@@ -24,6 +24,7 @@ from .timezone import urlpatterns as timezone_urls
 from .exporter import urlpatterns as exporter_urls
 from .phase3 import urlpatterns as phase3_urls
 from .workflow import urlpatterns as workflow_urls
+from .project_template import urlpatterns as project_template_urls
 
 urlpatterns = [
     *analytic_urls,
@@ -48,4 +49,5 @@ urlpatterns = [
     *exporter_urls,
     *phase3_urls,
     *workflow_urls,
+    *project_template_urls,
 ]

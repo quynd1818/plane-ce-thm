@@ -22,6 +22,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane web types
 import type { TProject } from "@plane/types";
 import { ProjectAttributes } from "./attributes";
+import { ProjectTemplateSelect } from "./template-select";
 import { getProjectFormValues } from "./utils";
 
 export type TCreateProjectFormProps = {
@@ -185,6 +186,8 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
             setShouldAutoSyncIdentifier={setShouldAutoSyncIdentifier}
           />
           <ProjectAttributes isMobile={isMobile} />
+          {/* THM: start from a workspace project template */}
+          <ProjectTemplateSelect workspaceSlug={workspaceSlug.toString()} />
         </div>
         <ProjectCreateButtons handleClose={handleClose} />
       </form>

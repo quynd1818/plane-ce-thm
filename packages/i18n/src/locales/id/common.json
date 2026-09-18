@@ -894,5 +894,48 @@
     "review_failed": "Tidak dapat meninjau worklog ini.",
     "load_failed": "Tidak dapat memuat worklog.",
     "save_failed": "Tidak dapat menyimpan penyetuju."
+  },
+  "project_templates": {
+    "page_description": "Simpan status, label, modul, aturan alur kerja, dan item kerja awal dari sebuah proyek untuk digunakan kembali saat membuat proyek baru.",
+    "empty": "Belum ada template proyek. Simpan proyek yang ada sebagai template untuk memulai.",
+    "used_count": "Digunakan {count} kali",
+    "actions": {
+      "new_from_project": "Baru dari proyek",
+      "save_as_template": "Simpan sebagai template",
+      "save_as_template_description": "Simpan pengaturan proyek ini (status, label, modul, aturan alur kerja, opsional item kerja) sebagai template workspace."
+    },
+    "picker": {
+      "placeholder": "Mulai dari template",
+      "blank": "Proyek kosong"
+    },
+    "summary": {
+      "states": "{count} status",
+      "labels": "{count} label",
+      "modules": "{count} modul",
+      "workflow_rules": "{count} aturan alur kerja",
+      "custom_properties": "{count} properti kustom",
+      "work_items": "{count} item kerja"
+    },
+    "save_modal": {
+      "title": "Simpan proyek sebagai template",
+      "project": "Proyek",
+      "project_placeholder": "Pilih proyek yang Anda kelola",
+      "name": "Nama template",
+      "name_placeholder": "mis. Proyek properti",
+      "description": "Deskripsi",
+      "description_placeholder": "Kapan template ini sebaiknya digunakan?",
+      "include_work_items": "Sertakan item kerja",
+      "include_work_items_hint": "Menyalin item kerja saat ini (nama, deskripsi, prioritas, status, label, modul) sebagai item awal. Orang dan tanggal tidak disalin.",
+      "submit": "Simpan template"
+    },
+    "delete_modal": {
+      "title": "Hapus template",
+      "content": "Hapus template \"{name}\"? Proyek yang sudah dibuat darinya tidak terpengaruh."
+    },
+    "toast": {
+      "saved": "Template disimpan.",
+      "save_failed": "Tidak dapat menyimpan template.",
+      "delete_failed": "Tidak dapat menghapus template."
+    }
   }
 }

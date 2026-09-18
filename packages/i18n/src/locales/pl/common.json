@@ -894,5 +894,48 @@
     "review_failed": "Nie można ocenić tego workloga.",
     "load_failed": "Nie można wczytać worklogów.",
     "save_failed": "Nie można zapisać zatwierdzających."
+  },
+  "project_templates": {
+    "page_description": "Zapisz statusy, etykiety, moduły, reguły workflow i startowe elementy pracy projektu, aby użyć ich ponownie przy tworzeniu nowych projektów.",
+    "empty": "Brak szablonów projektów. Zapisz istniejący projekt jako szablon, aby zacząć.",
+    "used_count": "Użyto {count} razy",
+    "actions": {
+      "new_from_project": "Nowy z projektu",
+      "save_as_template": "Zapisz jako szablon",
+      "save_as_template_description": "Zapisz konfigurację tego projektu (statusy, etykiety, moduły, reguły workflow, opcjonalnie elementy pracy) jako szablon przestrzeni roboczej."
+    },
+    "picker": {
+      "placeholder": "Zacznij od szablonu",
+      "blank": "Pusty projekt"
+    },
+    "summary": {
+      "states": "{count} statusów",
+      "labels": "{count} etykiet",
+      "modules": "{count} modułów",
+      "workflow_rules": "{count} reguł workflow",
+      "custom_properties": "{count} właściwości niestandardowych",
+      "work_items": "{count} elementów pracy"
+    },
+    "save_modal": {
+      "title": "Zapisz projekt jako szablon",
+      "project": "Projekt",
+      "project_placeholder": "Wybierz projekt, którym zarządzasz",
+      "name": "Nazwa szablonu",
+      "name_placeholder": "np. Projekt nieruchomości",
+      "description": "Opis",
+      "description_placeholder": "Kiedy używać tego szablonu?",
+      "include_work_items": "Dołącz elementy pracy",
+      "include_work_items_hint": "Kopiuje bieżące elementy pracy (nazwa, opis, priorytet, status, etykiety, moduły) jako startowe. Osoby i daty nie są kopiowane.",
+      "submit": "Zapisz szablon"
+    },
+    "delete_modal": {
+      "title": "Usuń szablon",
+      "content": "Usunąć szablon „{name}”? Projekty już z niego utworzone nie zostaną zmienione."
+    },
+    "toast": {
+      "saved": "Szablon zapisany.",
+      "save_failed": "Nie można zapisać szablonu.",
+      "delete_failed": "Nie można usunąć szablonu."
+    }
   }
 }

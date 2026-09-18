@@ -17,6 +17,8 @@ import { useProject } from "@/hooks/store/use-project";
 // local imports
 import { ArchiveRestoreProjectModal } from "../archive-restore-modal";
 import { DeleteProjectModal } from "../delete-project-modal";
+// THM
+import { SaveProjectAsTemplateModal } from "@/components/project/save-as-template-modal";
 
 type Props = {
   projectId: string;
@@ -29,6 +31,7 @@ export const GeneralProjectSettingsControlSection = observer(function GeneralPro
   // states
   const [selectProject, setSelectedProject] = useState<string | null>(null);
   const [archiveProject, setArchiveProject] = useState<boolean>(false);
+  const [saveAsTemplate, setSaveAsTemplate] = useState<boolean>(false);
   // params
   const { workspaceSlug } = useParams();
   // store hooks
@@ -54,7 +57,26 @@ export const GeneralProjectSettingsControlSection = observer(function GeneralPro
         isOpen={Boolean(selectProject)}
         onClose={() => setSelectedProject(null)}
       />
+      {workspaceSlug && (
+        <SaveProjectAsTemplateModal
+          isOpen={saveAsTemplate}
+          workspaceSlug={workspaceSlug}
+          projectId={projectId}
+          onClose={() => setSaveAsTemplate(false)}
+        />
+      )}
       <div className="rounded-lg border border-subtle bg-layer-2">
+        {/* THM: save as template */}
+        <SettingsBoxedControlItem
+          className="rounded-b-none border-0 border-b"
+          title={t("project_templates.actions.save_as_template")}
+          description={t("project_templates.actions.save_as_template_description")}
+          control={
+            <Button variant="secondary" onClick={() => setSaveAsTemplate(true)}>
+              {t("project_templates.actions.save_as_template")}
+            </Button>
+          }
+        />
         {/* Project Selector */}
         <SettingsBoxedControlItem
           className="rounded-b-none border-0 border-b"

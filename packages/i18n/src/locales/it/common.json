@@ -894,5 +894,48 @@
     "review_failed": "Impossibile revisionare questo worklog.",
     "load_failed": "Impossibile caricare i worklog.",
     "save_failed": "Impossibile salvare gli approvatori."
+  },
+  "project_templates": {
+    "page_description": "Acquisisci stati, etichette, moduli, regole di workflow ed elementi di lavoro iniziali di un progetto per riutilizzarli nella creazione di nuovi progetti.",
+    "empty": "Nessun modello di progetto. Salva un progetto esistente come modello per iniziare.",
+    "used_count": "Usato {count} volte",
+    "actions": {
+      "new_from_project": "Nuovo da progetto",
+      "save_as_template": "Salva come modello",
+      "save_as_template_description": "Salva la configurazione di questo progetto (stati, etichette, moduli, regole di workflow, facoltativamente elementi di lavoro) come modello dello spazio di lavoro."
+    },
+    "picker": {
+      "placeholder": "Inizia da un modello",
+      "blank": "Progetto vuoto"
+    },
+    "summary": {
+      "states": "{count} stati",
+      "labels": "{count} etichette",
+      "modules": "{count} moduli",
+      "workflow_rules": "{count} regole di workflow",
+      "custom_properties": "{count} proprietà personalizzate",
+      "work_items": "{count} elementi di lavoro"
+    },
+    "save_modal": {
+      "title": "Salva progetto come modello",
+      "project": "Progetto",
+      "project_placeholder": "Scegli un progetto che amministri",
+      "name": "Nome del modello",
+      "name_placeholder": "es. Progetto immobiliare",
+      "description": "Descrizione",
+      "description_placeholder": "Quando usare questo modello?",
+      "include_work_items": "Includi elementi di lavoro",
+      "include_work_items_hint": "Copia gli elementi di lavoro attuali (nome, descrizione, priorità, stato, etichette, moduli) come elementi iniziali. Persone e date non vengono copiate.",
+      "submit": "Salva modello"
+    },
+    "delete_modal": {
+      "title": "Elimina modello",
+      "content": "Eliminare il modello \"{name}\"? I progetti già creati da esso non sono interessati."
+    },
+    "toast": {
+      "saved": "Modello salvato.",
+      "save_failed": "Impossibile salvare il modello.",
+      "delete_failed": "Impossibile eliminare il modello."
+    }
   }
 }

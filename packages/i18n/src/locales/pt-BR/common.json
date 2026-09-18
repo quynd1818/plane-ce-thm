@@ -894,5 +894,48 @@
     "review_failed": "Não foi possível revisar este worklog.",
     "load_failed": "Não foi possível carregar os worklogs.",
     "save_failed": "Não foi possível salvar os aprovadores."
+  },
+  "project_templates": {
+    "page_description": "Capture os estados, rótulos, módulos, regras de fluxo de trabalho e itens de trabalho iniciais de um projeto para reutilizá-los ao criar novos projetos.",
+    "empty": "Ainda não há modelos de projeto. Salve um projeto existente como modelo para começar.",
+    "used_count": "Usado {count} vezes",
+    "actions": {
+      "new_from_project": "Novo a partir de projeto",
+      "save_as_template": "Salvar como modelo",
+      "save_as_template_description": "Salva a configuração deste projeto (estados, rótulos, módulos, regras de fluxo de trabalho e, opcionalmente, itens de trabalho) como modelo do workspace."
+    },
+    "picker": {
+      "placeholder": "Começar de um modelo",
+      "blank": "Projeto em branco"
+    },
+    "summary": {
+      "states": "{count} estados",
+      "labels": "{count} rótulos",
+      "modules": "{count} módulos",
+      "workflow_rules": "{count} regras de fluxo de trabalho",
+      "custom_properties": "{count} propriedades personalizadas",
+      "work_items": "{count} itens de trabalho"
+    },
+    "save_modal": {
+      "title": "Salvar projeto como modelo",
+      "project": "Projeto",
+      "project_placeholder": "Escolha um projeto que você administra",
+      "name": "Nome do modelo",
+      "name_placeholder": "ex.: Projeto imobiliário",
+      "description": "Descrição",
+      "description_placeholder": "Quando este modelo deve ser usado?",
+      "include_work_items": "Incluir itens de trabalho",
+      "include_work_items_hint": "Copia os itens de trabalho atuais (nome, descrição, prioridade, estado, rótulos, módulos) como itens iniciais. Pessoas e datas não são copiadas.",
+      "submit": "Salvar modelo"
+    },
+    "delete_modal": {
+      "title": "Excluir modelo",
+      "content": "Excluir o modelo \"{name}\"? Projetos já criados a partir dele não são afetados."
+    },
+    "toast": {
+      "saved": "Modelo salvo.",
+      "save_failed": "Não foi possível salvar o modelo.",
+      "delete_failed": "Não foi possível excluir o modelo."
+    }
   }
 }

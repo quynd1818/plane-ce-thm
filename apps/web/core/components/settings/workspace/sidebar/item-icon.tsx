@@ -8,6 +8,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BillingsOutline,
   BuildingOutline,
+  TemplatesOutline,
   ExportOutline,
   MembersOutline,
   WebhooksOutline,
@@ -21,5 +22,6 @@ export const WORKSPACE_SETTINGS_ICONS: Record<TWorkspaceSettingsTabs, LucideIcon
   members: MembersOutline,
   export: ExportOutline,
   "billing-and-plans": BillingsOutline,
+  templates: TemplatesOutline,
   webhooks: WebhooksOutline,
 };

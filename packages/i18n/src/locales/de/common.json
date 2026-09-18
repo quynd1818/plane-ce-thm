@@ -894,5 +894,48 @@
     "review_failed": "Worklog konnte nicht geprüft werden.",
     "load_failed": "Worklogs konnten nicht geladen werden.",
     "save_failed": "Freigeber konnten nicht gespeichert werden."
+  },
+  "project_templates": {
+    "page_description": "Status, Labels, Module, Workflow-Regeln und Start-Arbeitselemente eines Projekts erfassen und beim Anlegen neuer Projekte wiederverwenden.",
+    "empty": "Noch keine Projektvorlagen. Speichern Sie ein bestehendes Projekt als Vorlage.",
+    "used_count": "{count}-mal verwendet",
+    "actions": {
+      "new_from_project": "Neu aus Projekt",
+      "save_as_template": "Als Vorlage speichern",
+      "save_as_template_description": "Die Einrichtung dieses Projekts (Status, Labels, Module, Workflow-Regeln, optional Arbeitselemente) als Workspace-Vorlage speichern."
+    },
+    "picker": {
+      "placeholder": "Aus Vorlage starten",
+      "blank": "Leeres Projekt"
+    },
+    "summary": {
+      "states": "{count} Status",
+      "labels": "{count} Labels",
+      "modules": "{count} Module",
+      "workflow_rules": "{count} Workflow-Regeln",
+      "custom_properties": "{count} benutzerdefinierte Eigenschaften",
+      "work_items": "{count} Arbeitselemente"
+    },
+    "save_modal": {
+      "title": "Projekt als Vorlage speichern",
+      "project": "Projekt",
+      "project_placeholder": "Ein Projekt wählen, das Sie verwalten",
+      "name": "Vorlagenname",
+      "name_placeholder": "z. B. Immobilienprojekt",
+      "description": "Beschreibung",
+      "description_placeholder": "Wann sollte diese Vorlage verwendet werden?",
+      "include_work_items": "Arbeitselemente einschließen",
+      "include_work_items_hint": "Kopiert die aktuellen Arbeitselemente (Name, Beschreibung, Priorität, Status, Labels, Module) als Startelemente. Personen und Termine werden nicht kopiert.",
+      "submit": "Vorlage speichern"
+    },
+    "delete_modal": {
+      "title": "Vorlage löschen",
+      "content": "Vorlage „{name}“ löschen? Bereits daraus erstellte Projekte sind nicht betroffen."
+    },
+    "toast": {
+      "saved": "Vorlage gespeichert.",
+      "save_failed": "Vorlage konnte nicht gespeichert werden.",
+      "delete_failed": "Vorlage konnte nicht gelöscht werden."
+    }
   }
 }

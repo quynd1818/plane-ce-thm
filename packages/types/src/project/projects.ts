@@ -49,6 +49,8 @@ export interface IPartialProject {
 
 export interface IProject extends IPartialProject {
   archive_in?: number;
+  // THM: only on create — project template to apply
+  template_id?: string | null;
   close_in?: number;
   // only for uploading the cover image
   cover_image_asset?: null;
@@ -181,3 +183,32 @@ export interface ISearchIssueResponse {
 export type TPartialProject = IPartialProject;
 
 export type TProject = TPartialProject & IProject;
+
+// THM project templates
+export type TProjectTemplateSummary = {
+  states: number;
+  labels: number;
+  modules: number;
+  workflow_rules: number;
+  custom_properties: number;
+  work_item_templates: number;
+  work_items: number;
+};
+
+export type TProjectTemplateLite = {
+  id: string;
+  name: string;
+  description: string;
+  usage_count: number;
+  summary: TProjectTemplateSummary;
+};
+
+export type TProjectTemplate = TProjectTemplateLite & {
+  workspace: string;
+  template_data: Record<string, unknown>;
+  source_project: string | null;
+  owner: string | null;
+  owner_detail?: { id: string; display_name?: string; email?: string } | null;
+  created_at: string;
+  updated_at: string;
+};

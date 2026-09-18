@@ -894,5 +894,48 @@
     "review_failed": "Unable to review this worklog.",
     "load_failed": "Unable to load worklogs.",
     "save_failed": "Unable to save approvers."
+  },
+  "project_templates": {
+    "page_description": "Capture a project's states, labels, modules, workflow rules and starter work items, then reuse them when creating new projects.",
+    "empty": "No project templates yet. Save an existing project as a template to get started.",
+    "used_count": "Used {count} times",
+    "actions": {
+      "new_from_project": "New from project",
+      "save_as_template": "Save as template",
+      "save_as_template_description": "Capture this project's set-up (states, labels, modules, workflow rules, optionally work items) as a workspace template."
+    },
+    "picker": {
+      "placeholder": "Start from template",
+      "blank": "Blank project"
+    },
+    "summary": {
+      "states": "{count} states",
+      "labels": "{count} labels",
+      "modules": "{count} modules",
+      "workflow_rules": "{count} workflow rules",
+      "custom_properties": "{count} custom properties",
+      "work_items": "{count} work items"
+    },
+    "save_modal": {
+      "title": "Save project as template",
+      "project": "Project",
+      "project_placeholder": "Choose a project you administer",
+      "name": "Template name",
+      "name_placeholder": "e.g. Real-estate project",
+      "description": "Description",
+      "description_placeholder": "When should this template be used?",
+      "include_work_items": "Include work items",
+      "include_work_items_hint": "Copies the current work items (name, description, priority, state, labels, modules) as starter items. People and dates are not copied.",
+      "submit": "Save template"
+    },
+    "delete_modal": {
+      "title": "Delete template",
+      "content": "Delete template \"{name}\"? Projects already created from it are not affected."
+    },
+    "toast": {
+      "saved": "Template saved.",
+      "save_failed": "Unable to save the template.",
+      "delete_failed": "Unable to delete the template."
+    }
   }
 }

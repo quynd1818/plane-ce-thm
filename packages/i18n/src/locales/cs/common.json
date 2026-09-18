@@ -894,5 +894,48 @@
     "review_failed": "Tento worklog nelze posoudit.",
     "load_failed": "Worklogy nelze načíst.",
     "save_failed": "Schvalovatele nelze uložit."
+  },
+  "project_templates": {
+    "page_description": "Uložte stavy, štítky, moduly, pravidla workflow a výchozí pracovní položky projektu a použijte je při zakládání nových projektů.",
+    "empty": "Zatím žádné šablony projektů. Uložte existující projekt jako šablonu.",
+    "used_count": "Použito {count}×",
+    "actions": {
+      "new_from_project": "Nová z projektu",
+      "save_as_template": "Uložit jako šablonu",
+      "save_as_template_description": "Uložit nastavení tohoto projektu (stavy, štítky, moduly, pravidla workflow, volitelně pracovní položky) jako šablonu pracovního prostoru."
+    },
+    "picker": {
+      "placeholder": "Začít ze šablony",
+      "blank": "Prázdný projekt"
+    },
+    "summary": {
+      "states": "{count} stavů",
+      "labels": "{count} štítků",
+      "modules": "{count} modulů",
+      "workflow_rules": "{count} pravidel workflow",
+      "custom_properties": "{count} vlastních vlastností",
+      "work_items": "{count} pracovních položek"
+    },
+    "save_modal": {
+      "title": "Uložit projekt jako šablonu",
+      "project": "Projekt",
+      "project_placeholder": "Vyberte projekt, který spravujete",
+      "name": "Název šablony",
+      "name_placeholder": "např. Realitní projekt",
+      "description": "Popis",
+      "description_placeholder": "Kdy se má tato šablona použít?",
+      "include_work_items": "Zahrnout pracovní položky",
+      "include_work_items_hint": "Zkopíruje aktuální pracovní položky (název, popis, priorita, stav, štítky, moduly) jako výchozí. Lidé a data se nekopírují.",
+      "submit": "Uložit šablonu"
+    },
+    "delete_modal": {
+      "title": "Smazat šablonu",
+      "content": "Smazat šablonu „{name}“? Projekty z ní již vytvořené nejsou ovlivněny."
+    },
+    "toast": {
+      "saved": "Šablona uložena.",
+      "save_failed": "Šablonu se nepodařilo uložit.",
+      "delete_failed": "Šablonu se nepodařilo smazat."
+    }
   }
 }

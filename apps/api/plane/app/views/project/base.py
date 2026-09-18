@@ -32,6 +32,7 @@ from plane.db.models import (
     Project,
     ProjectIdentifier,
     ProjectMember,
+    ProjectTemplate,
     ProjectNetwork,
     ProjectUserProperty,
     State,
@@ -41,6 +42,7 @@ from plane.db.models import (
 )
 from plane.db.models.intake import IntakeIssueStatus
 from plane.utils.host import base_host
+from plane.utils.project_template import apply_template
 from plane.utils.order_queryset import PROJECT_ORDER_BY_ALLOWLIST, sanitize_order_by
 
 
@@ -258,7 +260,16 @@ class ProjectViewSet(BaseViewSet):
     def create(self, request, slug):
         workspace = Workspace.objects.get(slug=slug)
 
-        serializer = ProjectSerializer(data={**request.data}, context={"workspace_id": workspace.id})
+        # THM: optional project template to apply after creation
+        payload = {**request.data}
+        template_id = payload.pop("template_id", None) or None
+        template = None
+        if template_id:
+            template = ProjectTemplate.objects.filter(pk=template_id, workspace=workspace).first()
+            if template is None:
+                return Response({"template_id": ["Template not found."]}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ProjectSerializer(data=payload, context={"workspace_id": workspace.id})
         if serializer.is_valid():
             serializer.save()
 
@@ -293,6 +304,10 @@ class ProjectViewSet(BaseViewSet):
                     for state in DEFAULT_STATES
                 ]
             )
+
+            if template is not None:
+                apply_template(serializer.instance, template.template_data, request.user)
+                ProjectTemplate.objects.filter(pk=template.pk).update(usage_count=F("usage_count") + 1)
 
             project = self.get_queryset().filter(pk=serializer.data["id"]).first()
 

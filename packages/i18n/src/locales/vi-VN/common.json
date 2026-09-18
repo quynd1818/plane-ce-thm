@@ -894,5 +894,48 @@
     "review_failed": "Không thể duyệt worklog này.",
     "load_failed": "Không thể tải worklog.",
     "save_failed": "Không thể lưu danh sách người duyệt."
+  },
+  "project_templates": {
+    "page_description": "Lưu lại trạng thái, nhãn, module, quy tắc quy trình và các mục công việc khởi tạo của một dự án để dùng lại khi tạo dự án mới.",
+    "empty": "Chưa có mẫu dự án nào. Hãy lưu một dự án hiện có làm mẫu để bắt đầu.",
+    "used_count": "Đã dùng {count} lần",
+    "actions": {
+      "new_from_project": "Tạo từ dự án",
+      "save_as_template": "Lưu làm mẫu",
+      "save_as_template_description": "Lưu cấu hình của dự án này (trạng thái, nhãn, module, quy tắc quy trình, tuỳ chọn cả mục công việc) thành mẫu dùng chung trong workspace."
+    },
+    "picker": {
+      "placeholder": "Tạo từ mẫu",
+      "blank": "Dự án trống"
+    },
+    "summary": {
+      "states": "{count} trạng thái",
+      "labels": "{count} nhãn",
+      "modules": "{count} module",
+      "workflow_rules": "{count} quy tắc quy trình",
+      "custom_properties": "{count} thuộc tính tuỳ chỉnh",
+      "work_items": "{count} mục công việc"
+    },
+    "save_modal": {
+      "title": "Lưu dự án làm mẫu",
+      "project": "Dự án",
+      "project_placeholder": "Chọn dự án bạn quản trị",
+      "name": "Tên mẫu",
+      "name_placeholder": "VD: Dự án bất động sản",
+      "description": "Mô tả",
+      "description_placeholder": "Khi nào nên dùng mẫu này?",
+      "include_work_items": "Kèm mục công việc",
+      "include_work_items_hint": "Sao chép các mục công việc hiện có (tên, mô tả, độ ưu tiên, trạng thái, nhãn, module) làm mục khởi tạo. Không sao chép người và ngày.",
+      "submit": "Lưu mẫu"
+    },
+    "delete_modal": {
+      "title": "Xoá mẫu",
+      "content": "Xoá mẫu \"{name}\"? Các dự án đã tạo từ mẫu này không bị ảnh hưởng."
+    },
+    "toast": {
+      "saved": "Đã lưu mẫu.",
+      "save_failed": "Không thể lưu mẫu.",
+      "delete_failed": "Không thể xoá mẫu."
+    }
   }
 }

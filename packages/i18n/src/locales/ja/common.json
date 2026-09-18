@@ -894,5 +894,48 @@
     "review_failed": "この作業ログを審査できませんでした。",
     "load_failed": "作業ログを読み込めませんでした。",
     "save_failed": "承認者を保存できませんでした。"
+  },
+  "project_templates": {
+    "page_description": "プロジェクトのステータス、ラベル、モジュール、ワークフロールール、初期作業項目を保存し、新しいプロジェクト作成時に再利用します。",
+    "empty": "プロジェクトテンプレートはまだありません。既存のプロジェクトをテンプレートとして保存してください。",
+    "used_count": "{count} 回使用",
+    "actions": {
+      "new_from_project": "プロジェクトから作成",
+      "save_as_template": "テンプレートとして保存",
+      "save_as_template_description": "このプロジェクトの設定（ステータス、ラベル、モジュール、ワークフロールール、任意で作業項目）をワークスペースのテンプレートとして保存します。"
+    },
+    "picker": {
+      "placeholder": "テンプレートから開始",
+      "blank": "空のプロジェクト"
+    },
+    "summary": {
+      "states": "{count} ステータス",
+      "labels": "{count} ラベル",
+      "modules": "{count} モジュール",
+      "workflow_rules": "{count} ワークフロールール",
+      "custom_properties": "{count} カスタムプロパティ",
+      "work_items": "{count} 作業項目"
+    },
+    "save_modal": {
+      "title": "プロジェクトをテンプレートとして保存",
+      "project": "プロジェクト",
+      "project_placeholder": "管理しているプロジェクトを選択",
+      "name": "テンプレート名",
+      "name_placeholder": "例：不動産プロジェクト",
+      "description": "説明",
+      "description_placeholder": "このテンプレートはいつ使用しますか？",
+      "include_work_items": "作業項目を含める",
+      "include_work_items_hint": "現在の作業項目（名前、説明、優先度、ステータス、ラベル、モジュール）を初期項目としてコピーします。担当者と日付はコピーされません。",
+      "submit": "テンプレートを保存"
+    },
+    "delete_modal": {
+      "title": "テンプレートを削除",
+      "content": "テンプレート「{name}」を削除しますか？作成済みのプロジェクトには影響しません。"
+    },
+    "toast": {
+      "saved": "テンプレートを保存しました。",
+      "save_failed": "テンプレートを保存できませんでした。",
+      "delete_failed": "テンプレートを削除できませんでした。"
+    }
   }
 }

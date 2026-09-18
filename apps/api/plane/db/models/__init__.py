@@ -92,5 +92,6 @@ from .worklog import WorkLog
 from .customization import ProjectCustomProperty, WorkItemTemplate
 from .phase3 import IntakeForm, RecurringIssue
 from .workflow import WorkflowTransitionRule
+from .project_template import ProjectTemplate
 
 from .description import Description, DescriptionVersion

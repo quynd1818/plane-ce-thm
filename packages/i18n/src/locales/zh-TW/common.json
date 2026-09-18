@@ -894,5 +894,48 @@
     "review_failed": "無法審核此工時紀錄。",
     "load_failed": "無法載入工時紀錄。",
     "save_failed": "無法儲存審核人。"
+  },
+  "project_templates": {
+    "page_description": "保存專案的狀態、標籤、模組、工作流程規則和初始工作項目，建立新專案時重複使用。",
+    "empty": "尚無專案範本。將現有專案儲存為範本即可開始。",
+    "used_count": "已使用 {count} 次",
+    "actions": {
+      "new_from_project": "從專案新建",
+      "save_as_template": "儲存為範本",
+      "save_as_template_description": "將此專案的設定（狀態、標籤、模組、工作流程規則，可選工作項目）儲存為工作區範本。"
+    },
+    "picker": {
+      "placeholder": "從範本開始",
+      "blank": "空白專案"
+    },
+    "summary": {
+      "states": "{count} 個狀態",
+      "labels": "{count} 個標籤",
+      "modules": "{count} 個模組",
+      "workflow_rules": "{count} 條工作流程規則",
+      "custom_properties": "{count} 個自訂屬性",
+      "work_items": "{count} 個工作項目"
+    },
+    "save_modal": {
+      "title": "將專案儲存為範本",
+      "project": "專案",
+      "project_placeholder": "選擇你管理的專案",
+      "name": "範本名稱",
+      "name_placeholder": "例如：房地產專案",
+      "description": "描述",
+      "description_placeholder": "何時應使用此範本？",
+      "include_work_items": "包含工作項目",
+      "include_work_items_hint": "將目前的工作項目（名稱、描述、優先順序、狀態、標籤、模組）複製為初始項目。不會複製人員和日期。",
+      "submit": "儲存範本"
+    },
+    "delete_modal": {
+      "title": "刪除範本",
+      "content": "刪除範本「{name}」？已由其建立的專案不受影響。"
+    },
+    "toast": {
+      "saved": "範本已儲存。",
+      "save_failed": "無法儲存範本。",
+      "delete_failed": "無法刪除範本。"
+    }
   }
 }

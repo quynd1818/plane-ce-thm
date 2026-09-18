@@ -138,6 +138,11 @@ from .issue.worklog import (
     ProjectWorkLogSummaryEndpoint,
     WorkLogReviewEndpoint,
 )
+from .project.template import (
+    ProjectSaveAsTemplateEndpoint,
+    ProjectTemplateDetailEndpoint,
+    ProjectTemplateEndpoint,
+)
 from .project.customization import (
     ProjectCustomPropertyDetailEndpoint,
     ProjectCustomPropertyEndpoint,

@@ -894,5 +894,48 @@
     "review_failed": "Bu çalışma kaydı incelenemedi.",
     "load_failed": "Çalışma kayıtları yüklenemedi.",
     "save_failed": "Onaylayıcılar kaydedilemedi."
+  },
+  "project_templates": {
+    "page_description": "Bir projenin durumlarını, etiketlerini, modüllerini, iş akışı kurallarını ve başlangıç iş öğelerini kaydedin; yeni proje oluştururken yeniden kullanın.",
+    "empty": "Henüz proje şablonu yok. Başlamak için mevcut bir projeyi şablon olarak kaydedin.",
+    "used_count": "{count} kez kullanıldı",
+    "actions": {
+      "new_from_project": "Projeden yeni",
+      "save_as_template": "Şablon olarak kaydet",
+      "save_as_template_description": "Bu projenin kurulumunu (durumlar, etiketler, modüller, iş akışı kuralları, isteğe bağlı iş öğeleri) çalışma alanı şablonu olarak kaydedin."
+    },
+    "picker": {
+      "placeholder": "Şablondan başla",
+      "blank": "Boş proje"
+    },
+    "summary": {
+      "states": "{count} durum",
+      "labels": "{count} etiket",
+      "modules": "{count} modül",
+      "workflow_rules": "{count} iş akışı kuralı",
+      "custom_properties": "{count} özel özellik",
+      "work_items": "{count} iş öğesi"
+    },
+    "save_modal": {
+      "title": "Projeyi şablon olarak kaydet",
+      "project": "Proje",
+      "project_placeholder": "Yönettiğiniz bir proje seçin",
+      "name": "Şablon adı",
+      "name_placeholder": "örn. Gayrimenkul projesi",
+      "description": "Açıklama",
+      "description_placeholder": "Bu şablon ne zaman kullanılmalı?",
+      "include_work_items": "İş öğelerini dahil et",
+      "include_work_items_hint": "Mevcut iş öğelerini (ad, açıklama, öncelik, durum, etiketler, modüller) başlangıç öğeleri olarak kopyalar. Kişiler ve tarihler kopyalanmaz.",
+      "submit": "Şablonu kaydet"
+    },
+    "delete_modal": {
+      "title": "Şablonu sil",
+      "content": "\"{name}\" şablonu silinsin mi? Ondan oluşturulmuş projeler etkilenmez."
+    },
+    "toast": {
+      "saved": "Şablon kaydedildi.",
+      "save_failed": "Şablon kaydedilemedi.",
+      "delete_failed": "Şablon silinemedi."
+    }
   }
 }

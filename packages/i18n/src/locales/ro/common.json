@@ -894,5 +894,48 @@
     "review_failed": "Acest worklog nu a putut fi evaluat.",
     "load_failed": "Worklogurile nu au putut fi încărcate.",
     "save_failed": "Aprobatorii nu au putut fi salvați."
+  },
+  "project_templates": {
+    "page_description": "Salvează stările, etichetele, modulele, regulile de workflow și elementele de lucru inițiale ale unui proiect pentru a le reutiliza la crearea de proiecte noi.",
+    "empty": "Nu există încă șabloane de proiect. Salvează un proiect existent ca șablon pentru a începe.",
+    "used_count": "Folosit de {count} ori",
+    "actions": {
+      "new_from_project": "Nou din proiect",
+      "save_as_template": "Salvează ca șablon",
+      "save_as_template_description": "Salvează configurația acestui proiect (stări, etichete, module, reguli de workflow, opțional elemente de lucru) ca șablon al spațiului de lucru."
+    },
+    "picker": {
+      "placeholder": "Pornește de la șablon",
+      "blank": "Proiect gol"
+    },
+    "summary": {
+      "states": "{count} stări",
+      "labels": "{count} etichete",
+      "modules": "{count} module",
+      "workflow_rules": "{count} reguli de workflow",
+      "custom_properties": "{count} proprietăți personalizate",
+      "work_items": "{count} elemente de lucru"
+    },
+    "save_modal": {
+      "title": "Salvează proiectul ca șablon",
+      "project": "Proiect",
+      "project_placeholder": "Alege un proiect pe care îl administrezi",
+      "name": "Numele șablonului",
+      "name_placeholder": "ex. Proiect imobiliar",
+      "description": "Descriere",
+      "description_placeholder": "Când ar trebui folosit acest șablon?",
+      "include_work_items": "Include elementele de lucru",
+      "include_work_items_hint": "Copiază elementele de lucru curente (nume, descriere, prioritate, stare, etichete, module) ca elemente inițiale. Persoanele și datele nu sunt copiate.",
+      "submit": "Salvează șablonul"
+    },
+    "delete_modal": {
+      "title": "Șterge șablonul",
+      "content": "Ștergi șablonul „{name}”? Proiectele deja create din el nu sunt afectate."
+    },
+    "toast": {
+      "saved": "Șablon salvat.",
+      "save_failed": "Șablonul nu a putut fi salvat.",
+      "delete_failed": "Șablonul nu a putut fi șters."
+    }
   }
 }

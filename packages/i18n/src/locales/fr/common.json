@@ -894,5 +894,48 @@
     "review_failed": "Impossible de traiter ce worklog.",
     "load_failed": "Impossible de charger les worklogs.",
     "save_failed": "Impossible d'enregistrer les approbateurs."
+  },
+  "project_templates": {
+    "page_description": "Capturez les états, libellés, modules, règles de workflow et éléments de travail initiaux d'un projet pour les réutiliser lors de la création de nouveaux projets.",
+    "empty": "Aucun modèle de projet. Enregistrez un projet existant comme modèle pour commencer.",
+    "used_count": "Utilisé {count} fois",
+    "actions": {
+      "new_from_project": "Nouveau depuis un projet",
+      "save_as_template": "Enregistrer comme modèle",
+      "save_as_template_description": "Enregistrer la configuration de ce projet (états, libellés, modules, règles de workflow, éléments de travail en option) comme modèle d'espace de travail."
+    },
+    "picker": {
+      "placeholder": "Partir d'un modèle",
+      "blank": "Projet vierge"
+    },
+    "summary": {
+      "states": "{count} états",
+      "labels": "{count} libellés",
+      "modules": "{count} modules",
+      "workflow_rules": "{count} règles de workflow",
+      "custom_properties": "{count} propriétés personnalisées",
+      "work_items": "{count} éléments de travail"
+    },
+    "save_modal": {
+      "title": "Enregistrer le projet comme modèle",
+      "project": "Projet",
+      "project_placeholder": "Choisissez un projet que vous administrez",
+      "name": "Nom du modèle",
+      "name_placeholder": "ex. Projet immobilier",
+      "description": "Description",
+      "description_placeholder": "Quand utiliser ce modèle ?",
+      "include_work_items": "Inclure les éléments de travail",
+      "include_work_items_hint": "Copie les éléments de travail actuels (nom, description, priorité, état, libellés, modules) comme éléments initiaux. Les personnes et les dates ne sont pas copiées.",
+      "submit": "Enregistrer le modèle"
+    },
+    "delete_modal": {
+      "title": "Supprimer le modèle",
+      "content": "Supprimer le modèle « {name} » ? Les projets déjà créés à partir de celui-ci ne sont pas affectés."
+    },
+    "toast": {
+      "saved": "Modèle enregistré.",
+      "save_failed": "Impossible d'enregistrer le modèle.",
+      "delete_failed": "Impossible de supprimer le modèle."
+    }
   }
 }
