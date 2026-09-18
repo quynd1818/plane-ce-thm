@@ -230,6 +230,8 @@
   "intake_description": "Izinkan non-anggota membagikan bug, masukan, dan saran tanpa mengganggu alur kerja Anda.",
   "time_tracking_description": "Catat waktu yang dihabiskan untuk item kerja dan proyek.",
   "workflow_description": "Batasi siapa yang dapat memindahkan item kerja ke suatu status. Atur aturannya di Pengaturan → Alur kerja.",
+  "worklog_approval": "Persetujuan worklog",
+  "worklog_approval_description": "Worklog baru menunggu admin proyek atau penyetuju yang ditunjuk sebelum dihitung dalam laporan.",
   "work_management_description": "Kelola pekerjaan dan proyek Anda dengan mudah.",
   "documentation": "Dokumentasi",
   "message_support": "Pesan dukungan",
@@ -869,5 +871,28 @@
       "description": "Ekspor item kerja ke file JSON.",
       "short_description": "Ekspor sebagai json"
     }
+  },
+  "worklog_review": {
+    "page_description": "Tinjau, setujui, dan ekspor waktu yang dicatat di proyek ini.",
+    "approvers_title": "Penyetuju",
+    "approvers_description": "Admin proyek selalu dapat menyetujui. Tambahkan anggota lain yang boleh mengesahkan worklog.",
+    "pending_title": "Menunggu persetujuan",
+    "pending_empty": "Tidak ada yang menunggu persetujuan.",
+    "report_title": "Laporan",
+    "status_label": "Status",
+    "status": {
+      "submitted": "Menunggu",
+      "approved": "Disetujui",
+      "rejected": "Ditolak"
+    },
+    "actions": {
+      "approve": "Setujui",
+      "reject": "Tolak",
+      "reopen": "Buka kembali"
+    },
+    "reject_note_placeholder": "Alasan penolakan (wajib)",
+    "review_failed": "Tidak dapat meninjau worklog ini.",
+    "load_failed": "Tidak dapat memuat worklog.",
+    "save_failed": "Tidak dapat menyimpan penyetuju."
   }
 }

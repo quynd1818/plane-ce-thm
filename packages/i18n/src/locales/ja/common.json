@@ -230,6 +230,8 @@
   "intake_description": "非メンバーがバグ、フィードバック、提案を共有できるようにし、ワークフローを妨げないようにします。",
   "time_tracking_description": "作業項目やプロジェクトに費やした時間を記録します。",
   "workflow_description": "作業項目を特定のステータスへ移動できるユーザーを制限します。ルールは「設定 → ワークフロー」で設定します。",
+  "worklog_approval": "作業ログの承認",
+  "worklog_approval_description": "新しい作業ログは、プロジェクト管理者または指定された承認者が承認するまでレポートに集計されません。",
   "work_management_description": "作業とプロジェクトを簡単に管理します。",
   "documentation": "ドキュメント",
   "message_support": "サポートにメッセージ",
@@ -869,5 +871,28 @@
       "description": "作業項目をJSONファイルにエクスポートします。",
       "short_description": "JSONとしてエクスポート"
     }
+  },
+  "worklog_review": {
+    "page_description": "このプロジェクトで記録した時間を確認・承認・エクスポートします。",
+    "approvers_title": "承認者",
+    "approvers_description": "プロジェクト管理者は常に承認できます。作業ログを承認できる他のメンバーを追加してください。",
+    "pending_title": "承認待ち",
+    "pending_empty": "承認待ちの作業ログはありません。",
+    "report_title": "レポート",
+    "status_label": "ステータス",
+    "status": {
+      "submitted": "承認待ち",
+      "approved": "承認済み",
+      "rejected": "却下"
+    },
+    "actions": {
+      "approve": "承認",
+      "reject": "却下",
+      "reopen": "再オープン"
+    },
+    "reject_note_placeholder": "却下理由（必須）",
+    "review_failed": "この作業ログを審査できませんでした。",
+    "load_failed": "作業ログを読み込めませんでした。",
+    "save_failed": "承認者を保存できませんでした。"
   }
 }

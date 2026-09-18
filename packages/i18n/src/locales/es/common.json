@@ -230,6 +230,8 @@
   "intake_description": "Permite que personas ajenas al equipo compartan errores, comentarios y sugerencias sin interrumpir tu flujo de trabajo.",
   "time_tracking_description": "Registra el tiempo dedicado a elementos de trabajo y proyectos.",
   "workflow_description": "Restrinja quién puede mover elementos de trabajo a un estado. Configure las reglas en Configuración → Flujo de trabajo.",
+  "worklog_approval": "Aprobación de worklogs",
+  "worklog_approval_description": "Los nuevos worklogs esperan a un administrador del proyecto o a un aprobador designado antes de contar en los informes.",
   "work_management_description": "Gestiona tu trabajo y proyectos con facilidad.",
   "documentation": "Documentación",
   "message_support": "Mensaje al soporte",
@@ -869,5 +871,28 @@
       "description": "Exporta elementos de trabajo a un archivo JSON.",
       "short_description": "Exportar como json"
     }
+  },
+  "worklog_review": {
+    "page_description": "Revisa, aprueba y exporta el tiempo registrado en este proyecto.",
+    "approvers_title": "Aprobadores",
+    "approvers_description": "Los administradores del proyecto siempre pueden aprobar. Añade otros miembros que puedan validar worklogs.",
+    "pending_title": "Pendiente de aprobación",
+    "pending_empty": "No hay nada pendiente de aprobación.",
+    "report_title": "Informe",
+    "status_label": "Estado",
+    "status": {
+      "submitted": "Pendiente",
+      "approved": "Aprobado",
+      "rejected": "Rechazado"
+    },
+    "actions": {
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "reopen": "Reabrir"
+    },
+    "reject_note_placeholder": "Motivo del rechazo (obligatorio)",
+    "review_failed": "No se pudo revisar este worklog.",
+    "load_failed": "No se pudieron cargar los worklogs.",
+    "save_failed": "No se pudieron guardar los aprobadores."
   }
 }

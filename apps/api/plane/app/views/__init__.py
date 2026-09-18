@@ -133,8 +133,10 @@ from .issue.worklog import (
     IssueTimerEndpoint,
     IssueWorkLogDetailEndpoint,
     IssueWorkLogEndpoint,
+    ProjectWorkLogPendingEndpoint,
     ProjectWorkLogReportEndpoint,
     ProjectWorkLogSummaryEndpoint,
+    WorkLogReviewEndpoint,
 )
 from .project.customization import (
     ProjectCustomPropertyDetailEndpoint,

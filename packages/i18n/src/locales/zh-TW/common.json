@@ -230,6 +230,8 @@
   "intake_description": "允許非成員分享錯誤、回饋和建議，而不會中斷您的工作流程。",
   "time_tracking_description": "記錄在工作事項和專案上花費的時間。",
   "workflow_description": "限制誰可以將工作項目移動到某個狀態。請在「設定 → 工作流程」中設定規則。",
+  "worklog_approval": "工時審核",
+  "worklog_approval_description": "新的工時紀錄需經專案管理員或指定審核人核准後才會計入報表。",
   "work_management_description": "輕鬆管理您的工作和專案。",
   "documentation": "文件",
   "message_support": "聯絡支援",
@@ -869,5 +871,28 @@
       "description": "將工作事項匯出為 JSON 檔案。",
       "short_description": "匯出為 JSON"
     }
+  },
+  "worklog_review": {
+    "page_description": "檢視、審核並匯出此專案中記錄的時間。",
+    "approvers_title": "審核人",
+    "approvers_description": "專案管理員永遠可以審核。新增其他可簽核工時紀錄的成員。",
+    "pending_title": "待審核",
+    "pending_empty": "沒有待審核的工時紀錄。",
+    "report_title": "報表",
+    "status_label": "狀態",
+    "status": {
+      "submitted": "待審核",
+      "approved": "已核准",
+      "rejected": "已拒絕"
+    },
+    "actions": {
+      "approve": "核准",
+      "reject": "拒絕",
+      "reopen": "重新開啟"
+    },
+    "reject_note_placeholder": "拒絕原因（必填）",
+    "review_failed": "無法審核此工時紀錄。",
+    "load_failed": "無法載入工時紀錄。",
+    "save_failed": "無法儲存審核人。"
   }
 }

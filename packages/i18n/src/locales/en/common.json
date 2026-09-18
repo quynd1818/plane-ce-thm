@@ -230,6 +230,8 @@
   "intake_description": "Let non-members share bugs, feedback, and suggestions; without disrupting your workflow.",
   "time_tracking_description": "Log time spent on work items and projects.",
   "workflow_description": "Restrict who can move work items into a state. Configure rules under Settings → Workflow.",
+  "worklog_approval": "Worklog approval",
+  "worklog_approval_description": "New worklogs wait for a project admin or named approver before they count in reports.",
   "work_management_description": "Manage your work and projects with ease.",
   "documentation": "Documentation",
   "message_support": "Message support",
@@ -869,5 +871,28 @@
       "description": "Export work items to a JSON file.",
       "short_description": "Export as json"
     }
+  },
+  "worklog_review": {
+    "page_description": "Review, approve and export time tracked in this project.",
+    "approvers_title": "Approvers",
+    "approvers_description": "Project admins can always approve. Add other members who may sign off worklogs.",
+    "pending_title": "Pending approval",
+    "pending_empty": "Nothing waiting for approval.",
+    "report_title": "Report",
+    "status_label": "Status",
+    "status": {
+      "submitted": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "reopen": "Reopen"
+    },
+    "reject_note_placeholder": "Reason for rejecting (required)",
+    "review_failed": "Unable to review this worklog.",
+    "load_failed": "Unable to load worklogs.",
+    "save_failed": "Unable to save approvers."
   }
 }

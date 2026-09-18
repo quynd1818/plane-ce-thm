@@ -230,6 +230,8 @@
   "intake_description": "Üye olmayanların hata, geri bildirim ve öneri paylaşmasına izin verin; iş akışınızı bozmadan.",
   "time_tracking_description": "İş öğeleri ve projelerde harcanan zamanı kaydedin.",
   "workflow_description": "İş öğelerini bir duruma kimlerin taşıyabileceğini kısıtlayın. Kuralları Ayarlar → İş akışı altında yapılandırın.",
+  "worklog_approval": "Çalışma kaydı onayı",
+  "worklog_approval_description": "Yeni çalışma kayıtları raporlara dahil edilmeden önce bir proje yöneticisinin veya atanmış onaylayıcının onayını bekler.",
   "work_management_description": "İşlerinizi ve projelerinizi kolayca yönetin.",
   "documentation": "Dokümantasyon",
   "message_support": "Destekle iletişim",
@@ -869,5 +871,28 @@
       "description": "İş öğelerini JSON dosyasına aktarın.",
       "short_description": "JSON olarak aktar"
     }
+  },
+  "worklog_review": {
+    "page_description": "Bu projede kaydedilen süreyi inceleyin, onaylayın ve dışa aktarın.",
+    "approvers_title": "Onaylayıcılar",
+    "approvers_description": "Proje yöneticileri her zaman onaylayabilir. Çalışma kayıtlarını onaylayabilecek diğer üyeleri ekleyin.",
+    "pending_title": "Onay bekliyor",
+    "pending_empty": "Onay bekleyen kayıt yok.",
+    "report_title": "Rapor",
+    "status_label": "Durum",
+    "status": {
+      "submitted": "Bekliyor",
+      "approved": "Onaylandı",
+      "rejected": "Reddedildi"
+    },
+    "actions": {
+      "approve": "Onayla",
+      "reject": "Reddet",
+      "reopen": "Yeniden aç"
+    },
+    "reject_note_placeholder": "Red nedeni (zorunlu)",
+    "review_failed": "Bu çalışma kaydı incelenemedi.",
+    "load_failed": "Çalışma kayıtları yüklenemedi.",
+    "save_failed": "Onaylayıcılar kaydedilemedi."
   }
 }

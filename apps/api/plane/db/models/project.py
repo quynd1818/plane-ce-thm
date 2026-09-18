@@ -98,6 +98,9 @@ class Project(BaseModel):
     is_time_tracking_enabled = models.BooleanField(default=False)
     # THM: enforce WorkflowTransitionRule on state changes
     is_workflow_enabled = models.BooleanField(default=False)
+    # THM: worklogs need approval (by project admins + worklog_approver_ids)
+    is_worklog_approval_enabled = models.BooleanField(default=False)
+    worklog_approver_ids = models.JSONField(default=list, blank=True)
     is_issue_type_enabled = models.BooleanField(default=False)
     guest_view_all_features = models.BooleanField(default=False)
     cover_image = models.TextField(blank=True, null=True)

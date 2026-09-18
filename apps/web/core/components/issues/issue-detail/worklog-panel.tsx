@@ -3,6 +3,10 @@ import { observer } from "mobx-react";
 import { useTranslation } from "@plane/i18n";
 import { setToast, TOAST_TYPE } from "@plane/propel/toast";
 import { workLogService, type TWorkLog } from "@/services/issue/worklog.service";
+// THM worklog approval
+import { WorklogReviewActions } from "@/components/worklog/review-actions";
+import { WorklogStatusBadge } from "@/components/worklog/status-badge";
+import { useWorklogApproval } from "@/components/worklog/use-worklog-approval";
 
 type Props = { workspaceSlug: string; projectId: string; issueId: string };
 
@@ -27,6 +31,11 @@ export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspace
   const [editDuration, setEditDuration] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const { isApprovalEnabled, isApprover, currentUserId } = useWorklogApproval(workspaceSlug, projectId);
+
+  /** Mirrors the server: approvers always; the author unless the log is approved-locked. */
+  const canModify = (log: TWorkLog) =>
+    isApprover || (log.user === currentUserId && !(isApprovalEnabled && log.status === "approved"));
 
   const activeTimer = useMemo(() => logs.find((log) => log.is_timer && !log.ended_at), [logs]);
   const totalSeconds = useMemo(
@@ -122,7 +131,11 @@ export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspace
         <span className="text-caption text-secondary">{formatDuration(totalSeconds)}</span>
       </div>
       <div className="mt-3 space-y-2">
-        <button type="button" className="h-7 w-full rounded border border-subtle-1 text-body-xs-medium" onClick={toggleTimer}>
+        <button
+          type="button"
+          className="h-7 w-full rounded border border-subtle-1 text-body-xs-medium"
+          onClick={toggleTimer}
+        >
           {activeTimer ? "Stop timer" : "Start timer"}
         </button>
         <div className="flex gap-2">
@@ -140,17 +153,22 @@ export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspace
             onChange={(event) => setDescription(event.target.value)}
             placeholder="What did you work on?"
           />
-          <button type="button" className="h-7 rounded bg-accent-primary px-2 text-body-xs-medium text-on-color" onClick={addLog}>
+          <button
+            type="button"
+            className="h-7 rounded bg-accent-primary px-2 text-body-xs-medium text-on-color"
+            onClick={addLog}
+          >
             Add
           </button>
         </div>
         {!loading && logs.length === 0 && <p className="text-caption text-secondary">{t("common.no_worklogs")}</p>}
         {logs.slice(0, 5).map((log) => (
-          <div key={log.id} className="space-y-1 text-caption">
+          <div key={log.id} className="text-caption space-y-1">
             <div className="flex items-center justify-between">
               <span className="truncate">{log.description || (log.is_timer ? "Timer" : "Worklog")}</span>
+              {isApprovalEnabled && <WorklogStatusBadge log={log} className="ml-2" />}
               <span className="ml-2 shrink-0">{formatDuration(getDurationSeconds(log, currentTime))}</span>
-              {!log.is_timer && (
+              {!(log.is_timer && !log.ended_at) && canModify(log) && (
                 <div className="ml-2 flex shrink-0 gap-2">
                   <button type="button" className="text-secondary" onClick={() => beginEdit(log)}>
                     Edit
@@ -161,6 +179,14 @@ export const IssueWorkLogPanel = observer(function IssueWorkLogPanel({ workspace
                 </div>
               )}
             </div>
+            {isApprovalEnabled && isApprover && (
+              <WorklogReviewActions
+                workspaceSlug={workspaceSlug}
+                projectId={projectId}
+                log={log}
+                onReviewed={refresh}
+              />
+            )}
             {editingLog?.id === log.id && (
               <div className="flex gap-2">
                 <input

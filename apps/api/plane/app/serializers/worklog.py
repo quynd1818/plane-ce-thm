@@ -6,6 +6,7 @@ from .user import UserLiteSerializer
 
 class WorkLogSerializer(serializers.ModelSerializer):
     user_detail = UserLiteSerializer(source="user", read_only=True)
+    reviewed_by_detail = UserLiteSerializer(source="reviewed_by", read_only=True)
 
     class Meta:
         model = WorkLog
@@ -19,10 +20,28 @@ class WorkLogSerializer(serializers.ModelSerializer):
             "started_at",
             "ended_at",
             "is_timer",
+            "status",
+            "reviewed_by",
+            "reviewed_by_detail",
+            "reviewed_at",
+            "review_note",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "issue", "user", "user_detail", "is_timer", "created_at", "updated_at"]
+        read_only_fields = [
+            "id",
+            "issue",
+            "user",
+            "user_detail",
+            "is_timer",
+            "status",
+            "reviewed_by",
+            "reviewed_by_detail",
+            "reviewed_at",
+            "review_note",
+            "created_at",
+            "updated_at",
+        ]
 
     def validate(self, attrs):
         issue = self.instance.issue if self.instance else self.context["issue"]

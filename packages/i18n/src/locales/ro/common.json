@@ -230,6 +230,8 @@
   "intake_description": "Permite utilizatorilor care nu sunt membri să trimită erori, feedback și sugestii fără a perturba fluxul de lucru.",
   "time_tracking_description": "Înregistrează timpul petrecut pe activități și proiecte.",
   "workflow_description": "Restricționați cine poate muta elementele de lucru într-o stare. Configurați regulile în Setări → Flux de lucru.",
+  "worklog_approval": "Aprobarea worklogurilor",
+  "worklog_approval_description": "Worklogurile noi așteaptă un administrator de proiect sau un aprobator desemnat înainte de a fi incluse în rapoarte.",
   "work_management_description": "Gestionează-ți munca și proiectele cu ușurință.",
   "documentation": "Documentație",
   "message_support": "Trimite mesaj la suport",
@@ -869,5 +871,28 @@
       "description": "Exportă activitățile într-un fișier JSON.",
       "short_description": "Exportă ca JSON"
     }
+  },
+  "worklog_review": {
+    "page_description": "Verifică, aprobă și exportă timpul înregistrat în acest proiect.",
+    "approvers_title": "Aprobatori",
+    "approvers_description": "Administratorii proiectului pot aproba oricând. Adaugă alți membri care pot valida worklogurile.",
+    "pending_title": "În așteptarea aprobării",
+    "pending_empty": "Nimic nu așteaptă aprobare.",
+    "report_title": "Raport",
+    "status_label": "Stare",
+    "status": {
+      "submitted": "În așteptare",
+      "approved": "Aprobat",
+      "rejected": "Respins"
+    },
+    "actions": {
+      "approve": "Aprobă",
+      "reject": "Respinge",
+      "reopen": "Redeschide"
+    },
+    "reject_note_placeholder": "Motivul respingerii (obligatoriu)",
+    "review_failed": "Acest worklog nu a putut fi evaluat.",
+    "load_failed": "Worklogurile nu au putut fi încărcate.",
+    "save_failed": "Aprobatorii nu au putut fi salvați."
   }
 }

@@ -13,7 +13,9 @@ from rest_framework.response import Response
 from plane.app.permissions import ROLE, allow_permission
 from plane.app.serializers.worklog import WorkLogCreateSerializer, WorkLogSerializer
 from plane.app.views.base import BaseAPIView
-from plane.db.models import Issue, ProjectMember, WorkLog
+from plane.db.models import Issue, Project, WorkLog
+from plane.notifications.service import publish_event
+from plane.utils.worklog_approval import can_modify_worklog, initial_status, is_worklog_approver
 
 
 class IssueWorkLogEndpoint(BaseAPIView):
@@ -43,6 +45,7 @@ class IssueWorkLogEndpoint(BaseAPIView):
             project=issue.project,
             workspace=issue.workspace,
             user=request.user,
+            status=initial_status(issue.project),
         )
         return Response(WorkLogSerializer(worklog).data, status=status.HTTP_201_CREATED)
 
@@ -61,10 +64,9 @@ class IssueWorkLogDetailEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def patch(self, request, slug, project_id, issue_id, worklog_id):
         worklog = self.get_worklog(slug, project_id, issue_id, worklog_id)
-        if worklog.user_id != request.user.id and not ProjectMember.objects.filter(
-            workspace__slug=slug, project_id=project_id, member=request.user, role=ROLE.ADMIN.value, is_active=True
-        ).exists():
-            return Response({"error": "Only the author or a project admin can edit this worklog."}, status=403)
+        allowed, reason = can_modify_worklog(worklog, request.user)
+        if not allowed:
+            return Response({"error": reason}, status=403)
         serializer = WorkLogSerializer(
             worklog,
             data=request.data,
@@ -72,15 +74,23 @@ class IssueWorkLogDetailEndpoint(BaseAPIView):
             context={"issue": worklog.issue},
         )
         serializer.is_valid(raise_exception=True)
-        return Response(WorkLogSerializer(serializer.save()).data)
+        # an author editing a rejected log re-submits it
+        extra = {}
+        if worklog.user_id == request.user.id and worklog.status == WorkLog.STATUS_REJECTED:
+            extra = {
+                "status": initial_status(worklog.project),
+                "review_note": "",
+                "reviewed_by": None,
+                "reviewed_at": None,
+            }
+        return Response(WorkLogSerializer(serializer.save(**extra)).data)
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def delete(self, request, slug, project_id, issue_id, worklog_id):
         worklog = self.get_worklog(slug, project_id, issue_id, worklog_id)
-        if worklog.user_id != request.user.id and not ProjectMember.objects.filter(
-            workspace__slug=slug, project_id=project_id, member=request.user, role=ROLE.ADMIN.value, is_active=True
-        ).exists():
-            return Response({"error": "Only the author or a project admin can delete this worklog."}, status=403)
+        allowed, reason = can_modify_worklog(worklog, request.user)
+        if not allowed:
+            return Response({"error": reason}, status=403)
         worklog.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -105,6 +115,7 @@ class IssueTimerEndpoint(BaseAPIView):
                 started_at=timezone.now(),
                 duration_seconds=1,
                 is_timer=True,
+                status=initial_status(issue.project),
             )
         except IntegrityError:
             return Response({"error": "You already have an active timer."}, status=400)
@@ -128,8 +139,13 @@ class IssueTimerEndpoint(BaseAPIView):
         return Response(WorkLogSerializer(worklog).data)
 
 
-def _apply_worklog_filters(queryset, params):
-    """Apply optional issue/user/date filters. Raises ValidationError on bad dates (-> HTTP 400)."""
+def _apply_worklog_filters(queryset, params, project_id=None):
+    """Apply optional issue/user/date/status filters. Raises ValidationError on bad dates (-> HTTP 400).
+
+    status: "submitted" | "approved" | "rejected" | "all". When omitted and the
+    project requires approval, only approved logs are counted so reports never
+    include hours that were not signed off.
+    """
     issue_id = params.get("issue_id")
     user_id = params.get("user_id")
     started_after = params.get("started_after")
@@ -138,6 +154,14 @@ def _apply_worklog_filters(queryset, params):
         queryset = queryset.filter(issue_id=issue_id)
     if user_id:
         queryset = queryset.filter(user_id=user_id)
+    status_filter = params.get("status")
+    if status_filter and status_filter != "all":
+        if status_filter not in dict(WorkLog.STATUS_CHOICES):
+            raise ValidationError({"status": "Expected submitted, approved, rejected or all."})
+        queryset = queryset.filter(status=status_filter)
+    elif not status_filter and project_id is not None:
+        if Project.objects.filter(pk=project_id, is_worklog_approval_enabled=True).exists():
+            queryset = queryset.filter(status=WorkLog.STATUS_APPROVED)
     for key, value in (("started_after", started_after), ("started_before", started_before)):
         if not value:
             continue
@@ -161,21 +185,17 @@ class ProjectWorkLogSummaryEndpoint(BaseAPIView):
             project__project_projectmember__is_active=True,
             project__is_time_tracking_enabled=True,
         )
-        queryset = _apply_worklog_filters(queryset, request.GET)
+        queryset = _apply_worklog_filters(queryset, request.GET, project_id=project_id)
         total = queryset.aggregate(total=Sum("duration_seconds"))["total"] or 0
         group_by = request.GET.get("group_by")
         grouped = []
         if group_by == "issue":
             grouped = list(
-                queryset.values("issue_id")
-                .annotate(total_seconds=Sum("duration_seconds"))
-                .order_by("-total_seconds")
+                queryset.values("issue_id").annotate(total_seconds=Sum("duration_seconds")).order_by("-total_seconds")
             )
         elif group_by == "user":
             grouped = list(
-                queryset.values("user_id")
-                .annotate(total_seconds=Sum("duration_seconds"))
-                .order_by("-total_seconds")
+                queryset.values("user_id").annotate(total_seconds=Sum("duration_seconds")).order_by("-total_seconds")
             )
         elif group_by == "day":
             grouped = list(
@@ -204,7 +224,7 @@ class ProjectWorkLogReportEndpoint(BaseAPIView):
             project__project_projectmember__member=request.user,
             project__project_projectmember__is_active=True,
         ).select_related("issue", "user")
-        queryset = _apply_worklog_filters(queryset, request.GET)
+        queryset = _apply_worklog_filters(queryset, request.GET, project_id=project_id)
 
         if request.GET.get("format") == "csv":
             response = HttpResponse(content_type="text/csv")
@@ -237,3 +257,76 @@ class ProjectWorkLogReportEndpoint(BaseAPIView):
                 "total_seconds": queryset.aggregate(total=Sum("duration_seconds"))["total"] or 0,
             }
         )
+
+
+class ProjectWorkLogPendingEndpoint(BaseAPIView):
+    """Worklogs waiting for review — approvers only."""
+
+    @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    def get(self, request, slug, project_id):
+        project = Project.objects.get(pk=project_id, workspace__slug=slug)
+        if not is_worklog_approver(project, request.user):
+            return Response({"error": "Only worklog approvers can view the review queue."}, status=403)
+        queryset = (
+            WorkLog.objects.filter(project=project, status=WorkLog.STATUS_SUBMITTED)
+            .exclude(is_timer=True, ended_at__isnull=True)
+            .select_related("issue", "user")
+            .order_by("started_at")
+        )
+        return Response(
+            {
+                "results": [
+                    {**WorkLogSerializer(w).data, "issue_name": w.issue.name, "issue_sequence_id": w.issue.sequence_id}
+                    for w in queryset
+                ],
+                "count": queryset.count(),
+                "total_seconds": queryset.aggregate(total=Sum("duration_seconds"))["total"] or 0,
+            }
+        )
+
+
+class WorkLogReviewEndpoint(BaseAPIView):
+    """POST {action: approve|reject|reopen, note?} — approvers only."""
+
+    ACTIONS = {
+        "approve": WorkLog.STATUS_APPROVED,
+        "reject": WorkLog.STATUS_REJECTED,
+        "reopen": WorkLog.STATUS_SUBMITTED,
+    }
+
+    @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    def post(self, request, slug, project_id, issue_id, worklog_id):
+        worklog = WorkLog.objects.select_related("project", "issue", "user").get(
+            pk=worklog_id, workspace__slug=slug, project_id=project_id, issue_id=issue_id
+        )
+        if not is_worklog_approver(worklog.project, request.user):
+            return Response({"error": "Only worklog approvers can review worklogs."}, status=403)
+        action = request.data.get("action")
+        if action not in self.ACTIONS:
+            return Response({"error": "action must be one of approve, reject, reopen."}, status=400)
+        if worklog.is_timer and worklog.ended_at is None:
+            return Response({"error": "Stop the timer before reviewing this worklog."}, status=400)
+        note = str(request.data.get("note") or "").strip()
+        if action == "reject" and not note:
+            return Response({"note": "A note is required when rejecting."}, status=400)
+
+        worklog.status = self.ACTIONS[action]
+        worklog.review_note = note
+        worklog.reviewed_by = None if action == "reopen" else request.user
+        worklog.reviewed_at = None if action == "reopen" else timezone.now()
+        worklog.save(update_fields=["status", "review_note", "reviewed_by", "reviewed_at", "updated_at"])
+
+        publish_event(
+            "worklog.reviewed",
+            {
+                "title": {"approve": "Worklog Approved", "reject": "Worklog Rejected", "reopen": "Worklog Reopened"}[
+                    action
+                ],
+                "project_name": worklog.project.name,
+                "issue_name": worklog.issue.name,
+                "user": worklog.user.display_name or worklog.user.email,
+                "duration_seconds": worklog.duration_seconds,
+                "description": note,
+            },
+        )
+        return Response(WorkLogSerializer(worklog).data)

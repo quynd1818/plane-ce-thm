@@ -34,8 +34,10 @@ from plane.app.views import (
     IssueTimerEndpoint,
     IssueWorkLogDetailEndpoint,
     IssueWorkLogEndpoint,
+    ProjectWorkLogPendingEndpoint,
     ProjectWorkLogSummaryEndpoint,
     ProjectWorkLogReportEndpoint,
+    WorkLogReviewEndpoint,
 )
 
 urlpatterns = [
@@ -63,6 +65,16 @@ urlpatterns = [
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/timer/",
         IssueTimerEndpoint.as_view(),
         name="issue-timer",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/worklogs/pending/",
+        ProjectWorkLogPendingEndpoint.as_view(),
+        name="project-worklog-pending",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/worklogs/<uuid:worklog_id>/review/",
+        WorkLogReviewEndpoint.as_view(),
+        name="issue-worklog-review",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/list/",

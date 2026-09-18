@@ -5,7 +5,7 @@
  */
 
 import { observer } from "mobx-react";
-import { Clock, ShieldCheck } from "lucide-react";
+import { CheckCheck, Clock, ShieldCheck } from "lucide-react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { setPromiseToast } from "@plane/propel/toast";
@@ -89,6 +89,15 @@ const PROJECT_FEATURES_LIST = {
     title: "Time Tracking",
     description: "Log time spent on work items and projects.",
     icon: <Clock className="h-5 w-5 flex-shrink-0 text-tertiary" />,
+    isPro: false,
+    isEnabled: true,
+  },
+  worklog_approval: {
+    key: "worklog_approval",
+    property: "is_worklog_approval_enabled",
+    title: "Worklog approval",
+    description: "New worklogs wait for a project admin or named approver before they count in reports.",
+    icon: <CheckCheck className="h-5 w-5 flex-shrink-0 text-tertiary" />,
     isPro: false,
     isEnabled: true,
   },

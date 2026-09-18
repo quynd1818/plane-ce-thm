@@ -230,6 +230,8 @@
   "intake_description": "Umožněte nečlenům sdílet chyby, zpětnou vazbu a návrhy, aniž by narušili váš pracovní postup.",
   "time_tracking_description": "Zaznamenávejte čas strávený na pracovních položkách a projektech.",
   "workflow_description": "Omezte, kdo může přesouvat pracovní položky do stavu. Pravidla nastavíte v Nastavení → Pracovní postup.",
+  "worklog_approval": "Schvalování worklogů",
+  "worklog_approval_description": "Nové worklogy čekají na administrátora projektu nebo určeného schvalovatele, než se započítají do reportů.",
   "work_management_description": "Spravujte svou práci a projekty snadno.",
   "documentation": "Dokumentace",
   "message_support": "Kontaktovat podporu",
@@ -869,5 +871,28 @@
       "description": "Exportujte položky do JSON.",
       "short_description": "Exportovat jako JSON"
     }
+  },
+  "worklog_review": {
+    "page_description": "Zkontrolujte, schvalte a exportujte čas zaznamenaný v tomto projektu.",
+    "approvers_title": "Schvalovatelé",
+    "approvers_description": "Administrátoři projektu mohou schvalovat vždy. Přidejte další členy, kteří smí worklogy podepisovat.",
+    "pending_title": "Čeká na schválení",
+    "pending_empty": "Nic nečeká na schválení.",
+    "report_title": "Report",
+    "status_label": "Stav",
+    "status": {
+      "submitted": "Čeká",
+      "approved": "Schváleno",
+      "rejected": "Zamítnuto"
+    },
+    "actions": {
+      "approve": "Schválit",
+      "reject": "Zamítnout",
+      "reopen": "Znovu otevřít"
+    },
+    "reject_note_placeholder": "Důvod zamítnutí (povinné)",
+    "review_failed": "Tento worklog nelze posoudit.",
+    "load_failed": "Worklogy nelze načíst.",
+    "save_failed": "Schvalovatele nelze uložit."
   }
 }

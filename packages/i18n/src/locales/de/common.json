@@ -230,6 +230,8 @@
   "intake_description": "Erlauben Sie Nicht-Mitgliedern, Bugs, Feedback und Vorschläge zu teilen – ohne Ihren Arbeitsablauf zu stören.",
   "time_tracking_description": "Erfassen Sie die auf Arbeitselemente und Projekte verwendete Zeit.",
   "workflow_description": "Legen Sie fest, wer Arbeitselemente in einen Status verschieben darf. Regeln unter Einstellungen → Workflow konfigurieren.",
+  "worklog_approval": "Worklog-Freigabe",
+  "worklog_approval_description": "Neue Worklogs warten auf einen Projektadmin oder benannten Freigeber, bevor sie in Berichten zählen.",
   "work_management_description": "Verwalten Sie Ihre Arbeit und Projekte mühelos.",
   "documentation": "Dokumentation",
   "message_support": "Support kontaktieren",
@@ -869,5 +871,28 @@
       "description": "Arbeitselemente in JSON exportieren.",
       "short_description": "Als JSON exportieren"
     }
+  },
+  "worklog_review": {
+    "page_description": "Erfasste Zeit in diesem Projekt prüfen, freigeben und exportieren.",
+    "approvers_title": "Freigeber",
+    "approvers_description": "Projektadmins dürfen immer freigeben. Weitere Mitglieder hinzufügen, die Worklogs abzeichnen dürfen.",
+    "pending_title": "Freigabe ausstehend",
+    "pending_empty": "Nichts wartet auf Freigabe.",
+    "report_title": "Bericht",
+    "status_label": "Status",
+    "status": {
+      "submitted": "Ausstehend",
+      "approved": "Freigegeben",
+      "rejected": "Abgelehnt"
+    },
+    "actions": {
+      "approve": "Freigeben",
+      "reject": "Ablehnen",
+      "reopen": "Wieder öffnen"
+    },
+    "reject_note_placeholder": "Grund der Ablehnung (erforderlich)",
+    "review_failed": "Worklog konnte nicht geprüft werden.",
+    "load_failed": "Worklogs konnten nicht geladen werden.",
+    "save_failed": "Freigeber konnten nicht gespeichert werden."
   }
 }

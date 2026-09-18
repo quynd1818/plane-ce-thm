@@ -230,6 +230,8 @@
   "intake_description": "Cho phép người không phải thành viên chia sẻ lỗi, phản hồi và đề xuất mà không làm gián đoạn quy trình làm việc của bạn.",
   "time_tracking_description": "Ghi lại thời gian dành cho các mục công việc và dự án.",
   "workflow_description": "Giới hạn ai được chuyển mục công việc sang một trạng thái. Cấu hình quy tắc tại Cài đặt → Quy trình.",
+  "worklog_approval": "Duyệt worklog",
+  "worklog_approval_description": "Worklog mới sẽ chờ quản trị dự án hoặc người duyệt được chỉ định phê duyệt trước khi được tính vào báo cáo.",
   "work_management_description": "Quản lý công việc và dự án của bạn một cách dễ dàng.",
   "documentation": "Tài liệu",
   "message_support": "Liên hệ hỗ trợ",
@@ -869,5 +871,28 @@
       "description": "Xuất mục công việc thành tệp JSON.",
       "short_description": "Xuất sang JSON"
     }
+  },
+  "worklog_review": {
+    "page_description": "Xem, phê duyệt và xuất thời gian đã ghi nhận trong dự án này.",
+    "approvers_title": "Người duyệt",
+    "approvers_description": "Quản trị dự án luôn có quyền duyệt. Thêm thành viên khác được phép ký duyệt worklog.",
+    "pending_title": "Chờ duyệt",
+    "pending_empty": "Không có worklog nào đang chờ duyệt.",
+    "report_title": "Báo cáo",
+    "status_label": "Trạng thái",
+    "status": {
+      "submitted": "Chờ duyệt",
+      "approved": "Đã duyệt",
+      "rejected": "Từ chối"
+    },
+    "actions": {
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "reopen": "Mở lại"
+    },
+    "reject_note_placeholder": "Lý do từ chối (bắt buộc)",
+    "review_failed": "Không thể duyệt worklog này.",
+    "load_failed": "Không thể tải worklog.",
+    "save_failed": "Không thể lưu danh sách người duyệt."
   }
 }

@@ -230,6 +230,8 @@
   "intake_description": "允许非成员提交 Bug、反馈和建议，且不会干扰您的工作流程。",
   "time_tracking_description": "记录在工作项和项目上花费的时间。",
   "workflow_description": "限制谁可以将工作项移动到某个状态。请在\"设置 → 工作流\"中配置规则。",
+  "worklog_approval": "工时审批",
+  "worklog_approval_description": "新的工时记录需经项目管理员或指定审批人批准后才会计入报表。",
   "work_management_description": "轻松管理您的工作和项目。",
   "documentation": "文档",
   "message_support": "联系支持",
@@ -869,5 +871,28 @@
       "description": "将工作项导出为 JSON 文件。",
       "short_description": "导出为 JSON"
     }
+  },
+  "worklog_review": {
+    "page_description": "查看、审批并导出此项目中记录的时间。",
+    "approvers_title": "审批人",
+    "approvers_description": "项目管理员始终可以审批。添加其他可签核工时记录的成员。",
+    "pending_title": "待审批",
+    "pending_empty": "没有待审批的工时记录。",
+    "report_title": "报表",
+    "status_label": "状态",
+    "status": {
+      "submitted": "待审批",
+      "approved": "已批准",
+      "rejected": "已拒绝"
+    },
+    "actions": {
+      "approve": "批准",
+      "reject": "拒绝",
+      "reopen": "重新打开"
+    },
+    "reject_note_placeholder": "拒绝原因（必填）",
+    "review_failed": "无法审批此工时记录。",
+    "load_failed": "无法加载工时记录。",
+    "save_failed": "无法保存审批人。"
   }
 }

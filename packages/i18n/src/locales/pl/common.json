@@ -230,6 +230,8 @@
   "intake_description": "Pozwól osobom spoza zespołu zgłaszać błędy, opinie i sugestie bez zakłócania przepływu pracy.",
   "time_tracking_description": "Rejestruj czas spędzony na elementach pracy i projektach.",
   "workflow_description": "Ogranicz, kto może przenosić elementy pracy do danego stanu. Reguły konfiguruje się w Ustawienia → Przepływ pracy.",
+  "worklog_approval": "Zatwierdzanie worklogów",
+  "worklog_approval_description": "Nowe worklogi czekają na administratora projektu lub wyznaczonego zatwierdzającego, zanim zostaną uwzględnione w raportach.",
   "work_management_description": "Łatwo zarządzaj swoją pracą i projektami.",
   "documentation": "Dokumentacja",
   "message_support": "Skontaktuj się z pomocą",
@@ -869,5 +871,28 @@
       "description": "Eksportuj elementy do pliku JSON.",
       "short_description": "Eksportuj jako JSON"
     }
+  },
+  "worklog_review": {
+    "page_description": "Przeglądaj, zatwierdzaj i eksportuj czas zarejestrowany w tym projekcie.",
+    "approvers_title": "Zatwierdzający",
+    "approvers_description": "Administratorzy projektu zawsze mogą zatwierdzać. Dodaj innych członków, którzy mogą podpisywać worklogi.",
+    "pending_title": "Oczekuje na zatwierdzenie",
+    "pending_empty": "Nic nie czeka na zatwierdzenie.",
+    "report_title": "Raport",
+    "status_label": "Status",
+    "status": {
+      "submitted": "Oczekuje",
+      "approved": "Zatwierdzony",
+      "rejected": "Odrzucony"
+    },
+    "actions": {
+      "approve": "Zatwierdź",
+      "reject": "Odrzuć",
+      "reopen": "Otwórz ponownie"
+    },
+    "reject_note_placeholder": "Powód odrzucenia (wymagany)",
+    "review_failed": "Nie można ocenić tego workloga.",
+    "load_failed": "Nie można wczytać worklogów.",
+    "save_failed": "Nie można zapisać zatwierdzających."
   }
 }

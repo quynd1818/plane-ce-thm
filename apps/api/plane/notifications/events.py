@@ -22,6 +22,7 @@ class NotificationEvent:
             "worklog.created": "TEAMS_NOTIFY_WORKLOG",
             "worklog.updated": "TEAMS_NOTIFY_WORKLOG",
             "worklog.deleted": "TEAMS_NOTIFY_WORKLOG",
+            "worklog.reviewed": "TEAMS_NOTIFY_WORKLOG",
             "custom_property.changed": "TEAMS_NOTIFY_CUSTOMIZATION",
             "template.changed": "TEAMS_NOTIFY_CUSTOMIZATION",
             "work_item_type.changed": "TEAMS_NOTIFY_CUSTOMIZATION",
