@@ -937,5 +937,118 @@
       "save_failed": "Unable to save the template.",
       "delete_failed": "Unable to delete the template."
     }
+  },
+  "thm_dashboards": {
+    "label": "Dashboards",
+    "create": "New dashboard",
+    "edit": "Edit dashboard",
+    "delete": "Delete dashboard",
+    "delete_confirm": "Delete dashboard \"{name}\"? All of its widgets will be removed.",
+    "refresh": "Refresh",
+    "edit_layout": "Edit layout",
+    "done_editing": "Done",
+    "not_found": "Dashboard not found or you do not have access to it.",
+    "private": "Private",
+    "widget_count": "{count} widgets",
+    "empty": {
+      "title": "No dashboards yet",
+      "description": "Build dashboards from charts over work items and logged time — by state, priority, assignee, project and more."
+    },
+    "form": {
+      "name": "Name",
+      "name_placeholder": "e.g. Weekly operations",
+      "description": "Description",
+      "project_scope": "Project scope",
+      "project_scope_all": "All projects I belong to",
+      "shared": "Shared with the workspace",
+      "shared_hint": "Everyone in the workspace can view it; data is limited to the projects each viewer is a member of."
+    },
+    "widget": {
+      "add": "Add widget",
+      "edit": "Edit widget",
+      "delete": "Delete widget",
+      "delete_confirm": "Delete widget \"{title}\"?",
+      "title": "Title",
+      "title_placeholder": "e.g. Open work items by priority",
+      "chart_type": "Chart",
+      "metric": "Metric",
+      "group_by": "Group by",
+      "width": "Width",
+      "width_columns": "{count} of 3 columns",
+      "filters": "Filters",
+      "no_data": "No data for these filters.",
+      "total": "Total",
+      "empty_title": "No widgets yet",
+      "empty_description": "Add a widget to start charting work items and logged time.",
+      "move_left": "Move left",
+      "move_right": "Move right"
+    },
+    "chart": {
+      "number": "Number",
+      "bar": "Bar chart",
+      "pie": "Pie chart",
+      "line": "Line chart",
+      "table": "Table"
+    },
+    "metric": {
+      "count": "Work items",
+      "estimate_points": "Estimate points",
+      "worklog_hours": "Logged hours"
+    },
+    "group_by": {
+      "none": "None",
+      "state": "State",
+      "state_group": "State group",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "label": "Label",
+      "project": "Project",
+      "module": "Module",
+      "cycle": "Cycle",
+      "created_by": "Creator",
+      "created_month": "Month created",
+      "completed_month": "Month completed",
+      "target_month": "Month due"
+    },
+    "filters": {
+      "projects": "Projects",
+      "state_groups": "State groups",
+      "priorities": "Priorities",
+      "assignees": "Assignees",
+      "date_range": "Date range",
+      "date_field": "Date field",
+      "overdue_only": "Overdue only",
+      "unassigned_only": "Unassigned only",
+      "include_sub_issues": "Include sub-work items"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Unstarted",
+      "started": "Started",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "priority": {
+      "urgent": "Urgent",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "none": "None"
+    },
+    "date_range": {
+      "any": "Any time",
+      "this_week": "This week",
+      "last_week": "Last week",
+      "this_month": "This month",
+      "last_month": "Last month",
+      "last_30_days": "Last 30 days",
+      "last_90_days": "Last 90 days",
+      "this_year": "This year"
+    },
+    "date_field": {
+      "created_at": "Created",
+      "target_date": "Due date",
+      "completed_at": "Completed"
+    }
   }
 }

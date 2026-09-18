@@ -937,5 +937,118 @@
       "save_failed": "Tidak dapat menyimpan template.",
       "delete_failed": "Tidak dapat menghapus template."
     }
+  },
+  "thm_dashboards": {
+    "label": "Dasbor",
+    "create": "Dasbor baru",
+    "edit": "Edit dasbor",
+    "delete": "Hapus dasbor",
+    "delete_confirm": "Hapus dasbor \"{name}\"? Semua widget-nya akan dihapus.",
+    "refresh": "Muat ulang",
+    "edit_layout": "Edit tata letak",
+    "done_editing": "Selesai",
+    "not_found": "Dasbor tidak ditemukan atau Anda tidak memiliki akses.",
+    "private": "Pribadi",
+    "widget_count": "{count} widget",
+    "empty": {
+      "title": "Belum ada dasbor",
+      "description": "Buat dasbor dari grafik item kerja dan waktu tercatat — berdasarkan status, prioritas, penanggung jawab, proyek, dan lainnya."
+    },
+    "form": {
+      "name": "Nama",
+      "name_placeholder": "mis. Operasional mingguan",
+      "description": "Deskripsi",
+      "project_scope": "Cakupan proyek",
+      "project_scope_all": "Semua proyek yang saya ikuti",
+      "shared": "Dibagikan ke workspace",
+      "shared_hint": "Semua orang di workspace dapat melihatnya; data dibatasi pada proyek tempat masing-masing pengguna menjadi anggota."
+    },
+    "widget": {
+      "add": "Tambah widget",
+      "edit": "Edit widget",
+      "delete": "Hapus widget",
+      "delete_confirm": "Hapus widget \"{title}\"?",
+      "title": "Judul",
+      "title_placeholder": "mis. Item kerja terbuka per prioritas",
+      "chart_type": "Grafik",
+      "metric": "Metrik",
+      "group_by": "Kelompokkan menurut",
+      "width": "Lebar",
+      "width_columns": "{count} dari 3 kolom",
+      "filters": "Filter",
+      "no_data": "Tidak ada data untuk filter ini.",
+      "total": "Total",
+      "empty_title": "Belum ada widget",
+      "empty_description": "Tambahkan widget untuk mulai memvisualisasikan item kerja dan waktu tercatat.",
+      "move_left": "Geser ke kiri",
+      "move_right": "Geser ke kanan"
+    },
+    "chart": {
+      "number": "Angka",
+      "bar": "Grafik batang",
+      "pie": "Grafik lingkaran",
+      "line": "Grafik garis",
+      "table": "Tabel"
+    },
+    "metric": {
+      "count": "Item kerja",
+      "estimate_points": "Poin estimasi",
+      "worklog_hours": "Jam tercatat"
+    },
+    "group_by": {
+      "none": "Tidak ada",
+      "state": "Status",
+      "state_group": "Grup status",
+      "priority": "Prioritas",
+      "assignee": "Penanggung jawab",
+      "label": "Label",
+      "project": "Proyek",
+      "module": "Modul",
+      "cycle": "Siklus",
+      "created_by": "Pembuat",
+      "created_month": "Bulan dibuat",
+      "completed_month": "Bulan selesai",
+      "target_month": "Bulan jatuh tempo"
+    },
+    "filters": {
+      "projects": "Proyek",
+      "state_groups": "Grup status",
+      "priorities": "Prioritas",
+      "assignees": "Penanggung jawab",
+      "date_range": "Rentang tanggal",
+      "date_field": "Bidang tanggal",
+      "overdue_only": "Hanya yang terlambat",
+      "unassigned_only": "Hanya yang belum ditugaskan",
+      "include_sub_issues": "Sertakan sub-item kerja"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Belum dimulai",
+      "started": "Dimulai",
+      "completed": "Selesai",
+      "cancelled": "Dibatalkan"
+    },
+    "priority": {
+      "urgent": "Mendesak",
+      "high": "Tinggi",
+      "medium": "Sedang",
+      "low": "Rendah",
+      "none": "Tidak ada"
+    },
+    "date_range": {
+      "any": "Kapan saja",
+      "this_week": "Minggu ini",
+      "last_week": "Minggu lalu",
+      "this_month": "Bulan ini",
+      "last_month": "Bulan lalu",
+      "last_30_days": "30 hari terakhir",
+      "last_90_days": "90 hari terakhir",
+      "this_year": "Tahun ini"
+    },
+    "date_field": {
+      "created_at": "Dibuat",
+      "target_date": "Jatuh tempo",
+      "completed_at": "Selesai"
+    }
   }
 }

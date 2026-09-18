@@ -937,5 +937,118 @@
       "save_failed": "Vorlage konnte nicht gespeichert werden.",
       "delete_failed": "Vorlage konnte nicht gelöscht werden."
     }
+  },
+  "thm_dashboards": {
+    "label": "Dashboards",
+    "create": "Neues Dashboard",
+    "edit": "Dashboard bearbeiten",
+    "delete": "Dashboard löschen",
+    "delete_confirm": "Dashboard „{name}“ löschen? Alle Widgets werden entfernt.",
+    "refresh": "Aktualisieren",
+    "edit_layout": "Layout bearbeiten",
+    "done_editing": "Fertig",
+    "not_found": "Dashboard nicht gefunden oder kein Zugriff.",
+    "private": "Privat",
+    "widget_count": "{count} Widgets",
+    "empty": {
+      "title": "Noch keine Dashboards",
+      "description": "Erstellen Sie Dashboards aus Diagrammen über Arbeitselemente und erfasste Zeit – nach Status, Priorität, Zuständigem, Projekt und mehr."
+    },
+    "form": {
+      "name": "Name",
+      "name_placeholder": "z. B. Wöchentlicher Betrieb",
+      "description": "Beschreibung",
+      "project_scope": "Projektbereich",
+      "project_scope_all": "Alle meine Projekte",
+      "shared": "Mit dem Workspace geteilt",
+      "shared_hint": "Alle im Workspace können es sehen; die Daten sind auf die Projekte beschränkt, in denen der Betrachter Mitglied ist."
+    },
+    "widget": {
+      "add": "Widget hinzufügen",
+      "edit": "Widget bearbeiten",
+      "delete": "Widget löschen",
+      "delete_confirm": "Widget „{title}“ löschen?",
+      "title": "Titel",
+      "title_placeholder": "z. B. Offene Arbeitselemente nach Priorität",
+      "chart_type": "Diagramm",
+      "metric": "Kennzahl",
+      "group_by": "Gruppieren nach",
+      "width": "Breite",
+      "width_columns": "{count} von 3 Spalten",
+      "filters": "Filter",
+      "no_data": "Keine Daten für diese Filter.",
+      "total": "Gesamt",
+      "empty_title": "Noch keine Widgets",
+      "empty_description": "Fügen Sie ein Widget hinzu, um Arbeitselemente und erfasste Zeit zu visualisieren.",
+      "move_left": "Nach links",
+      "move_right": "Nach rechts"
+    },
+    "chart": {
+      "number": "Zahl",
+      "bar": "Balkendiagramm",
+      "pie": "Kreisdiagramm",
+      "line": "Liniendiagramm",
+      "table": "Tabelle"
+    },
+    "metric": {
+      "count": "Arbeitselemente",
+      "estimate_points": "Schätzpunkte",
+      "worklog_hours": "Erfasste Stunden"
+    },
+    "group_by": {
+      "none": "Keine",
+      "state": "Status",
+      "state_group": "Statusgruppe",
+      "priority": "Priorität",
+      "assignee": "Zuständiger",
+      "label": "Label",
+      "project": "Projekt",
+      "module": "Modul",
+      "cycle": "Zyklus",
+      "created_by": "Ersteller",
+      "created_month": "Monat erstellt",
+      "completed_month": "Monat abgeschlossen",
+      "target_month": "Monat fällig"
+    },
+    "filters": {
+      "projects": "Projekte",
+      "state_groups": "Statusgruppen",
+      "priorities": "Prioritäten",
+      "assignees": "Zuständige",
+      "date_range": "Zeitraum",
+      "date_field": "Datumsfeld",
+      "overdue_only": "Nur überfällige",
+      "unassigned_only": "Nur nicht zugewiesene",
+      "include_sub_issues": "Unteraufgaben einschließen"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Nicht begonnen",
+      "started": "Begonnen",
+      "completed": "Abgeschlossen",
+      "cancelled": "Abgebrochen"
+    },
+    "priority": {
+      "urgent": "Dringend",
+      "high": "Hoch",
+      "medium": "Mittel",
+      "low": "Niedrig",
+      "none": "Keine"
+    },
+    "date_range": {
+      "any": "Beliebig",
+      "this_week": "Diese Woche",
+      "last_week": "Letzte Woche",
+      "this_month": "Dieser Monat",
+      "last_month": "Letzter Monat",
+      "last_30_days": "Letzte 30 Tage",
+      "last_90_days": "Letzte 90 Tage",
+      "this_year": "Dieses Jahr"
+    },
+    "date_field": {
+      "created_at": "Erstellt",
+      "target_date": "Fälligkeitsdatum",
+      "completed_at": "Abgeschlossen"
+    }
   }
 }

@@ -937,5 +937,118 @@
       "save_failed": "Şablon kaydedilemedi.",
       "delete_failed": "Şablon silinemedi."
     }
+  },
+  "thm_dashboards": {
+    "label": "Panolar",
+    "create": "Yeni pano",
+    "edit": "Panoyu düzenle",
+    "delete": "Panoyu sil",
+    "delete_confirm": "\"{name}\" panosu silinsin mi? Tüm bileşenleri kaldırılacak.",
+    "refresh": "Yenile",
+    "edit_layout": "Düzeni düzenle",
+    "done_editing": "Bitti",
+    "not_found": "Pano bulunamadı veya erişiminiz yok.",
+    "private": "Özel",
+    "widget_count": "{count} bileşen",
+    "empty": {
+      "title": "Henüz pano yok",
+      "description": "İş öğeleri ve kaydedilen süre üzerinde durum, öncelik, atanan, proje ve daha fazlasına göre grafiklerle panolar oluşturun."
+    },
+    "form": {
+      "name": "Ad",
+      "name_placeholder": "örn. Haftalık operasyon",
+      "description": "Açıklama",
+      "project_scope": "Proje kapsamı",
+      "project_scope_all": "Üyesi olduğum tüm projeler",
+      "shared": "Çalışma alanıyla paylaşıldı",
+      "shared_hint": "Çalışma alanındaki herkes görebilir; veriler her görüntüleyenin üyesi olduğu projelerle sınırlıdır."
+    },
+    "widget": {
+      "add": "Bileşen ekle",
+      "edit": "Bileşeni düzenle",
+      "delete": "Bileşeni sil",
+      "delete_confirm": "\"{title}\" bileşeni silinsin mi?",
+      "title": "Başlık",
+      "title_placeholder": "örn. Önceliğe göre açık iş öğeleri",
+      "chart_type": "Grafik",
+      "metric": "Metrik",
+      "group_by": "Gruplama",
+      "width": "Genişlik",
+      "width_columns": "3 sütundan {count}",
+      "filters": "Filtreler",
+      "no_data": "Bu filtreler için veri yok.",
+      "total": "Toplam",
+      "empty_title": "Henüz bileşen yok",
+      "empty_description": "İş öğelerini ve kaydedilen süreyi görselleştirmek için bir bileşen ekleyin.",
+      "move_left": "Sola taşı",
+      "move_right": "Sağa taşı"
+    },
+    "chart": {
+      "number": "Sayı",
+      "bar": "Çubuk grafik",
+      "pie": "Pasta grafik",
+      "line": "Çizgi grafik",
+      "table": "Tablo"
+    },
+    "metric": {
+      "count": "İş öğeleri",
+      "estimate_points": "Tahmin puanı",
+      "worklog_hours": "Kaydedilen saat"
+    },
+    "group_by": {
+      "none": "Yok",
+      "state": "Durum",
+      "state_group": "Durum grubu",
+      "priority": "Öncelik",
+      "assignee": "Atanan",
+      "label": "Etiket",
+      "project": "Proje",
+      "module": "Modül",
+      "cycle": "Döngü",
+      "created_by": "Oluşturan",
+      "created_month": "Oluşturma ayı",
+      "completed_month": "Tamamlanma ayı",
+      "target_month": "Son tarih ayı"
+    },
+    "filters": {
+      "projects": "Projeler",
+      "state_groups": "Durum grupları",
+      "priorities": "Öncelikler",
+      "assignees": "Atananlar",
+      "date_range": "Tarih aralığı",
+      "date_field": "Tarih alanı",
+      "overdue_only": "Yalnızca gecikmiş",
+      "unassigned_only": "Yalnızca atanmamış",
+      "include_sub_issues": "Alt iş öğelerini dahil et"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Başlanmadı",
+      "started": "Başlandı",
+      "completed": "Tamamlandı",
+      "cancelled": "İptal edildi"
+    },
+    "priority": {
+      "urgent": "Acil",
+      "high": "Yüksek",
+      "medium": "Orta",
+      "low": "Düşük",
+      "none": "Yok"
+    },
+    "date_range": {
+      "any": "Herhangi bir zaman",
+      "this_week": "Bu hafta",
+      "last_week": "Geçen hafta",
+      "this_month": "Bu ay",
+      "last_month": "Geçen ay",
+      "last_30_days": "Son 30 gün",
+      "last_90_days": "Son 90 gün",
+      "this_year": "Bu yıl"
+    },
+    "date_field": {
+      "created_at": "Oluşturma",
+      "target_date": "Son tarih",
+      "completed_at": "Tamamlanma"
+    }
   }
 }

@@ -937,5 +937,118 @@
       "save_failed": "Šablonu se nepodařilo uložit.",
       "delete_failed": "Šablonu se nepodařilo smazat."
     }
+  },
+  "thm_dashboards": {
+    "label": "Dashboardy",
+    "create": "Nový dashboard",
+    "edit": "Upravit dashboard",
+    "delete": "Smazat dashboard",
+    "delete_confirm": "Smazat dashboard „{name}“? Všechny jeho widgety budou odstraněny.",
+    "refresh": "Obnovit",
+    "edit_layout": "Upravit rozložení",
+    "done_editing": "Hotovo",
+    "not_found": "Dashboard nenalezen nebo nemáte přístup.",
+    "private": "Soukromý",
+    "widget_count": "Widgetů: {count}",
+    "empty": {
+      "title": "Zatím žádné dashboardy",
+      "description": "Sestavte dashboardy z grafů nad pracovními položkami a vykázaným časem – podle stavu, priority, řešitele, projektu a dalších."
+    },
+    "form": {
+      "name": "Název",
+      "name_placeholder": "např. Týdenní provoz",
+      "description": "Popis",
+      "project_scope": "Rozsah projektu",
+      "project_scope_all": "Všechny mé projekty",
+      "shared": "Sdílený s pracovním prostorem",
+      "shared_hint": "Vidí všichni v pracovním prostoru; data jsou omezena na projekty, jichž je divák členem."
+    },
+    "widget": {
+      "add": "Přidat widget",
+      "edit": "Upravit widget",
+      "delete": "Smazat widget",
+      "delete_confirm": "Smazat widget „{title}“?",
+      "title": "Název",
+      "title_placeholder": "např. Otevřené položky podle priority",
+      "chart_type": "Graf",
+      "metric": "Metrika",
+      "group_by": "Seskupit podle",
+      "width": "Šířka",
+      "width_columns": "{count} ze 3 sloupců",
+      "filters": "Filtry",
+      "no_data": "Pro tyto filtry nejsou data.",
+      "total": "Celkem",
+      "empty_title": "Zatím žádné widgety",
+      "empty_description": "Přidejte widget a začněte vizualizovat pracovní položky a vykázaný čas.",
+      "move_left": "Doleva",
+      "move_right": "Doprava"
+    },
+    "chart": {
+      "number": "Číslo",
+      "bar": "Sloupcový graf",
+      "pie": "Koláčový graf",
+      "line": "Čárový graf",
+      "table": "Tabulka"
+    },
+    "metric": {
+      "count": "Pracovní položky",
+      "estimate_points": "Body odhadu",
+      "worklog_hours": "Vykázané hodiny"
+    },
+    "group_by": {
+      "none": "Žádné",
+      "state": "Stav",
+      "state_group": "Skupina stavů",
+      "priority": "Priorita",
+      "assignee": "Řešitel",
+      "label": "Štítek",
+      "project": "Projekt",
+      "module": "Modul",
+      "cycle": "Cyklus",
+      "created_by": "Autor",
+      "created_month": "Měsíc vytvoření",
+      "completed_month": "Měsíc dokončení",
+      "target_month": "Měsíc termínu"
+    },
+    "filters": {
+      "projects": "Projekty",
+      "state_groups": "Skupiny stavů",
+      "priorities": "Priority",
+      "assignees": "Řešitelé",
+      "date_range": "Období",
+      "date_field": "Datové pole",
+      "overdue_only": "Jen po termínu",
+      "unassigned_only": "Jen nepřiřazené",
+      "include_sub_issues": "Včetně podpoložek"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Nezahájeno",
+      "started": "Zahájeno",
+      "completed": "Dokončeno",
+      "cancelled": "Zrušeno"
+    },
+    "priority": {
+      "urgent": "Urgentní",
+      "high": "Vysoká",
+      "medium": "Střední",
+      "low": "Nízká",
+      "none": "Žádná"
+    },
+    "date_range": {
+      "any": "Kdykoli",
+      "this_week": "Tento týden",
+      "last_week": "Minulý týden",
+      "this_month": "Tento měsíc",
+      "last_month": "Minulý měsíc",
+      "last_30_days": "Posledních 30 dní",
+      "last_90_days": "Posledních 90 dní",
+      "this_year": "Tento rok"
+    },
+    "date_field": {
+      "created_at": "Vytvořeno",
+      "target_date": "Termín",
+      "completed_at": "Dokončeno"
+    }
   }
 }

@@ -937,5 +937,118 @@
       "save_failed": "無法儲存範本。",
       "delete_failed": "無法刪除範本。"
     }
+  },
+  "thm_dashboards": {
+    "label": "儀表板",
+    "create": "新增儀表板",
+    "edit": "編輯儀表板",
+    "delete": "刪除儀表板",
+    "delete_confirm": "刪除儀表板「{name}」？其所有小工具都會被移除。",
+    "refresh": "重新整理",
+    "edit_layout": "編輯版面",
+    "done_editing": "完成",
+    "not_found": "找不到儀表板或無權存取。",
+    "private": "私人",
+    "widget_count": "{count} 個小工具",
+    "empty": {
+      "title": "尚無儀表板",
+      "description": "以依狀態、優先順序、負責人、專案等彙整工作項目與工時的圖表建立儀表板。"
+    },
+    "form": {
+      "name": "名稱",
+      "name_placeholder": "例如：每週營運",
+      "description": "描述",
+      "project_scope": "專案範圍",
+      "project_scope_all": "我參與的所有專案",
+      "shared": "與工作區共用",
+      "shared_hint": "工作區內所有人皆可檢視；資料僅限於檢視者所屬的專案。"
+    },
+    "widget": {
+      "add": "新增小工具",
+      "edit": "編輯小工具",
+      "delete": "刪除小工具",
+      "delete_confirm": "刪除小工具「{title}」？",
+      "title": "標題",
+      "title_placeholder": "例如：依優先順序的未完成工作項目",
+      "chart_type": "圖表",
+      "metric": "指標",
+      "group_by": "分組依據",
+      "width": "寬度",
+      "width_columns": "3 欄中的 {count} 欄",
+      "filters": "篩選",
+      "no_data": "目前篩選沒有資料。",
+      "total": "總計",
+      "empty_title": "尚無小工具",
+      "empty_description": "新增小工具，開始視覺化工作項目與工時。",
+      "move_left": "向左移",
+      "move_right": "向右移"
+    },
+    "chart": {
+      "number": "數字",
+      "bar": "長條圖",
+      "pie": "圓餅圖",
+      "line": "折線圖",
+      "table": "表格"
+    },
+    "metric": {
+      "count": "工作項目",
+      "estimate_points": "估算點數",
+      "worklog_hours": "記錄工時"
+    },
+    "group_by": {
+      "none": "無",
+      "state": "狀態",
+      "state_group": "狀態群組",
+      "priority": "優先順序",
+      "assignee": "負責人",
+      "label": "標籤",
+      "project": "專案",
+      "module": "模組",
+      "cycle": "週期",
+      "created_by": "建立者",
+      "created_month": "建立月份",
+      "completed_month": "完成月份",
+      "target_month": "到期月份"
+    },
+    "filters": {
+      "projects": "專案",
+      "state_groups": "狀態群組",
+      "priorities": "優先順序",
+      "assignees": "負責人",
+      "date_range": "時間範圍",
+      "date_field": "日期欄位",
+      "overdue_only": "僅逾期",
+      "unassigned_only": "僅未指派",
+      "include_sub_issues": "包含子工作項目"
+    },
+    "state_group": {
+      "backlog": "待辦",
+      "unstarted": "未開始",
+      "started": "進行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "priority": {
+      "urgent": "緊急",
+      "high": "高",
+      "medium": "中",
+      "low": "低",
+      "none": "無"
+    },
+    "date_range": {
+      "any": "任何時間",
+      "this_week": "本週",
+      "last_week": "上週",
+      "this_month": "本月",
+      "last_month": "上月",
+      "last_30_days": "最近 30 天",
+      "last_90_days": "最近 90 天",
+      "this_year": "今年"
+    },
+    "date_field": {
+      "created_at": "建立時間",
+      "target_date": "截止日期",
+      "completed_at": "完成時間"
+    }
   }
 }

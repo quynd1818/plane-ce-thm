@@ -937,5 +937,118 @@
       "save_failed": "无法保存模板。",
       "delete_failed": "无法删除模板。"
     }
+  },
+  "thm_dashboards": {
+    "label": "仪表盘",
+    "create": "新建仪表盘",
+    "edit": "编辑仪表盘",
+    "delete": "删除仪表盘",
+    "delete_confirm": "删除仪表盘“{name}”？其所有小组件都将被移除。",
+    "refresh": "刷新",
+    "edit_layout": "编辑布局",
+    "done_editing": "完成",
+    "not_found": "未找到仪表盘或无权访问。",
+    "private": "私有",
+    "widget_count": "{count} 个小组件",
+    "empty": {
+      "title": "还没有仪表盘",
+      "description": "用按状态、优先级、负责人、项目等汇总工作项和工时的图表构建仪表盘。"
+    },
+    "form": {
+      "name": "名称",
+      "name_placeholder": "例如：每周运营",
+      "description": "描述",
+      "project_scope": "项目范围",
+      "project_scope_all": "我参与的所有项目",
+      "shared": "与工作区共享",
+      "shared_hint": "工作区内所有人可查看；数据仅限于查看者所属的项目。"
+    },
+    "widget": {
+      "add": "添加小组件",
+      "edit": "编辑小组件",
+      "delete": "删除小组件",
+      "delete_confirm": "删除小组件“{title}”？",
+      "title": "标题",
+      "title_placeholder": "例如：按优先级的未完成工作项",
+      "chart_type": "图表",
+      "metric": "指标",
+      "group_by": "分组依据",
+      "width": "宽度",
+      "width_columns": "3 列中的 {count} 列",
+      "filters": "筛选",
+      "no_data": "当前筛选无数据。",
+      "total": "合计",
+      "empty_title": "还没有小组件",
+      "empty_description": "添加小组件，开始可视化工作项和工时。",
+      "move_left": "左移",
+      "move_right": "右移"
+    },
+    "chart": {
+      "number": "数字",
+      "bar": "柱状图",
+      "pie": "饼图",
+      "line": "折线图",
+      "table": "表格"
+    },
+    "metric": {
+      "count": "工作项",
+      "estimate_points": "估算点数",
+      "worklog_hours": "记录工时"
+    },
+    "group_by": {
+      "none": "无",
+      "state": "状态",
+      "state_group": "状态组",
+      "priority": "优先级",
+      "assignee": "负责人",
+      "label": "标签",
+      "project": "项目",
+      "module": "模块",
+      "cycle": "周期",
+      "created_by": "创建者",
+      "created_month": "创建月份",
+      "completed_month": "完成月份",
+      "target_month": "到期月份"
+    },
+    "filters": {
+      "projects": "项目",
+      "state_groups": "状态组",
+      "priorities": "优先级",
+      "assignees": "负责人",
+      "date_range": "时间范围",
+      "date_field": "日期字段",
+      "overdue_only": "仅逾期",
+      "unassigned_only": "仅未分配",
+      "include_sub_issues": "包含子工作项"
+    },
+    "state_group": {
+      "backlog": "待办",
+      "unstarted": "未开始",
+      "started": "进行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    },
+    "priority": {
+      "urgent": "紧急",
+      "high": "高",
+      "medium": "中",
+      "low": "低",
+      "none": "无"
+    },
+    "date_range": {
+      "any": "任意时间",
+      "this_week": "本周",
+      "last_week": "上周",
+      "this_month": "本月",
+      "last_month": "上月",
+      "last_30_days": "最近 30 天",
+      "last_90_days": "最近 90 天",
+      "this_year": "今年"
+    },
+    "date_field": {
+      "created_at": "创建时间",
+      "target_date": "截止日期",
+      "completed_at": "完成时间"
+    }
   }
 }

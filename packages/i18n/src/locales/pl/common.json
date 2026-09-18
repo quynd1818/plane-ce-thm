@@ -937,5 +937,118 @@
       "save_failed": "Nie można zapisać szablonu.",
       "delete_failed": "Nie można usunąć szablonu."
     }
+  },
+  "thm_dashboards": {
+    "label": "Pulpity",
+    "create": "Nowy pulpit",
+    "edit": "Edytuj pulpit",
+    "delete": "Usuń pulpit",
+    "delete_confirm": "Usunąć pulpit „{name}”? Wszystkie widżety zostaną usunięte.",
+    "refresh": "Odśwież",
+    "edit_layout": "Edytuj układ",
+    "done_editing": "Gotowe",
+    "not_found": "Nie znaleziono pulpitu lub brak dostępu.",
+    "private": "Prywatny",
+    "widget_count": "Widżety: {count}",
+    "empty": {
+      "title": "Brak pulpitów",
+      "description": "Twórz pulpity z wykresów elementów pracy i zarejestrowanego czasu — według statusu, priorytetu, przypisania, projektu i innych."
+    },
+    "form": {
+      "name": "Nazwa",
+      "name_placeholder": "np. Cotygodniowe operacje",
+      "description": "Opis",
+      "project_scope": "Zakres projektu",
+      "project_scope_all": "Wszystkie moje projekty",
+      "shared": "Udostępniony w przestrzeni roboczej",
+      "shared_hint": "Widzą wszyscy w przestrzeni; dane są ograniczone do projektów, w których oglądający jest członkiem."
+    },
+    "widget": {
+      "add": "Dodaj widżet",
+      "edit": "Edytuj widżet",
+      "delete": "Usuń widżet",
+      "delete_confirm": "Usunąć widżet „{title}”?",
+      "title": "Tytuł",
+      "title_placeholder": "np. Otwarte elementy według priorytetu",
+      "chart_type": "Wykres",
+      "metric": "Metryka",
+      "group_by": "Grupuj według",
+      "width": "Szerokość",
+      "width_columns": "{count} z 3 kolumn",
+      "filters": "Filtry",
+      "no_data": "Brak danych dla tych filtrów.",
+      "total": "Razem",
+      "empty_title": "Brak widżetów",
+      "empty_description": "Dodaj widżet, aby wizualizować elementy pracy i zarejestrowany czas.",
+      "move_left": "W lewo",
+      "move_right": "W prawo"
+    },
+    "chart": {
+      "number": "Liczba",
+      "bar": "Wykres słupkowy",
+      "pie": "Wykres kołowy",
+      "line": "Wykres liniowy",
+      "table": "Tabela"
+    },
+    "metric": {
+      "count": "Elementy pracy",
+      "estimate_points": "Punkty estymacji",
+      "worklog_hours": "Zarejestrowane godziny"
+    },
+    "group_by": {
+      "none": "Brak",
+      "state": "Status",
+      "state_group": "Grupa statusów",
+      "priority": "Priorytet",
+      "assignee": "Przypisany",
+      "label": "Etykieta",
+      "project": "Projekt",
+      "module": "Moduł",
+      "cycle": "Cykl",
+      "created_by": "Twórca",
+      "created_month": "Miesiąc utworzenia",
+      "completed_month": "Miesiąc ukończenia",
+      "target_month": "Miesiąc terminu"
+    },
+    "filters": {
+      "projects": "Projekty",
+      "state_groups": "Grupy statusów",
+      "priorities": "Priorytety",
+      "assignees": "Przypisani",
+      "date_range": "Zakres dat",
+      "date_field": "Pole daty",
+      "overdue_only": "Tylko przeterminowane",
+      "unassigned_only": "Tylko nieprzypisane",
+      "include_sub_issues": "Uwzględnij podelementy"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Nierozpoczęte",
+      "started": "Rozpoczęte",
+      "completed": "Ukończone",
+      "cancelled": "Anulowane"
+    },
+    "priority": {
+      "urgent": "Pilny",
+      "high": "Wysoki",
+      "medium": "Średni",
+      "low": "Niski",
+      "none": "Brak"
+    },
+    "date_range": {
+      "any": "Dowolny okres",
+      "this_week": "Ten tydzień",
+      "last_week": "Poprzedni tydzień",
+      "this_month": "Ten miesiąc",
+      "last_month": "Poprzedni miesiąc",
+      "last_30_days": "Ostatnie 30 dni",
+      "last_90_days": "Ostatnie 90 dni",
+      "this_year": "Ten rok"
+    },
+    "date_field": {
+      "created_at": "Utworzono",
+      "target_date": "Termin",
+      "completed_at": "Ukończono"
+    }
   }
 }

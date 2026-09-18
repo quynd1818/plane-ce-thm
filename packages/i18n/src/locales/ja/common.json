@@ -937,5 +937,118 @@
       "save_failed": "テンプレートを保存できませんでした。",
       "delete_failed": "テンプレートを削除できませんでした。"
     }
+  },
+  "thm_dashboards": {
+    "label": "ダッシュボード",
+    "create": "新しいダッシュボード",
+    "edit": "ダッシュボードを編集",
+    "delete": "ダッシュボードを削除",
+    "delete_confirm": "ダッシュボード「{name}」を削除しますか？すべてのウィジェットが削除されます。",
+    "refresh": "更新",
+    "edit_layout": "レイアウトを編集",
+    "done_editing": "完了",
+    "not_found": "ダッシュボードが見つからないか、アクセス権がありません。",
+    "private": "非公開",
+    "widget_count": "{count} ウィジェット",
+    "empty": {
+      "title": "ダッシュボードはまだありません",
+      "description": "作業項目と記録時間をステータス、優先度、担当者、プロジェクトなどで集計したグラフからダッシュボードを作成します。"
+    },
+    "form": {
+      "name": "名前",
+      "name_placeholder": "例：週次オペレーション",
+      "description": "説明",
+      "project_scope": "プロジェクト範囲",
+      "project_scope_all": "参加しているすべてのプロジェクト",
+      "shared": "ワークスペースで共有",
+      "shared_hint": "ワークスペースの全員が閲覧できます。データは閲覧者が所属するプロジェクトに限定されます。"
+    },
+    "widget": {
+      "add": "ウィジェットを追加",
+      "edit": "ウィジェットを編集",
+      "delete": "ウィジェットを削除",
+      "delete_confirm": "ウィジェット「{title}」を削除しますか？",
+      "title": "タイトル",
+      "title_placeholder": "例：優先度別の未完了作業項目",
+      "chart_type": "グラフ",
+      "metric": "指標",
+      "group_by": "グループ化",
+      "width": "幅",
+      "width_columns": "3 列中 {count} 列",
+      "filters": "フィルター",
+      "no_data": "このフィルターに該当するデータはありません。",
+      "total": "合計",
+      "empty_title": "ウィジェットはまだありません",
+      "empty_description": "ウィジェットを追加して作業項目と記録時間の可視化を始めましょう。",
+      "move_left": "左へ移動",
+      "move_right": "右へ移動"
+    },
+    "chart": {
+      "number": "数値",
+      "bar": "棒グラフ",
+      "pie": "円グラフ",
+      "line": "折れ線グラフ",
+      "table": "表"
+    },
+    "metric": {
+      "count": "作業項目",
+      "estimate_points": "見積ポイント",
+      "worklog_hours": "記録時間"
+    },
+    "group_by": {
+      "none": "なし",
+      "state": "ステータス",
+      "state_group": "ステータスグループ",
+      "priority": "優先度",
+      "assignee": "担当者",
+      "label": "ラベル",
+      "project": "プロジェクト",
+      "module": "モジュール",
+      "cycle": "サイクル",
+      "created_by": "作成者",
+      "created_month": "作成月",
+      "completed_month": "完了月",
+      "target_month": "期限月"
+    },
+    "filters": {
+      "projects": "プロジェクト",
+      "state_groups": "ステータスグループ",
+      "priorities": "優先度",
+      "assignees": "担当者",
+      "date_range": "期間",
+      "date_field": "日付フィールド",
+      "overdue_only": "期限超過のみ",
+      "unassigned_only": "未割り当てのみ",
+      "include_sub_issues": "子作業項目を含める"
+    },
+    "state_group": {
+      "backlog": "バックログ",
+      "unstarted": "未着手",
+      "started": "進行中",
+      "completed": "完了",
+      "cancelled": "キャンセル"
+    },
+    "priority": {
+      "urgent": "緊急",
+      "high": "高",
+      "medium": "中",
+      "low": "低",
+      "none": "なし"
+    },
+    "date_range": {
+      "any": "すべての期間",
+      "this_week": "今週",
+      "last_week": "先週",
+      "this_month": "今月",
+      "last_month": "先月",
+      "last_30_days": "過去 30 日",
+      "last_90_days": "過去 90 日",
+      "this_year": "今年"
+    },
+    "date_field": {
+      "created_at": "作成日",
+      "target_date": "期限",
+      "completed_at": "完了日"
+    }
   }
 }

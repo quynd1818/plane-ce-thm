@@ -937,5 +937,118 @@
       "save_failed": "No se pudo guardar la plantilla.",
       "delete_failed": "No se pudo eliminar la plantilla."
     }
+  },
+  "thm_dashboards": {
+    "label": "Paneles",
+    "create": "Nuevo panel",
+    "edit": "Editar panel",
+    "delete": "Eliminar panel",
+    "delete_confirm": "¿Eliminar el panel \"{name}\"? Se eliminarán todos sus widgets.",
+    "refresh": "Actualizar",
+    "edit_layout": "Editar diseño",
+    "done_editing": "Listo",
+    "not_found": "Panel no encontrado o sin acceso.",
+    "private": "Privado",
+    "widget_count": "{count} widgets",
+    "empty": {
+      "title": "Aún no hay paneles",
+      "description": "Crea paneles con gráficos sobre elementos de trabajo y tiempo registrado: por estado, prioridad, responsable, proyecto y más."
+    },
+    "form": {
+      "name": "Nombre",
+      "name_placeholder": "p. ej. Operaciones semanales",
+      "description": "Descripción",
+      "project_scope": "Ámbito de proyecto",
+      "project_scope_all": "Todos mis proyectos",
+      "shared": "Compartido con el espacio de trabajo",
+      "shared_hint": "Todos pueden verlo; los datos se limitan a los proyectos de los que cada usuario es miembro."
+    },
+    "widget": {
+      "add": "Añadir widget",
+      "edit": "Editar widget",
+      "delete": "Eliminar widget",
+      "delete_confirm": "¿Eliminar el widget \"{title}\"?",
+      "title": "Título",
+      "title_placeholder": "p. ej. Elementos abiertos por prioridad",
+      "chart_type": "Gráfico",
+      "metric": "Métrica",
+      "group_by": "Agrupar por",
+      "width": "Ancho",
+      "width_columns": "{count} de 3 columnas",
+      "filters": "Filtros",
+      "no_data": "No hay datos para estos filtros.",
+      "total": "Total",
+      "empty_title": "Aún no hay widgets",
+      "empty_description": "Añade un widget para graficar elementos de trabajo y tiempo registrado.",
+      "move_left": "Mover a la izquierda",
+      "move_right": "Mover a la derecha"
+    },
+    "chart": {
+      "number": "Número",
+      "bar": "Gráfico de barras",
+      "pie": "Gráfico circular",
+      "line": "Gráfico de líneas",
+      "table": "Tabla"
+    },
+    "metric": {
+      "count": "Elementos de trabajo",
+      "estimate_points": "Puntos de estimación",
+      "worklog_hours": "Horas registradas"
+    },
+    "group_by": {
+      "none": "Ninguno",
+      "state": "Estado",
+      "state_group": "Grupo de estados",
+      "priority": "Prioridad",
+      "assignee": "Responsable",
+      "label": "Etiqueta",
+      "project": "Proyecto",
+      "module": "Módulo",
+      "cycle": "Ciclo",
+      "created_by": "Creador",
+      "created_month": "Mes de creación",
+      "completed_month": "Mes de finalización",
+      "target_month": "Mes de vencimiento"
+    },
+    "filters": {
+      "projects": "Proyectos",
+      "state_groups": "Grupos de estados",
+      "priorities": "Prioridades",
+      "assignees": "Responsables",
+      "date_range": "Rango de fechas",
+      "date_field": "Campo de fecha",
+      "overdue_only": "Solo vencidos",
+      "unassigned_only": "Solo sin asignar",
+      "include_sub_issues": "Incluir subelementos"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Sin iniciar",
+      "started": "Iniciado",
+      "completed": "Completado",
+      "cancelled": "Cancelado"
+    },
+    "priority": {
+      "urgent": "Urgente",
+      "high": "Alta",
+      "medium": "Media",
+      "low": "Baja",
+      "none": "Ninguna"
+    },
+    "date_range": {
+      "any": "Cualquier fecha",
+      "this_week": "Esta semana",
+      "last_week": "Semana pasada",
+      "this_month": "Este mes",
+      "last_month": "Mes pasado",
+      "last_30_days": "Últimos 30 días",
+      "last_90_days": "Últimos 90 días",
+      "this_year": "Este año"
+    },
+    "date_field": {
+      "created_at": "Creación",
+      "target_date": "Fecha límite",
+      "completed_at": "Finalización"
+    }
   }
 }

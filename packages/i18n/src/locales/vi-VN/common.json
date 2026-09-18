@@ -937,5 +937,118 @@
       "save_failed": "Không thể lưu mẫu.",
       "delete_failed": "Không thể xoá mẫu."
     }
+  },
+  "thm_dashboards": {
+    "label": "Bảng điều khiển",
+    "create": "Tạo bảng điều khiển",
+    "edit": "Sửa bảng điều khiển",
+    "delete": "Xoá bảng điều khiển",
+    "delete_confirm": "Xoá bảng điều khiển \"{name}\"? Toàn bộ widget sẽ bị xoá.",
+    "refresh": "Làm mới",
+    "edit_layout": "Sửa bố cục",
+    "done_editing": "Xong",
+    "not_found": "Không tìm thấy bảng điều khiển hoặc bạn không có quyền xem.",
+    "private": "Riêng tư",
+    "widget_count": "{count} widget",
+    "empty": {
+      "title": "Chưa có bảng điều khiển",
+      "description": "Tạo bảng điều khiển từ biểu đồ về mục công việc và giờ đã ghi — theo trạng thái, độ ưu tiên, người phụ trách, dự án…"
+    },
+    "form": {
+      "name": "Tên",
+      "name_placeholder": "VD: Vận hành hàng tuần",
+      "description": "Mô tả",
+      "project_scope": "Phạm vi dự án",
+      "project_scope_all": "Mọi dự án tôi tham gia",
+      "shared": "Chia sẻ với workspace",
+      "shared_hint": "Mọi người trong workspace đều xem được; dữ liệu giới hạn theo dự án mà người xem là thành viên."
+    },
+    "widget": {
+      "add": "Thêm widget",
+      "edit": "Sửa widget",
+      "delete": "Xoá widget",
+      "delete_confirm": "Xoá widget \"{title}\"?",
+      "title": "Tiêu đề",
+      "title_placeholder": "VD: Việc đang mở theo độ ưu tiên",
+      "chart_type": "Biểu đồ",
+      "metric": "Chỉ số",
+      "group_by": "Nhóm theo",
+      "width": "Độ rộng",
+      "width_columns": "{count}/3 cột",
+      "filters": "Bộ lọc",
+      "no_data": "Không có dữ liệu với bộ lọc này.",
+      "total": "Tổng",
+      "empty_title": "Chưa có widget",
+      "empty_description": "Thêm widget để bắt đầu vẽ biểu đồ mục công việc và giờ đã ghi.",
+      "move_left": "Sang trái",
+      "move_right": "Sang phải"
+    },
+    "chart": {
+      "number": "Số",
+      "bar": "Biểu đồ cột",
+      "pie": "Biểu đồ tròn",
+      "line": "Biểu đồ đường",
+      "table": "Bảng"
+    },
+    "metric": {
+      "count": "Mục công việc",
+      "estimate_points": "Điểm ước lượng",
+      "worklog_hours": "Giờ đã ghi"
+    },
+    "group_by": {
+      "none": "Không",
+      "state": "Trạng thái",
+      "state_group": "Nhóm trạng thái",
+      "priority": "Độ ưu tiên",
+      "assignee": "Người phụ trách",
+      "label": "Nhãn",
+      "project": "Dự án",
+      "module": "Module",
+      "cycle": "Chu kỳ",
+      "created_by": "Người tạo",
+      "created_month": "Tháng tạo",
+      "completed_month": "Tháng hoàn thành",
+      "target_month": "Tháng đến hạn"
+    },
+    "filters": {
+      "projects": "Dự án",
+      "state_groups": "Nhóm trạng thái",
+      "priorities": "Độ ưu tiên",
+      "assignees": "Người phụ trách",
+      "date_range": "Khoảng thời gian",
+      "date_field": "Trường ngày",
+      "overdue_only": "Chỉ việc quá hạn",
+      "unassigned_only": "Chỉ việc chưa giao",
+      "include_sub_issues": "Gồm cả việc con"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Chưa bắt đầu",
+      "started": "Đang làm",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã huỷ"
+    },
+    "priority": {
+      "urgent": "Khẩn cấp",
+      "high": "Cao",
+      "medium": "Trung bình",
+      "low": "Thấp",
+      "none": "Không"
+    },
+    "date_range": {
+      "any": "Mọi thời điểm",
+      "this_week": "Tuần này",
+      "last_week": "Tuần trước",
+      "this_month": "Tháng này",
+      "last_month": "Tháng trước",
+      "last_30_days": "30 ngày qua",
+      "last_90_days": "90 ngày qua",
+      "this_year": "Năm nay"
+    },
+    "date_field": {
+      "created_at": "Ngày tạo",
+      "target_date": "Hạn hoàn thành",
+      "completed_at": "Ngày hoàn thành"
+    }
   }
 }

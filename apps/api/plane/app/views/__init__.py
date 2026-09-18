@@ -138,6 +138,15 @@ from .issue.worklog import (
     ProjectWorkLogSummaryEndpoint,
     WorkLogReviewEndpoint,
 )
+from .workspace.dashboard import (
+    DashboardDataEndpoint,
+    DashboardDetailEndpoint,
+    DashboardEndpoint,
+    DashboardWidgetDataEndpoint,
+    DashboardWidgetDetailEndpoint,
+    DashboardWidgetEndpoint,
+    DashboardWidgetReorderEndpoint,
+)
 from .project.template import (
     ProjectSaveAsTemplateEndpoint,
     ProjectTemplateDetailEndpoint,

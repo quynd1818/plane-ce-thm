@@ -937,5 +937,118 @@
       "save_failed": "Șablonul nu a putut fi salvat.",
       "delete_failed": "Șablonul nu a putut fi șters."
     }
+  },
+  "thm_dashboards": {
+    "label": "Tablouri de bord",
+    "create": "Tablou de bord nou",
+    "edit": "Editează tabloul de bord",
+    "delete": "Șterge tabloul de bord",
+    "delete_confirm": "Ștergi tabloul de bord „{name}”? Toate widgeturile vor fi eliminate.",
+    "refresh": "Reîmprospătează",
+    "edit_layout": "Editează aspectul",
+    "done_editing": "Gata",
+    "not_found": "Tabloul de bord nu a fost găsit sau nu ai acces.",
+    "private": "Privat",
+    "widget_count": "{count} widgeturi",
+    "empty": {
+      "title": "Niciun tablou de bord încă",
+      "description": "Construiește tablouri de bord din grafice peste elemente de lucru și timp înregistrat — după stare, prioritate, responsabil, proiect și altele."
+    },
+    "form": {
+      "name": "Nume",
+      "name_placeholder": "ex. Operațiuni săptămânale",
+      "description": "Descriere",
+      "project_scope": "Domeniu proiect",
+      "project_scope_all": "Toate proiectele mele",
+      "shared": "Partajat cu spațiul de lucru",
+      "shared_hint": "Toți din spațiul de lucru îl pot vedea; datele sunt limitate la proiectele în care fiecare este membru."
+    },
+    "widget": {
+      "add": "Adaugă widget",
+      "edit": "Editează widget",
+      "delete": "Șterge widget",
+      "delete_confirm": "Ștergi widgetul „{title}”?",
+      "title": "Titlu",
+      "title_placeholder": "ex. Elemente deschise după prioritate",
+      "chart_type": "Grafic",
+      "metric": "Metrică",
+      "group_by": "Grupează după",
+      "width": "Lățime",
+      "width_columns": "{count} din 3 coloane",
+      "filters": "Filtre",
+      "no_data": "Nu există date pentru aceste filtre.",
+      "total": "Total",
+      "empty_title": "Niciun widget încă",
+      "empty_description": "Adaugă un widget pentru a vizualiza elementele de lucru și timpul înregistrat.",
+      "move_left": "Mută la stânga",
+      "move_right": "Mută la dreapta"
+    },
+    "chart": {
+      "number": "Număr",
+      "bar": "Grafic cu bare",
+      "pie": "Grafic circular",
+      "line": "Grafic liniar",
+      "table": "Tabel"
+    },
+    "metric": {
+      "count": "Elemente de lucru",
+      "estimate_points": "Puncte de estimare",
+      "worklog_hours": "Ore înregistrate"
+    },
+    "group_by": {
+      "none": "Niciuna",
+      "state": "Stare",
+      "state_group": "Grup de stări",
+      "priority": "Prioritate",
+      "assignee": "Responsabil",
+      "label": "Etichetă",
+      "project": "Proiect",
+      "module": "Modul",
+      "cycle": "Ciclu",
+      "created_by": "Creator",
+      "created_month": "Luna creării",
+      "completed_month": "Luna finalizării",
+      "target_month": "Luna scadenței"
+    },
+    "filters": {
+      "projects": "Proiecte",
+      "state_groups": "Grupuri de stări",
+      "priorities": "Priorități",
+      "assignees": "Responsabili",
+      "date_range": "Interval de date",
+      "date_field": "Câmp de dată",
+      "overdue_only": "Doar întârziate",
+      "unassigned_only": "Doar neatribuite",
+      "include_sub_issues": "Include subelementele"
+    },
+    "state_group": {
+      "backlog": "Backlog",
+      "unstarted": "Neînceput",
+      "started": "Început",
+      "completed": "Finalizat",
+      "cancelled": "Anulat"
+    },
+    "priority": {
+      "urgent": "Urgent",
+      "high": "Ridicată",
+      "medium": "Medie",
+      "low": "Scăzută",
+      "none": "Niciuna"
+    },
+    "date_range": {
+      "any": "Oricând",
+      "this_week": "Săptămâna aceasta",
+      "last_week": "Săptămâna trecută",
+      "this_month": "Luna aceasta",
+      "last_month": "Luna trecută",
+      "last_30_days": "Ultimele 30 de zile",
+      "last_90_days": "Ultimele 90 de zile",
+      "this_year": "Anul acesta"
+    },
+    "date_field": {
+      "created_at": "Creat",
+      "target_date": "Termen",
+      "completed_at": "Finalizat"
+    }
   }
 }
