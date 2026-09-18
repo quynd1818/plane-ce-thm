@@ -225,3 +225,114 @@ class TestProjectTemplates:
         assert r.status_code == 201, r.data
         assert State.objects.filter(project_id=r.data["id"]).count() == 5  # stock defaults kept
         assert Label.objects.filter(project_id=r.data["id"], name="Gấp").exists()
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+@pytest.mark.parametrize("legacy", [False, True])
+def test_work_item_template_defaults_remap_to_destination(workspace, create_user, source, legacy):
+    from copy import deepcopy
+
+    from plane.app.serializers import IssueCreateSerializer
+    from plane.db.models import WorkItemTemplate
+    from plane.utils.project_template import capture_project
+
+    source_state = State.objects.get(project=source, name="Pháp lý")
+    source_label = Label.objects.get(project=source, name="Xây dựng")
+    source_module = Module.objects.get(project=source, name="Giai đoạn 1")
+    defaults = {
+        "name": "From template",
+        "description_html": "<p>Details</p>",
+        "priority": "high",
+        "state_id": str(source_state.id),
+        "label_ids": [str(source_label.id)],
+        "module_ids": [str(source_module.id)],
+        "assignee_ids": [str(create_user.id)],
+        "project_id": str(source.id),
+        "workspace_id": str(workspace.id),
+        "parent_id": str(uuid4()),
+        "cycle_id": str(uuid4()),
+        "type_id": str(uuid4()),
+        "custom_properties": {"chu_dau_tu": "THM"},
+    }
+    original = WorkItemTemplate.objects.create(project=source, workspace=workspace, name="Task", defaults=defaults)
+    snapshot = capture_project(source)
+    portable = snapshot["work_item_templates"][0]["defaults"]
+    assert portable == {
+        "name": "From template",
+        "description_html": "<p>Details</p>",
+        "priority": "high",
+        "state": "Pháp lý",
+        "labels": ["Xây dựng"],
+        "modules": ["Giai đoạn 1"],
+        "custom_properties": {"chu_dau_tu": "THM"},
+    }
+    if legacy:
+        snapshot["work_item_templates"][0]["defaults"] = defaults
+    else:
+        # A portable snapshot must not depend on the source still having these names.
+        source_state.name = "Renamed after snapshot"
+        source_state.save()
+    before = deepcopy(snapshot)
+    template = ProjectTemplate.objects.create(
+        workspace=workspace, owner=create_user, source_project=source, name="Portable", template_data=snapshot
+    )
+    with patch("plane.app.views.project.base.model_activity"):
+        response = _client(create_user).post(
+            f"/api/workspaces/{workspace.slug}/projects/",
+            {"name": "Destination", "identifier": "DEST", "template_id": str(template.id)},
+            format="json",
+        )
+    assert response.status_code == 201, response.data
+    destination = Project.objects.get(pk=response.data["id"])
+    copied = WorkItemTemplate.objects.get(project=destination)
+    expected = {
+        "name": "From template",
+        "description_html": "<p>Details</p>",
+        "priority": "high",
+        "state_id": str(State.objects.get(project=destination, name="Pháp lý").id),
+        "label_ids": [str(Label.objects.get(project=destination, name="Xây dựng").id)],
+        "module_ids": [str(Module.objects.get(project=destination, name="Giai đoạn 1").id)],
+        "custom_properties": {"chu_dau_tu": "THM"},
+    }
+    assert copied.defaults == expected
+    serializer = IssueCreateSerializer(
+        data=copied.defaults,
+        context={"project_id": destination.id, "workspace_id": workspace.id, "default_assignee_id": None},
+    )
+    assert serializer.is_valid(), serializer.errors
+    issue = serializer.save()
+    assert str(issue.state_id) == expected["state_id"]
+    assert list(issue.labels.values_list("id", flat=True)) == [
+        Label.objects.get(project=destination, name="Xây dựng").id
+    ]
+    original.refresh_from_db()
+    template.refresh_from_db()
+    assert original.defaults == defaults and template.template_data == before
+
+
+@pytest.mark.unit
+@pytest.mark.django_db
+def test_legacy_defaults_without_source_drop_foreign_ids(workspace, create_user):
+    from plane.db.models import WorkItemTemplate
+    from plane.utils.project_template import apply_template
+
+    project = Project.objects.create(workspace=workspace, name="Orphan snapshot", identifier="ORPH")
+    apply_template(
+        project,
+        {
+            "work_item_templates": [
+                {
+                    "name": "Task",
+                    "defaults": {
+                        "name": "Safe",
+                        "state_id": str(uuid4()),
+                        "label_ids": [str(uuid4())],
+                        "assignee_ids": [str(create_user.id)],
+                    },
+                }
+            ]
+        },
+        create_user,
+    )
+    assert WorkItemTemplate.objects.get(project=project).defaults == {"name": "Safe"}

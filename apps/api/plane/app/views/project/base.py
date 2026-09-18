@@ -307,7 +307,9 @@ class ProjectViewSet(BaseViewSet):
             )
 
             if template is not None:
-                apply_template(serializer.instance, template.template_data, request.user)
+                apply_template(
+                    serializer.instance, template.template_data, request.user, source_project=template.source_project
+                )
                 ProjectTemplate.objects.filter(pk=template.pk).update(usage_count=F("usage_count") + 1)
 
             project = self.get_queryset().filter(pk=serializer.data["id"]).first()

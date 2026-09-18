@@ -26,7 +26,7 @@ from plane.app.views.base import BaseAPIView
 from plane.app.views.project.epic import _serialize_epics
 from plane.db.models import Initiative, InitiativeEpic, InitiativeProject, Issue, Project, Workspace, WorkspaceMember
 from plane.utils.dashboard import visible_project_ids
-from plane.utils.epic import epic_queryset, rollup_for_queryset
+from plane.utils.epic import epic_queryset, rollup_for_queryset, visible_issues
 
 NOT_FOUND = {"error": "Initiative not found."}
 FORBIDDEN = {"error": "Only the initiative lead, its creator or a workspace admin can change it."}
@@ -70,9 +70,9 @@ def _rollup(initiative, user):
     )
     # epics themselves are containers, not work
     qs = qs.exclude(type__is_epic=True)
-    data = rollup_for_queryset(qs)
+    data = rollup_for_queryset(visible_issues(qs, user))
     data["project_count"] = len(project_ids)
-    data["epic_count"] = len(epic_ids)
+    data["epic_count"] = visible_issues(epic_queryset().filter(pk__in=epic_ids), user).count()
     return data
 
 
@@ -117,7 +117,8 @@ class InitiativeDetailEndpoint(BaseAPIView):
             p["is_member"] = p["id"] in visible
         epic_ids = [link.epic_id for link in initiative._epic_links]
         data["epics"] = _serialize_epics(
-            epic_queryset(workspace_id=initiative.workspace_id).filter(pk__in=epic_ids, project_id__in=list(visible))
+            epic_queryset(workspace_id=initiative.workspace_id).filter(pk__in=epic_ids, project_id__in=list(visible)),
+            request.user,
         )
         return Response(data)
 
@@ -250,4 +251,4 @@ class WorkspaceEpicEndpoint(BaseAPIView):
         project_id = request.GET.get("project_id")
         if project_id:
             epics = epics.filter(project_id=project_id)
-        return Response(_serialize_epics(epics))
+        return Response(_serialize_epics(epics, request.user))

@@ -24,6 +24,8 @@ workflow approvers) are deliberately not captured: they are project members,
 not project structure.
 """
 
+from copy import deepcopy
+
 from django.db import transaction
 
 from plane.db.models import (
@@ -58,6 +60,41 @@ PROJECT_SETTING_FIELDS = (
 )
 
 MAX_WORK_ITEMS = 500
+
+
+WORK_ITEM_DEFAULT_FIELDS = (
+    "name",
+    "description_html",
+    "priority",
+    "start_date",
+    "target_date",
+    "custom_properties",
+)
+
+
+def portable_defaults(defaults, states, labels, modules):
+    """Copy values and resolve source IDs to names; omit people and unsupported relations."""
+    defaults = defaults or {}
+    result = {key: deepcopy(defaults[key]) for key in WORK_ITEM_DEFAULT_FIELDS if key in defaults}
+    state_names = {str(state.id): state.name for state in states}
+    if defaults.get("state_id") in state_names:
+        result["state"] = state_names[defaults["state_id"]]
+    for key, objects in (("labels", labels), ("modules", modules)):
+        names = {str(obj.id): obj.name for obj in objects}
+        if f"{key[:-1]}_ids" in defaults:
+            result[key] = [names[value] for value in defaults[f"{key[:-1]}_ids"] or [] if value in names]
+    return result
+
+
+def restore_defaults(defaults, states, labels, modules):
+    """Only destination-project IDs may appear in restored work item defaults."""
+    result = {key: deepcopy(defaults[key]) for key in WORK_ITEM_DEFAULT_FIELDS if key in defaults}
+    if defaults.get("state") in states:
+        result["state_id"] = str(states[defaults["state"]].id)
+    for key, objects in (("labels", labels), ("modules", modules)):
+        if key in defaults:
+            result[f"{key[:-1]}_ids"] = [str(objects[name].id) for name in defaults[key] or [] if name in objects]
+    return result
 
 
 # --------------------------------------------------------------------------- #
@@ -118,7 +155,11 @@ def capture_project(project: Project, include_work_items: bool = False) -> dict:
             for p in ProjectCustomProperty.objects.filter(project=project, is_active=True)
         ],
         "work_item_templates": [
-            {"name": w.name, "description": w.description, "defaults": w.defaults}
+            {
+                "name": w.name,
+                "description": w.description,
+                "defaults": portable_defaults(w.defaults, states, labels, modules),
+            }
             for w in WorkItemTemplate.objects.filter(project=project, is_active=True)
         ],
         "work_items": [],
@@ -150,7 +191,7 @@ def capture_project(project: Project, include_work_items: bool = False) -> dict:
 # apply
 # --------------------------------------------------------------------------- #
 @transaction.atomic
-def apply_template(project: Project, template_data: dict, user) -> None:
+def apply_template(project: Project, template_data: dict, user, source_project=None) -> None:
     """Reproduce ``template_data`` inside ``project``.
 
     Called right after the project row exists. Template states *replace* the
@@ -170,7 +211,7 @@ def apply_template(project: Project, template_data: dict, user) -> None:
 
     # 2. states — replace the defaults so the template's set is the whole set
     states_by_name: dict[str, State] = {}
-    tpl_states = [s for s in (data.get("states") or []) if s.get("name")]
+    tpl_states = [dict(s) for s in (data.get("states") or []) if s.get("name")]
     if tpl_states:
         # brand-new project: nothing references the stock states yet, so hard-delete
         State.objects.filter(project=project, is_triage=False).delete(soft=False)
@@ -254,8 +295,23 @@ def apply_template(project: Project, template_data: dict, user) -> None:
         if not w.get("name") or w["name"] in seen_names:
             continue
         seen_names.add(w["name"])
+        defaults = w.get("defaults") or {}
+        # Older snapshots stored raw IDs. Resolve them only within their recorded source.
+        if source_project and any(key in defaults for key in ("state_id", "label_ids", "module_ids")):
+            defaults = {
+                **defaults,
+                **portable_defaults(
+                    defaults,
+                    State.objects.filter(project=source_project, is_triage=False),
+                    Label.objects.filter(project=source_project),
+                    Module.objects.filter(project=source_project, archived_at__isnull=True),
+                ),
+            }
         WorkItemTemplate.objects.create(
-            name=w["name"], description=w.get("description") or "", defaults=w.get("defaults") or {}, **audit
+            name=w["name"],
+            description=w.get("description") or "",
+            defaults=restore_defaults(defaults, states_by_name, labels_by_name, modules_by_name),
+            **audit,
         )
 
     # 7. starter work items

@@ -249,3 +249,51 @@ class TestInitiatives:
         assert other.delete(f"{base}{iid}/").status_code == 403
         assert member.delete(f"{base}{iid}/").status_code == 204
         assert not Initiative.objects.filter(pk=iid).exists()
+
+
+@pytest.mark.contract
+@pytest.mark.django_db
+@pytest.mark.parametrize("full_access", [False, True])
+def test_guest_epics_children_and_analytics_respect_visibility(workspace, world, full_access):
+    from plane.db.models import InitiativeEpic, InitiativeProject
+
+    project, states = world["a"], world["sa"]
+    project.guest_view_all_features = full_access
+    project.save()
+    guest = _user(workspace, 5, "restricted")
+    ProjectMember.objects.create(project=project, workspace=workspace, member=guest, role=5)
+    # Workspace role must not override the role in each individual project.
+    ProjectMember.objects.create(project=world["b"], workspace=workspace, member=guest, role=15)
+    epic_type = IssueType.objects.create(workspace=workspace, name="Epic", is_epic=True)
+    own = _issue(project, states["Todo"], guest, "Own epic", type=epic_type)
+    hidden = _issue(project, states["Todo"], world["admin"], "Hidden epic", type=epic_type)
+    other = _issue(world["b"], world["sb"]["Todo"], world["admin"], "Member epic", type=epic_type)
+    _issue(project, states["Todo"], guest, "Own child", parent=own)
+    _issue(project, states["Done"], world["admin"], "Hidden child", parent=own)
+    client = _client(guest)
+    expected = {"Own epic", "Hidden epic"} if full_access else {"Own epic"}
+    rows = client.get(_epics(workspace, project)).data
+    assert {row["name"] for row in rows} == expected
+    detail = client.get(f"{_epics(workspace, project)}{own.id}/")
+    assert detail.status_code == 200
+    assert {row["name"] for row in detail.data["work_items"]} == (
+        {"Own child", "Hidden child"} if full_access else {"Own child"}
+    )
+    assert detail.data["rollup"]["total"] == (2 if full_access else 1)
+    assert detail.data["rollup"]["completed"] == (1 if full_access else 0)
+    assert client.get(f"{_epics(workspace, project)}{hidden.id}/").status_code == (200 if full_access else 404)
+    assert {row["name"] for row in client.get(f"/api/workspaces/{workspace.slug}/epics/").data} == (
+        expected | {"Member epic"}
+    )
+    initiative = Initiative.objects.create(workspace=workspace, name="Guest analytics", created_by=world["admin"])
+    InitiativeProject.objects.create(initiative=initiative, project=project)
+    for epic in (own, hidden, other):
+        InitiativeEpic.objects.create(initiative=initiative, epic=epic)
+    base = f"/api/workspaces/{workspace.slug}/initiatives/{initiative.id}/"
+    data = client.get(base).data
+    assert {row["name"] for row in data["epics"]} == expected | {"Member epic"}
+    for analytics in (data["analytics"], client.get(f"{base}analytics/").data):
+        assert analytics["total"] == (2 if full_access else 1)
+        assert analytics["completed"] == (1 if full_access else 0)
+        assert analytics["epic_count"] == (3 if full_access else 2)
+    assert _client(world["admin"]).get(f"{_epics(workspace, project)}{own.id}/").data["rollup"]["total"] == 2

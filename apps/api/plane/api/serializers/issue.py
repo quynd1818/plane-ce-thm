@@ -87,7 +87,7 @@ class IssueSerializer(BaseSerializer):
         }
         existing_properties = self.instance.custom_properties if self.instance else {}
         merged_properties = {**existing_properties, **(custom_properties or {})}
-        unknown_keys = set(merged_properties) - set(definitions)
+        unknown_keys = set(custom_properties or {}) - set(definitions)
         if unknown_keys:
             raise serializers.ValidationError(
                 {"custom_properties": f"Unknown custom properties: {sorted(unknown_keys)}"}
@@ -100,7 +100,9 @@ class IssueSerializer(BaseSerializer):
                 {"custom_properties": f"Missing required custom properties: {sorted(missing_required)}"}
             )
         for key, value in merged_properties.items():
-            definition = definitions[key]
+            definition = definitions.get(key)
+            if definition is None:
+                continue  # Preserve historical values from removed or disabled definitions.
             if definition.property_type == "number" and (
                 isinstance(value, bool) or not isinstance(value, (int, float))
             ):
@@ -114,7 +116,7 @@ class IssueSerializer(BaseSerializer):
                 values = value if definition.property_type == "multi_select" else [value]
                 if any(option not in allowed for option in values):
                     raise serializers.ValidationError({"custom_properties": f"{key} contains an invalid option."})
-        if custom_properties is not None or self.instance is not None:
+        if custom_properties is not None:
             data["custom_properties"] = merged_properties
 
         if (
@@ -167,9 +169,9 @@ class IssueSerializer(BaseSerializer):
         # Validate labels are from project
         if data.get("labels", []):
             valid_label_ids = set(
-                Label.objects.filter(
-                    project_id=self.context.get("project_id"), id__in=data["labels"]
-                ).values_list("id", flat=True)
+                Label.objects.filter(project_id=self.context.get("project_id"), id__in=data["labels"]).values_list(
+                    "id", flat=True
+                )
             )
             invalid_label_ids = set(data["labels"]) - valid_label_ids
             if invalid_label_ids:
@@ -182,6 +184,22 @@ class IssueSerializer(BaseSerializer):
             and not State.objects.filter(project_id=self.context.get("project_id"), pk=data.get("state").id).exists()
         ):
             raise serializers.ValidationError("State is not valid please pass a valid state_id")
+
+        if self.instance and "state" in data and data["state"] is None:
+            # Issue.save() replaces null with the default; validate that actual transition too.
+            states = State.objects.filter(project_id=self.instance.project_id, is_triage=False)
+            data["state"] = states.filter(default=True).first() or states.first()
+        if self.instance and data.get("state") and data["state"].id != self.instance.state_id:
+            from plane.utils.workflow import check_transition
+
+            request = self.context.get("request")
+            if request is None:
+                raise serializers.ValidationError({"state": "A request is required to change state."})
+            decision = check_transition(
+                self.instance.project_id, request.user, self.instance.state_id, data["state"].id
+            )
+            if not decision.allowed:
+                raise serializers.ValidationError({"state": decision.reason, "code": "WORKFLOW_TRANSITION_DENIED"})
 
         # Check parent issue is from workspace as it can be cross workspace
         if (

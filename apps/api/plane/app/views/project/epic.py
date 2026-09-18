@@ -24,7 +24,7 @@ from plane.app.serializers import IssueCreateSerializer
 from plane.app.views.base import BaseAPIView
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.db.models import Issue, IssueAssignee, IssueLabel, Project
-from plane.utils.epic import ensure_project_epic_type, epic_queryset, rollup_for_epics
+from plane.utils.epic import ensure_project_epic_type, epic_queryset, rollup_for_epics, visible_issues
 from plane.utils.host import base_host
 
 EPIC_FIELDS = (
@@ -43,15 +43,15 @@ EPIC_FIELDS = (
 )
 
 
-def _serialize_epics(epics):
-    rows = list(epics.values(*EPIC_FIELDS))
+def _serialize_epics(epics, user):
+    rows = list(visible_issues(epics, user).values(*EPIC_FIELDS))
     ids = [r["id"] for r in rows]
     assignees, labels = defaultdict(list), defaultdict(list)
     for ia in IssueAssignee.objects.filter(issue_id__in=ids).values("issue_id", "assignee_id"):
         assignees[ia["issue_id"]].append(str(ia["assignee_id"]))
     for il in IssueLabel.objects.filter(issue_id__in=ids).values("issue_id", "label_id"):
         labels[il["issue_id"]].append(str(il["label_id"]))
-    rollup = rollup_for_epics(ids)
+    rollup = rollup_for_epics(ids, user)
     for r in rows:
         r["assignee_ids"] = assignees[r["id"]]
         r["label_ids"] = labels[r["id"]]
@@ -74,7 +74,7 @@ class ProjectEpicEndpoint(BaseAPIView):
         state_group = request.GET.get("state_group")
         if state_group:
             epics = epics.filter(state__group=state_group)
-        return Response(_serialize_epics(epics))
+        return Response(_serialize_epics(epics, request.user))
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def post(self, request, slug, project_id):
@@ -104,19 +104,21 @@ class ProjectEpicEndpoint(BaseAPIView):
             notification=True,
             origin=base_host(request=request, is_app=True),
         )
-        return Response(_serialize_epics(Issue.issue_objects.filter(pk=issue.pk))[0], status=status.HTTP_201_CREATED)
+        return Response(
+            _serialize_epics(Issue.issue_objects.filter(pk=issue.pk), request.user)[0], status=status.HTTP_201_CREATED
+        )
 
 
 class ProjectEpicDetailEndpoint(BaseAPIView):
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id, epic_id):
         epics = _project_epics(slug, project_id, request.user).filter(pk=epic_id)
-        rows = _serialize_epics(epics)
+        rows = _serialize_epics(epics, request.user)
         if not rows:
             return Response({"error": "Epic not found."}, status=status.HTTP_404_NOT_FOUND)
         data = rows[0]
         children = list(
-            Issue.issue_objects.filter(parent_id=epic_id)
+            visible_issues(Issue.issue_objects.filter(parent_id=epic_id), request.user)
             .order_by("sequence_id")
             .values("id", "name", "sequence_id", "state_id", "priority", "target_date", "project_id", "completed_at")
         )
@@ -166,7 +168,7 @@ class ProjectEpicWorkItemsEndpoint(BaseAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         candidates.update(parent=epic, updated_at=timezone.now())
-        return Response(_serialize_epics(Issue.issue_objects.filter(pk=epic.pk))[0])
+        return Response(_serialize_epics(Issue.issue_objects.filter(pk=epic.pk), request.user)[0])
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER])
     def delete(self, request, slug, project_id, epic_id):
@@ -175,7 +177,7 @@ class ProjectEpicWorkItemsEndpoint(BaseAPIView):
             return Response({"error": "Epic not found."}, status=status.HTTP_404_NOT_FOUND)
         ids = [str(i) for i in request.data.get("issue_ids") or []]
         Issue.issue_objects.filter(pk__in=ids, parent_id=epic_id).update(parent=None, updated_at=timezone.now())
-        return Response(_serialize_epics(Issue.issue_objects.filter(pk=epic.pk))[0])
+        return Response(_serialize_epics(Issue.issue_objects.filter(pk=epic.pk), request.user)[0])
 
 
 class ProjectEpicConvertEndpoint(BaseAPIView):
@@ -196,4 +198,4 @@ class ProjectEpicConvertEndpoint(BaseAPIView):
             )
         issue.type = ensure_project_epic_type(project, request.user)
         issue.save(update_fields=["type", "updated_at"])
-        return Response(_serialize_epics(Issue.issue_objects.filter(pk=issue.pk))[0])
+        return Response(_serialize_epics(Issue.issue_objects.filter(pk=issue.pk), request.user)[0])

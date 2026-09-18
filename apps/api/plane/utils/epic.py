@@ -14,7 +14,7 @@ epic still opens in the normal work item detail view.
 from django.db.models import Count, Q
 from django.utils import timezone
 
-from plane.db.models import Issue, IssueType, ProjectIssueType
+from plane.db.models import Issue, IssueType, ProjectIssueType, ProjectMember
 
 EPIC_TYPE_NAME = "Epic"
 STATE_GROUPS = ("backlog", "unstarted", "started", "completed", "cancelled")
@@ -58,12 +58,21 @@ def epic_queryset(workspace_id=None, project_id=None):
     return qs
 
 
-def rollup_for_epics(epic_ids) -> dict:
+def visible_issues(qs, user):
+    """Apply project membership and restricted guests' creator-only visibility."""
+    memberships = ProjectMember.objects.filter(member=user, is_active=True)
+    restricted = memberships.filter(role=5, project__guest_view_all_features=False)
+    return qs.filter(project_id__in=memberships.values("project_id")).exclude(
+        Q(project_id__in=restricted.values("project_id")) & ~Q(created_by=user)
+    )
+
+
+def rollup_for_epics(epic_ids, user) -> dict:
     """``{epic_id: {"total", "backlog", ..., "overdue", "progress"}}`` from the
     epics' direct children."""
     today = timezone.now().date()
     rows = (
-        Issue.issue_objects.filter(parent_id__in=list(epic_ids))
+        visible_issues(Issue.issue_objects.filter(parent_id__in=list(epic_ids)), user)
         .values("parent_id")
         .annotate(
             total=Count("id"),
