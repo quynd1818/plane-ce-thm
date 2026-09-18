@@ -30,20 +30,21 @@ function OnboardingPage() {
   const { data: user } = useUser();
   const { fetchWorkspaces } = useWorkspace();
 
-  // fetching workspaces list
-  useSWR(USER_WORKSPACES_LIST, () => {
-    if (user?.id) {
-      fetchWorkspaces();
-    }
-  });
+  // Wait for authenticated, user-scoped requests before interpreting an empty list.
+  const {
+    data: workspaces,
+    error: workspacesError,
+    mutate: retryWorkspaces,
+  } = useSWR(user?.id ? [USER_WORKSPACES_LIST, user.id] : null, () => fetchWorkspaces());
 
-  // fetching user workspace invitations
-  const { isLoading: invitationsLoader, data: invitations } = useSWR(
-    `USER_WORKSPACE_INVITATIONS_LIST_${user?.id}`,
-    () => {
-      if (user?.id) return workspaceService.userWorkspaceInvitations();
-    }
+  const {
+    data: invitations,
+    error: invitationsError,
+    mutate: retryInvitations,
+  } = useSWR(user?.id ? ["USER_WORKSPACE_INVITATIONS_LIST", user.id] : null, () =>
+    workspaceService.userWorkspaceInvitations()
   );
+  const hasLoadError = workspacesError || invitationsError;
 
   return (
     <AuthenticationWrapper pageType={EPageTypes.ONBOARDING}>
@@ -65,7 +66,20 @@ function OnboardingPage() {
           className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden rounded-[28px] bg-surface-1"
           style={{ boxShadow: "0 12px 40px rgba(11,30,60,0.08), inset 0 0 0 1px rgba(201,162,76,0.22)" }}
         >
-          {user && !invitationsLoader ? (
+          {hasLoadError ? (
+            <div role="alert" className="grid h-full place-content-center gap-4 p-8 text-center">
+              <p>Không thể tải workspace và lời mời. Vui lòng thử lại.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  void retryWorkspaces();
+                  void retryInvitations();
+                }}
+              >
+                Thử lại
+              </button>
+            </div>
+          ) : user && workspaces !== undefined && invitations !== undefined ? (
             <OnboardingRoot invitations={invitations ?? []} />
           ) : (
             <div className="grid h-full w-full place-items-center">

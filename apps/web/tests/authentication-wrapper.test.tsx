@@ -50,6 +50,7 @@ describe("AuthenticationWrapper navigation", () => {
     state.user.isLoading = false;
     state.profile.data = { id: "profile", is_onboarded: true };
     state.workspace.loader = false;
+    state.settings.data.workspace = { last_workspace_slug: "thm", fallback_workspace_slug: "thm" };
     state.swr.isLoading = false;
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -88,6 +89,14 @@ describe("AuthenticationWrapper navigation", () => {
   const flushNavigation = async () => {
     await act(async () => vi.runOnlyPendingTimersAsync());
   };
+
+  it("uses an existing workspace when profile settings do not have its slug yet", async () => {
+    state.settings.data.workspace = { last_workspace_slug: "", fallback_workspace_slug: "" };
+    await render();
+    await flushNavigation();
+    expect(router.state.location.pathname).toBe("/thm/");
+    expect(container.textContent).toBe("Workspace");
+  });
 
   it("keeps a spinner visible while the destination module is loading", async () => {
     let finishLoading!: (value: { Component: () => React.JSX.Element }) => void;
