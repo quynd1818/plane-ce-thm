@@ -94,11 +94,12 @@ export function InstanceKeycloakConfigForm(props: Props) {
     {
       key: "KEYCLOAK_AUTO_JOIN_WORKSPACE_SLUG",
       type: "text",
-      label: "Auto-join workspace (slug)",
+      label: "Default workspace for SSO users (slug)",
       description: (
         <>
-          Every user who signs in through Keycloak is added to this workspace on first login, so nobody needs a manual
-          invite. Leave empty to disable. The slug is the part after the domain in the workspace URL.
+          Keycloak users with no active workspace membership are added to this existing workspace after accepted
+          invitations are processed. Existing members keep their workspaces. Removed or deactivated access to this
+          workspace is never restored automatically. Leave empty to disable. Use the slug from the workspace URL.
         </>
       ),
       placeholder: "tan-hoang-minh",
@@ -206,7 +207,8 @@ export function InstanceKeycloakConfigForm(props: Props) {
                 <h4 className="text-13 font-medium text-tertiary">Auto-joined users are Members</h4>
                 <p className="text-11 text-tertiary">
                   On: joined as <CodeBlock darkerShade>Member</CodeBlock> (can create and edit work items). Off: joined
-                  as <CodeBlock darkerShade>Guest</CodeBlock> (read and comment) until an admin promotes them.
+                  as <CodeBlock darkerShade>Guest</CodeBlock>. Project access follows existing project permissions; this
+                  setting does not grant project memberships or change existing workspace roles.
                 </p>
               </div>
               <Controller

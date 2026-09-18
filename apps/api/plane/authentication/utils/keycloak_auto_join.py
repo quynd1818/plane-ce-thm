@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
-"""THM: put every Keycloak-authenticated user into the group workspace.
+"""THM: offer a default workspace to Keycloak users without a workspace.
 
 Plane's default flow expects a per-user invitation; with corporate SSO that
 means an admin inviting hundreds of people by hand, and with workspace
@@ -16,7 +16,9 @@ Configuration (God Mode -> THM SSO, or env on first boot):
 import logging
 import os
 
-from plane.db.models import Workspace, WorkspaceMember
+from django.db import transaction
+
+from plane.db.models import User, Workspace, WorkspaceMember
 from plane.license.utils.instance_value import get_configuration_value
 from plane.utils.cache import invalidate_cache_directly
 
@@ -45,7 +47,7 @@ def get_auto_join_settings():
 
 
 def auto_join_workspace(user):
-    """Add ``user`` to the configured workspace if they are not a member yet.
+    """Add ``user`` to the configured workspace only when they have no workspace.
 
     Returns the WorkspaceMember that was created, or None when nothing was
     done (feature off, workspace missing, or user already a member).
@@ -59,12 +61,19 @@ def auto_join_workspace(user):
         logger.warning("keycloak auto-join: workspace with slug %r does not exist", slug)
         return None
 
-    # all_objects: a member the admin deactivated or removed must not be
-    # silently re-added on the next login.
-    if WorkspaceMember.all_objects.filter(workspace=workspace, member=user).exists():
-        return None
+    with transaction.atomic():
+        # Serialize simultaneous SSO callbacks for the same user, including
+        # callbacks which started before a previous membership was revoked.
+        User.objects.select_for_update().get(pk=user.pk)
+        if WorkspaceMember.objects.filter(member=user, is_active=True, workspace__deleted_at__isnull=True).exists():
+            return None
 
-    membership = WorkspaceMember.objects.create(workspace=workspace, member=user, role=role)
+        # Revocation is deliberate: neither inactive nor soft-deleted default
+        # memberships may be recreated by this convenience flow.
+        if WorkspaceMember.all_objects.filter(workspace=workspace, member=user).exists():
+            return None
+
+        membership = WorkspaceMember.objects.create(workspace=workspace, member=user, role=role)
     invalidate_cache_directly(
         path=f"/api/workspaces/{workspace.slug}/members/",
         url_params=False,

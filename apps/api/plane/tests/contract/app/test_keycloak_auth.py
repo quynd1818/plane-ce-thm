@@ -17,7 +17,7 @@ from django.test import Client
 from django.utils import timezone
 from django.urls import reverse
 
-from plane.db.models import Account, Profile, User, Workspace, WorkspaceMember
+from plane.db.models import Account, Profile, ProjectMember, User, Workspace, WorkspaceMember, WorkspaceMemberInvite
 from plane.license.models import Instance, InstanceConfiguration
 
 KEYCLOAK_HOST = "https://sso.example.test/realms/thm"
@@ -318,3 +318,50 @@ class TestKeycloakAutoJoin:
         _configure(auto_join_slug="does-not-exist")
         assert "error_code" not in _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "b@thm.vn", sub="kc-2")["Location"]
         assert not WorkspaceMember.objects.filter(member__email="b@thm.vn").exists()
+
+    def test_existing_different_workspace_is_not_added_to_default(self, instance, thm_workspace, create_user):
+        _configure(auto_join_slug="thm", auto_join_role="15")
+        other = Workspace.objects.create(name="Existing", slug="existing", owner=create_user)
+        membership = WorkspaceMember.objects.create(workspace=other, member=create_user, role=20)
+        response = _login_via_keycloak(Client(HTTP_USER_AGENT=UA), create_user.email)
+        assert "error_code" not in response["Location"]
+        assert not WorkspaceMember.objects.filter(workspace=thm_workspace, member=create_user).exists()
+        membership.refresh_from_db()
+        assert membership.role == 20
+
+    def test_inactive_default_membership_stays_inactive(self, instance, thm_workspace, create_user):
+        _configure(auto_join_slug="thm")
+        membership = WorkspaceMember.objects.create(workspace=thm_workspace, member=create_user, is_active=False)
+        response = _login_via_keycloak(Client(HTTP_USER_AGENT=UA), create_user.email)
+        assert "error_code" not in response["Location"]
+        membership.refresh_from_db()
+        assert membership.is_active is False
+        assert WorkspaceMember.all_objects.filter(workspace=thm_workspace, member=create_user).count() == 1
+
+    @pytest.mark.parametrize("accepted", [True, False])
+    def test_invitations_are_processed_before_fallback(self, instance, thm_workspace, create_user, accepted):
+        _configure(auto_join_slug="thm")
+        other = Workspace.objects.create(name="Invited", slug="invited", owner=create_user)
+        invite = WorkspaceMemberInvite.objects.create(
+            workspace=other, email=create_user.email, role=15, accepted=accepted, token="invitation-token"
+        )
+        response = _login_via_keycloak(Client(HTTP_USER_AGENT=UA), create_user.email)
+        assert "error_code" not in response["Location"]
+        assert WorkspaceMember.objects.filter(workspace=thm_workspace, member=create_user).exists() is not accepted
+        assert WorkspaceMember.objects.filter(workspace=other, member=create_user, role=15).exists() is accepted
+        assert WorkspaceMemberInvite.objects.filter(pk=invite.pk).exists() is not accepted
+
+    def test_auto_join_does_not_complete_profile_or_grant_project_access(self, instance, thm_workspace):
+        _configure(auto_join_slug="thm", auto_join_role="15")
+        response = _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "new-staff@thm.vn")
+        assert "error_code" not in response["Location"]
+        user = User.objects.get(email="new-staff@thm.vn")
+        assert Profile.objects.get(user=user).is_onboarded is False
+        assert not ProjectMember.objects.filter(member=user).exists()
+
+    def test_deleted_default_does_not_block_login(self, instance, thm_workspace):
+        _configure(auto_join_slug="thm")
+        Workspace.objects.filter(pk=thm_workspace.pk).update(deleted_at=timezone.now())
+        response = _login_via_keycloak(Client(HTTP_USER_AGENT=UA), "staff@thm.vn")
+        assert "error_code" not in response["Location"]
+        assert not WorkspaceMember.objects.filter(member__email="staff@thm.vn").exists()
